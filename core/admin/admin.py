@@ -1,58 +1,56 @@
 # core/admin/admin.py
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from core.models import (
-    Leave, Soldier, ServiceLocation, HealthStatus,
-    ServiceStatus, Expertise, ServiceReductionType, SystemSetting
-)
+from core.models import *
+from ..forms import SoldierForm, LeaveForm
+from ..templatetags.jalali import to_jalali
 
 
-@admin.register(ServiceLocation)
-class ServiceLocationAdmin(ImportExportModelAdmin):
-    list_display = ('name', 'parent', 'created_at')
-    search_fields = ('name',)
-
-
-@admin.register(HealthStatus)
-class HealthStatusAdmin(ImportExportModelAdmin):
-    list_display = ('title', 'is_exempt_from_combat', 'created_at')
-    search_fields = ('title',)
-
-
-@admin.register(ServiceStatus)
-class ServiceStatusAdmin(ImportExportModelAdmin):
-    list_display = ('title', 'is_active_service', 'created_at')
-    search_fields = ('title',)
-
-
-@admin.register(Expertise)
-class ExpertiseAdmin(ImportExportModelAdmin):
-    list_display = ('title', 'created_at')
-    search_fields = ('title',)
-
-
-@admin.register(ServiceReductionType)
-class ServiceReductionTypeAdmin(ImportExportModelAdmin):
-    list_display = ('title', 'default_days', 'created_at')
-    search_fields = ('title',)
-
-
-@admin.register(SystemSetting)
-class SystemSettingAdmin(ImportExportModelAdmin):
-    list_display = ('key', 'value', 'description')
-    search_fields = ('key', 'value')
-
-
-@admin.register(Soldier)
 class SoldierAdmin(ImportExportModelAdmin):
-    list_display = ('full_name', 'national_code', 'dossier_code', 'dispatch_type', 'service_end_date')
+    form = SoldierForm
+    list_display = (
+        'full_name', 'national_code', 'dossier_code', 'dispatch_type', 'jalali_service_start', 'jalali_service_end')
     search_fields = ('first_name', 'last_name', 'national_code', 'dossier_code')
     list_filter = ('dispatch_type', 'health_status', 'service_status', 'current_location')
     readonly_fields = ('service_end_date',)
 
+    def jalali_service_start(self, obj):
+        return to_jalali(obj.service_start_date, "%Y/%m/%d")
 
-@admin.register(Leave)
+    jalali_service_start.short_description = 'شروع خدمت'
+
+    def jalali_service_end(self, obj):
+        return to_jalali(obj.service_end_date(), "%Y/%m/%d")
+
+    jalali_service_end.short_description = 'پایان خدمت'
+
+
 class LeaveAdmin(ImportExportModelAdmin):
-    list_display = ('soldier', 'get_leave_type_display', 'start_date', 'end_date', 'days', 'is_approved')
+    form = LeaveForm
+    list_display = ('soldier', 'get_leave_type_display', 'jalali_start', 'jalali_end', 'days', 'is_approved')
     list_filter = ('leave_type', 'is_approved')
-    search_fields = ('soldier__first_name', 'soldier__last_name', 'soldier__national_code')
+
+    def jalali_start(self, obj):
+        return to_jalali(obj.start_date, "%Y/%m/%d")
+
+    jalali_start.short_description = 'از تاریخ'
+
+    def jalali_end(self, obj):
+        return to_jalali(obj.end_date, "%Y/%m/%d")
+
+    jalali_end.short_description = 'تا تاریخ'
+
+
+# ثبت مجدد همه ادمین‌ها با فرم شمسی
+admin.site.unregister(Soldier)
+admin.site.unregister(Leave)
+admin.site.register(Soldier, SoldierAdmin)
+admin.site.register(Leave, LeaveAdmin)
+
+# بقیه مدل‌ها بدون تغییر
+admin.site.register(ServiceLocation)
+admin.site.register(HealthStatus)
+admin.site.register(ServiceStatus)
+admin.site.register(Expertise)
+admin.site.register(ServiceReductionType)
+admin.site.register(SystemSetting)

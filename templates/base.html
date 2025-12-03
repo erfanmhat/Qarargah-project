@@ -2,30 +2,32 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>سامانه مدیریت سربازان</title>
-    <link rel="stylesheet" href="{% load static %}{% static 'css/bootstrap.rtl.min.css' %}">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.rtl.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/persian-datepicker.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/custom-dark.css' %}">
-    <link rel="stylesheet" href="{% static 'webfonts/fa-solid-900.woff2' %}" as="font">
-    <link rel="stylesheet" href="{% static 'webfonts/fa-regular-400.woff2' %}" as="font">
     <link href="{% static 'css/all.min.css' %}" rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'IRANSans';
-            src: url('{% static 'fonts/IRANSansWeb.woff2' %}') format('woff2');
-            font-weight: normal;
-            font-style: normal;
-        }
-        body { font-family: 'IRANSans', Tahoma; background: #121212; color: #e0e0e0; }
-        .navbar { background: #1e1e1e !important; }
-        .sidebar { background: #0d1e0d; }
+        body { font-family: 'IRANSans', Tahoma; background:#121212; color:#eee; }
+        .jalali-date { direction: ltr; text-align: center; }
     </style>
 </head>
 <body>
     {% block content %}{% endblock %}
+
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'js/chart.umd.min.js' %}"></script>
     <script src="{% static 'js/jalali-moment.min.js' %}"></script>
     <script src="{% static 'js/persian-datepicker.min.js' %}"></script>
+    <script>
+        document.querySelectorAll('.jalali-date').forEach(input => {
+            $(input).persianDatePicker({
+                format: 'YYYY/MM/DD',
+                autoClose: true,
+                observer: true,
+                calendar: { persian: { locale: 'fa' } }
+            });
+        });
+    </script>
 </body>
 </html>
