@@ -86,7 +86,4 @@ admin.site.register(SystemSetting)
 admin.site.register(SoldierServiceReduction)
 
 # تنظیمات کلی ادمین
-admin.site.site_header = "سامانه مدیریت مرخصی و خدمت سربازان"
-admin.site.site_title = "پنل مدیریت سربازان"
-admin.site.index_title = "خوش آمدید"
-admin.site.index_template = None
+admin.site.index_template = 'admin/index.html'
