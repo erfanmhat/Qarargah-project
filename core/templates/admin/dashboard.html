@@ -1,0 +1,148 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}داشبورد مدیریت{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-success fw-bold mb-0">داشبورد مدیریت مرخصی و خدمت سربازان</h2>
+        <div class="text-white fs-5">
+            <i class="fas fa-calendar-alt"></i> {{ "now"|date:"d F Y" }}
+        </div>
+    </div>
+
+    <!-- کارت‌های آماری با گرادیان و انیمیشن -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-lg h-100" style="background: linear-gradient(135deg, #1e40af, #3b82f6);">
+                <div class="card-body text-center text-white p-4">
+                    <i class="fas fa-users fa-3x mb-3 opacity-75"></i>
+                    <h3 class="display-4 fw-bold mb-0">{{ stats.total_soldiers }}</h3>
+                    <p class="fs-5 mb-0">کل سربازان فعال</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-lg h-100" style="background: linear-gradient(135deg, #dc2626, #ef4444);">
+                <div class="card-body text-center text-white p-4">
+                    <i class="fas fa-calendar-check fa-3x mb-3 opacity-75"></i>
+                    <h3 class="display-4 fw-bold mb-0">{{ stats.on_leave_today }}</h3>
+                    <p class="fs-5 mb-0">در مرخصی امروز</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-lg h-100" style="background: linear-gradient(135deg, #d97706, #f59e0b);">
+                <div class="card-body text-center text-white p-4">
+                    <i class="fas fa-clock fa-3x mb-3 opacity-75"></i>
+                    <h3 class="display-4 fw-bold mb-0">{{ stats.ending_soon }}</h3>
+                    <p class="fs-5 mb-0">پایان خدمت تا ۹۰ روز</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-lg h-100" style="background: linear-gradient(135deg, #16a34a, #22c55e);">
+                <div class="card-body text-center text-white p-4">
+                    <i class="fas fa-shield-alt fa-3x mb-3 opacity-75"></i>
+                    <h3 class="display-4 fw-bold mb-0">فعال</h3>
+                    <p class="fs-5 mb-0">سیستم آنلاین و آماده</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نمودارها -->
+    <div class="row g-4">
+        <!-- توزیع انواع مرخصی -->
+        <div class="col-lg-6">
+            <div class="card bg-dark text-white border-0 shadow">
+                <div class="card-header bg-success text-dark fw-bold fs-5 d-flex justify-content-between align-items-center">
+                    توزیع انواع مرخصی
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="card-body">
+                    <canvas id="leaveChart" height="320"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- پایان خدمت در ۶ ماه آینده -->
+        <div class="col-lg-6">
+            <div class="card bg-dark text-white border-0 shadow">
+                <div class="card-header bg-success text-dark fw-bold fs-5 d-flex justify-content-between align-items-center">
+                    پایان خدمت در ۶ ماه آینده
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="card-body">
+                    <canvas id="endingChart" height="320"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script>
+// تنظیمات کلی چارت
+Chart.defaults.color = '#e0e0e0';
+Chart.defaults.borderColor = '#444';
+
+const leaveData = {{ leave_chart_data|safe }};
+const endingData = {{ ending_chart_data|safe }};
+
+// نمودار دایره‌ای مرخصی‌ها
+new Chart(document.getElementById('leaveChart'), {
+    type: 'doughnut',
+    data: {
+        labels: leaveData.labels,
+        datasets: [{
+            data: leaveData.data,
+            backgroundColor: leaveData.colors,
+            borderColor: '#111',
+            borderWidth: 3,
+            hoverOffset: 20
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { padding: 20, font: { size: 14 } }
+            },
+            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} روز` } }
+        }
+    }
+});
+
+// نمودار میله‌ای پایان خدمت
+new Chart(document.getElementById('endingChart'), {
+    type: 'bar',
+    data: {
+        labels: endingData.labels,
+        datasets: [{
+            label: 'تعداد سرباز',
+            data: endingData.data,
+            backgroundColor: '#00c853',
+            borderRadius: 10,
+            borderSkipped: false,
+            barThickness: 40
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => `${ctx.parsed.y} سرباز` } }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,47 +1,97 @@
-{% extends "admin/base.html" %}
-{% load static i18n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}سامانه مدیریت سربازان{% endblock %}</title>
 
-{% block title %}{{ title }} | سامانه مدیریت مرخصی سربازان{% endblock %}
+    <!-- Bootstrap 5.3 RTL + Custom -->
+    <link href="{% static 'css/bootstrap.rtl.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/all.min.css' %}" rel="stylesheet">
+    <link href="{% static 'admin/css/wordpress-admin-dark.css' %}" rel="stylesheet">
+    <link href="{% static 'admin/css/wordpress-admin-light.css' %}" rel="stylesheet" id="light-theme" disabled>
 
-{% block branding %}
-<h1 id="site-name" style="margin:0;">
-    <a href="{% url 'admin:index' %}" style="color:#00c853;font-weight:bold;text-decoration:none;">
-        مدیریت مرخصی سربازان
-    </a>
-</h1>
-{% endblock %}
+    <style>
+        :root { --primary: #00c853; --primary-dark: #00b140; }
+        body { background: #121212; font-family: 'IRANSans', Tahoma; }
+        .sidebar { width: 280px; background: #1e1e1e; position: fixed; top: 0; right: 0; bottom: 0; z-index: 1000; overflow-y: auto; border-left: 3px solid var(--primary); }
+        .sidebar-header { background: #000; padding: 1rem; text-align: center; border-bottom: 1px solid #333; }
+        .sidebar-menu { padding: 1rem 0; }
+        .sidebar-menu a { color: #ddd; padding: 12px 20px; display: block; transition: all 0.3s; }
+        .sidebar-menu a:hover, .sidebar-menu a.active { background: var(--primary); color: #000; font-weight: bold; }
+        .sidebar-menu i { width: 30px; }
+        .main-content { margin-right: 280px; padding: 2rem; }
+        .topbar { background: #1e1e1e; padding: 1rem 2rem; border-bottom: 3px solid var(--primary); position: fixed; left: 0; right: 280px; top: 0; z-index: 999; }
+        .theme-toggle { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <!-- سایدبار وردپرسی -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="text-white mb-0">سامانه سربازان</h4>
+        </div>
+        <div class="sidebar-menu">
+            <a href="{% url 'admin:index' %}" class="{% if request.path == '/admin/' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i> داشبورد
+            </a>
+            <a href="{% url 'admin:core_soldier_changelist' %}" class="{% if 'soldier' in request.path %}active{% endif %}">
+                <i class="fas fa-users"></i> سربازان
+            </a>
+            <a href="{% url 'admin:core_leave_changelist' %}" class="{% if 'leave' in request.path %}active{% endif %}">
+                <i class="fas fa-calendar-check"></i> مرخصی‌ها
+            </a>
+            <a href="/admin/dashboard/" class="{% if 'dashboard' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i> داشبورد پیشرفته
+            </a>
+            <a href="/admin/soldiers/search/" class="{% if 'soldiers/search' in request.path %}active{% endif %}">
+                <i class="fas fa-search"></i> جستجوی پیشرفته
+            </a>
+        </div>
+    </div>
 
-{% block extrastyle %}
-<link rel="stylesheet" href="{% static 'admin/css/wordpress-admin-dark.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/wordpress-admin-light.css' %}" id="theme-css" disabled>
-<link rel="stylesheet" href="{% static 'css/all.min.css' %}">
-<style>
-    :root { --primary:#00c853; --primary-dark:#00b140; }
-    #header { background: #1e1e1e !important; border-bottom:3px solid var(--primary); }
-    .module caption, .selector-chosen h2 { background:var(--primary) !important; }
-    .button, input[type=submit], input[type=button], .submit-row input, a.button { background:var(--primary) !important; }
-    .button:hover, input[type=submit]:hover { background:var(--primary-dark) !important; }
-</style>
-{% endblock %}
+    <!-- نوار بالا -->
+    <div class="topbar d-flex justify-content-between align-items-center">
+        <div>
+            <button class="theme-toggle" onclick="toggleTheme()" title="تغییر تم">
+                <i class="fas fa-moon" id="theme-icon"></i>
+            </button>
+        </div>
+        <div class="text-white">
+            خوش آمدید، {{ user.get_full_name|default:user.username }}
+            <a href="{% url 'admin:logout' %}" class="text-danger ms-3">خروج</a>
+        </div>
+    </div>
 
-{% block extrahead %}
-<script src="{% static 'admin/js/admin-theme-switcher.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // بازیابی تم ذخیره شده
-    const saved = localStorage.getItem('admin-theme') || 'dark';
-    if (saved === 'light') {
-        document.getElementById('theme-css').disabled = false;
-        document.body.classList.add('theme-light');
+    <!-- محتوای اصلی -->
+    <div class="main-content pt-5">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- اسکریپت تغییر تم -->
+    <script>
+    function toggleTheme() {
+        const light = document.getElementById('light-theme');
+        const icon = document.getElementById('theme-icon');
+        if (light.disabled) {
+            light.disabled = false;
+            document.body.classList.add('light-mode');
+            icon.classList.replace('fa-moon', 'fa-sun');
+            localStorage.setItem('theme', 'light');
+        } else {
+            light.disabled = true;
+            document.body.classList.remove('light-mode');
+            icon.classList.replace('fa-sun', 'fa-moon');
+            localStorage.setItem('theme', 'dark');
+        }
     }
-});
-</script>
-{% endblock %}
-
-{% block nav-global %}
-<div style="position:absolute;left:20px;top:15px;">
-    <button onclick="toggleTheme()" class="button" style="padding:8px 15px;">
-        <span id="theme-icon">moon</span> تغییر تم
-    </button>
-</div>
-{% endblock %}
+    // بازیابی تم
+    if (localStorage.getItem('theme') === 'light') {
+        document.getElementById('light-theme').disabled = false;
+        document.body.classList.add('light-mode');
+        document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+    }
+    </script>
+</body>
+</html>

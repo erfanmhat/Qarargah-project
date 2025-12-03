@@ -1,7 +1,8 @@
-.theme-light body { background:#f1f1f1 !important; color:#333 !important; }
-.theme-light #header { background:#2271b1 !important; }
-.theme-light .module h2, .theme-light .module caption { background:#2271b1 !important; color:#fff !important; }
-.theme-light .row1 { background:#fff !important; }
-.theme-light .row2 { background:#f9f9f9 !important; }
-.theme-light .button, .theme-light input[type=submit] { background:#2271b1 !important; color:#fff !important; }
-.theme-light a:link, .theme-light a:visited { color:#2271b1 !important; }
+.light-mode body { background: #f1f1f1 !important; color: #333 !important; }
+.light-mode .sidebar { background: #fff !important; border-left-color: #2271b1; }
+.light-mode .sidebar-header { background: #2271b1 !important; }
+.light-mode .sidebar-menu a { color: #333; }
+.light-mode .sidebar-menu a:hover, .light-mode .sidebar-menu a.active { background: #2271b1; color: #fff !important; }
+.light-mode .topbar { background: #2271b1 !important; }
+.light-mode .card { background: #fff !important; color: #333 !important; }
+.light-mode .table-dark { background: #fff !important; color: #333 !important; }
