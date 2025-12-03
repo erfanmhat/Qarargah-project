@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: soldier_db
+      POSTGRES_USER: soldier_user
+      POSTGRES_PASSWORD: soldier_pass_1404
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  web:
+    build: .
+    command: gunicorn soldier_management.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://soldier_user:soldier_pass_1404@db:5432/soldier_db
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
