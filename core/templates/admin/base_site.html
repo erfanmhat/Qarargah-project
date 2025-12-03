@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ title }} | سامانه مدیریت مرخصی سربازان{% endblock %}
+
+{% block branding %}
+<h1 id="site-name" style="margin:0;">
+    <a href="{% url 'admin:index' %}" style="color:#00c853;font-weight:bold;text-decoration:none;">
+        مدیریت مرخصی سربازان
+    </a>
+</h1>
+{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static 'admin/css/wordpress-admin-dark.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/wordpress-admin-light.css' %}" id="theme-css" disabled>
+<link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+<style>
+    :root { --primary:#00c853; --primary-dark:#00b140; }
+    #header { background: #1e1e1e !important; border-bottom:3px solid var(--primary); }
+    .module caption, .selector-chosen h2 { background:var(--primary) !important; }
+    .button, input[type=submit], input[type=button], .submit-row input, a.button { background:var(--primary) !important; }
+    .button:hover, input[type=submit]:hover { background:var(--primary-dark) !important; }
+</style>
+{% endblock %}
+
+{% block extrahead %}
+<script src="{% static 'admin/js/admin-theme-switcher.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // بازیابی تم ذخیره شده
+    const saved = localStorage.getItem('admin-theme') || 'dark';
+    if (saved === 'light') {
+        document.getElementById('theme-css').disabled = false;
+        document.body.classList.add('theme-light');
+    }
+});
+</script>
+{% endblock %}
+
+{% block nav-global %}
+<div style="position:absolute;left:20px;top:15px;">
+    <button onclick="toggleTheme()" class="button" style="padding:8px 15px;">
+        <span id="theme-icon">moon</span> تغییر تم
+    </button>
+</div>
+{% endblock %}

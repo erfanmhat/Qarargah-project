@@ -128,3 +128,12 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/admin/'
 LOGOUT_REDIRECT_URL = '/admin/'
+
+ADMIN_SITE_HEADER = "پنل مدیریت سربازان"
+ADMIN_SITE_TITLE = "مدیریت سربازان"
+ADMIN_INDEX_TITLE = "داشبورد اصلی"
+
+from django.contrib import admin
+admin.site.site_header = 'پنل مدیریت سربازان'
+admin.site.site_title = 'سامانه سربازان'
+admin.site.index_title = 'خوش آمدید'
