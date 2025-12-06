@@ -1,0 +1,111 @@
+{% extends "dashboard/base.html" %}
+
+{% block page_title %}
+<div class="float-start">
+    <a href="{% url 'admin:core_soldier_add' %}" class="btn btn-success rounded-pill shadow-sm">
+        <i class="fas fa-plus"></i> افزودن سرباز جدید
+    </a>
+</div>
+<i class="fas fa-users text-white"></i> مدیریت سربازان
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-lg">
+    <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
+         style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
+        <span><i class="fas fa-list-ul"></i> فهرست سربازان ناحیه مقاومت بسیج اردبیل</span>
+        <small class="badge bg-dark opacity-90">{{ soldiers|length }} سرباز</small>
+    </div>
+    <div class="card-body p-4">
+
+        <!-- جستجوی زنده با رنگ سفید و خوانا -->
+        <div class="position-relative mb-4">
+            <i class="fas fa-search position-absolute top-50 start-4 translate-middle-y text-white opacity-75"></i>
+            <input type="text" id="searchInput" class="form-control form-control-lg search-box shadow-sm text-white"
+                   placeholder="جستجو در نام، کد ملی، کد پرونده، تلفن..."
+                   style="background: rgba(30, 35, 50, 0.95) !important; border: 2px solid #00c853; color: white !important;"
+                   autocomplete="off">
+        </div>
+
+        <div class="table-responsive rounded-3 overflow-hidden shadow-sm">
+            <table class="table table-hover align-middle mb-0" id="soldiersTable">
+                <thead class="text-white" style="background: linear-gradient(90deg, #00c853, #00e676);">
+                <tr>
+                    <th class="text-center">نام و نام خانوادگی</th>
+                    <th>کد ملی</th>
+                    <th>کد پرونده</th>
+                    <th>نوع اعزام</th>
+                    <th>شروع خدمت</th>
+                    <th>پایان خدمت</th>
+                    <th>وضعیت خدمت</th>
+                    <th class="text-center">عملیات</th>
+                </tr>
+                </thead>
+                <tbody id="tableBody">
+                {% include "dashboard/soldier_row.html" %}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="noResults" class="text-center py-5 d-none">
+            <i class="fas fa-search fa-3x text-white opacity-50 mb-3"></i>
+            <p class="text-white opacity-75 fs-5">موردی با این مشخصات یافت نشد.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.soldier-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('noResults').classList.toggle('d-none', visibleCount > 0);
+    });
+
+    function confirmDelete(id, name) {
+        if (confirm(`آیا از حذف سرباز "${name}" اطمینان دارید؟\nاین عمل قابل بازگشت نیست.`)) {
+            window.location.href = `/dashboard/soldier/${id}/delete/`;
+        }
+    }
+
+    // انیمیشن ورود ردیف‌ها
+    document.querySelectorAll('.soldier-row').forEach((row, i) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(15px)';
+        setTimeout(() => {
+            row.style.transition = 'all 0.5s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, i * 40);
+    });
+
+</script>
+
+<style>
+    /* تضمین خوانایی کامل */
+    .search-box::placeholder {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-weight: 400;
+    }
+    .search-box:focus::placeholder {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    .table-hover tbody tr:hover {
+        background: rgba(0, 200, 83, 0.25) !important;
+    }
+
+</style>
+{% endblock %}

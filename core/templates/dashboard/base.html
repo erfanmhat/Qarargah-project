@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}سامانه مدیریت خدمت سربازان{% endblock %}</title>
+
+    {% load static %}
+
+    <!-- Bootstrap RTL محلی -->
+    <link href="{% static 'dashboard/css/bootstrap.rtl.min.css' %}" rel="stylesheet">
+
+    <!-- Font Awesome 6 محلی (با webfonts درست) -->
+    <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
+
+    <!-- فونت IRANSansWeb (دقیقاً همون چیزی که آپلود کردی) -->
+    <style>
+        @font-face {
+            font-family: 'IRANSans';
+            src: url('{% static "fonts/IRANSansWeb.woff2" %}') format('woff2'),
+                 url('{% static "fonts/IRANSansWeb.woff" %}') format('woff'),
+                 url('{% static "fonts/IRANSansWeb.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'IRANSans';
+            src: url('{% static "fonts/IRANSansWeb.woff2" %}') format('woff2'),
+                 url('{% static "fonts/IRANSansWeb.woff" %}') format('woff');
+            font-weight: bold;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        :root {
+            --primary: #00c853;
+            --primary-dark: #00a043;
+            --bg-dark: #0e1117;
+            --card-bg: #1a1d29;
+            --text: #e8f5e8;
+            --border: #2d3748;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            font-family: 'IRANSans', Tahoma, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* بقیه استایل‌های زیبا (همون قبلی) */
+        .sidebar { width: 280px; background: linear-gradient(180deg, #0a1a0a 0%, #0d1e0d 100%); border-left: 6px solid var(--primary); position: fixed; top: 0; right: 0; bottom: 0; z-index: 1030; overflow-y: auto; box-shadow: -10px 0 30px rgba(0,200,83,0.3); }
+        .sidebar-header { padding: 2rem 1.5rem; text-align: center; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); }
+        .sidebar-header h4 { color: var(--primary); margin: 0; font-weight: 900; font-size: 1.7rem; }
+        .nav-link { color: #ddd !important; padding: 16px 28px; transition: all 0.35s ease; border-bottom: 1px solid var(--border); }
+        .nav-link:hover, .nav-link.active { background: var(--primary) !important; color: #000 !important; font-weight: bold; transform: translateX(-8px); }
+        .nav-link i { width: 36px; margin-left: 12px; }
+        .topbar { background: rgba(26,29,41,0.98); padding: 1rem 2rem; border-bottom: 4px solid var(--primary); position: fixed; left: 0; right: 280px; top: 0; z-index: 1020; display: flex; justify-content: space-between; align-items: center; }
+        .main-content { margin-right: 280px; padding: 2.5rem; padding-top: 100px; min-height: 100vh; }
+        .page-title { color: var(--primary); border-bottom: 5px solid var(--primary); padding-bottom: 15px; margin-bottom: 2.5rem; font-weight: 900; font-size: 2.1rem; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 12px 35px rgba(0,200,83,0.18); transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-10px); box-shadow: 0 25px 60px rgba(0,200,83,0.35); }
+        .btn-primary { background: var(--primary); border: none; border-radius: 50px; padding: 12px 32px; font-weight: bold; }
+        .btn-primary:hover { background: #69f0ae; color: #000; transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,200,83,0.5); }
+
+
+    </style>
+</head>
+<body>
+
+<!-- سایدبار -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h4 class="text-white" style="text-shadow: 0 0 15px rgba(0,200,83,0.6);">
+            سامانه خدمت
+        </h4>
+        <small class="text-white opacity-90 d-block mt-2 fw-bold">
+            ناحیه مقاومت بسیج استان اردبیل
+        </small>
+    </div>
+    <nav class="nav flex-column mt-3">
+        <a href="/dashboard/" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}">
+            <i class="fas fa-home"></i> داشبورد
+        </a>
+        <a href="/dashboard/soldiers/" class="nav-link {% if 'soldiers' in request.path %}active{% endif %}">
+            <i class="fas fa-users"></i> سربازان
+        </a>
+        <a href="/dashboard/leaves/" class="nav-link {% if 'leaves' in request.path %}active{% endif %}">
+            <i class="fas fa-calendar-check"></i> مرخصی‌ها
+        </a>
+        <a href="/dashboard/search/" class="nav-link {% if 'search' in request.path %}active{% endif %}">
+            <i class="fas fa-search"></i> جستجوی پیشرفته
+        </a>
+        <hr class="border-secondary mx-4 my-4">
+        <a href="/dashboard/logout/" class="nav-link text-danger">
+            <i class="fas fa-sign-out-alt"></i> خروج از حساب
+        </a>
+    </nav>
+</div>
+
+<!-- نوار بالا -->
+<div class="topbar">
+    <button class="theme-toggle" title="تغییر تم">
+        <i class="fas fa-moon"></i>
+    </button>
+    <div class="text-white">
+        <i class="fas fa-user-shield text-success me-2"></i>
+        خوش آمدید، <strong>{{ user.get_full_name|default:user.username }}</strong>
+    </div>
+</div>
+
+<!-- محتوای اصلی -->
+<div class="main-content">
+    <h2 class="page-title">{% block page_title %}داشبورد مدیریت{% endblock %}</h2>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show text-center mb-4">
+        <i class="fas fa-bell"></i> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+</div>
+
+<script src="{% static 'dashboard/js/bootstrap.bundle.min.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,119 @@
+{% extends "dashboard/base.html" %}
+
+{% block page_title %}
+    <i class="fas fa-calendar-check text-white"></i> مدیریت مرخصی‌ها
+    <div class="float-start">
+        <a href="{% url 'admin:core_leave_add' %}" class="btn btn-success rounded-pill shadow-sm">
+            <i class="fas fa-plus"></i> ثبت مرخصی جدید
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-lg">
+    <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
+         style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
+        <span><i class="fas fa-calendar-alt"></i> فهرست مرخصی‌های ثبت‌شده</span>
+        <small class="badge bg-dark opacity-90">{{ leaves|length }} مرخصی</small>
+    </div>
+
+    <div class="card-body p-4">
+
+        <!-- جستجوی زنده -->
+        <div class="position-relative mb-4">
+            <i class="fas fa-search position-absolute top-50 start-4 translate-middle-y text-white opacity-75"></i>
+            <input type="text" id="searchInput" class="form-control form-control-lg search-box shadow-sm text-white"
+                   placeholder="جستجو در نام سرباز، کد ملی، نوع مرخصی، تاریخ..."
+                   style="background: rgba(30, 35, 50, 0.95) !important; border: 2px solid #00c853; color: white !important;"
+                   autocomplete="off">
+        </div>
+
+        <!-- جدول مرخصی‌ها -->
+        <div class="table-responsive rounded-3 overflow-hidden shadow-sm">
+            <table class="table table-hover align-middle mb-0" id="leavesTable">
+                <thead class="text-white" style="background: linear-gradient(90deg, #00c853, #00e676);">
+                    <tr>
+                        <th>سرباز</th>
+                        <th>نوع مرخصی</th>
+                        <th>از تاریخ</th>
+                        <th>تا تاریخ</th>
+                        <th>مدت</th>
+                        <th>وضعیت</th>
+                        <th>تاریخ ثبت</th>
+                        <th class="text-center">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% include "dashboard/leave_row.html" %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- پیام عدم وجود نتیجه -->
+        <div id="noResults" class="text-center py-5 d-none">
+            <i class="fas fa-search fa-3x text-white opacity-50 mb-3"></i>
+            <p class="text-white opacity-75 fs-5">مرخصی‌ای با این مشخصات یافت نشد.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // جستجوی زنده
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.leave-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('noResults').classList.toggle('d-none', visibleCount > 0);
+    });
+
+    // تأیید حذف مرخصی
+    function confirmLeaveDelete(id, soldier_name) {
+        if (confirm(`آیا از حذف مرخصی سرباز "${soldier_name}" اطمینان دارید؟`)) {
+            window.location.href = `/admin/core/leave/${id}/delete/`;
+        }
+    }
+
+    // انیمیشن ورود ردیف‌ها
+    document.querySelectorAll('.leave-row').forEach((row, i) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(15px)';
+        setTimeout(() => {
+            row.style.transition = 'all 0.5s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, i * 40);
+    });
+</script>
+
+<style>
+    .search-box::placeholder {
+        color: rgba(255, 255, 255, 0.75) !important;
+        font-weight: 500;
+    }
+    .search-box:focus::placeholder {
+        color: rgba(255, 255, 255, 0.95) !important;
+    }
+    .table-hover tbody tr:hover {
+        background: rgba(0, 200, 83, 0.25) !important;
+        transform: scale(1.01);
+        transition: all 0.3s ease;
+    }
+    .badge {
+        font-size: 0.9rem !important;
+        padding: 0.5em 0.8em;
+    }
+</style>
+{% endblock %}

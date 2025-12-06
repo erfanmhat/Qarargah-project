@@ -1,4 +1,4 @@
-# core/admin.py
+# core/dashboard.py
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
 from core.models import *
@@ -86,4 +86,4 @@ admin.site.register(SystemSetting)
 admin.site.register(SoldierServiceReduction)
 
 # تنظیمات کلی ادمین
-admin.site.index_template = 'admin/index.html'
+admin.site.index_template = 'dashboard/index.html'
