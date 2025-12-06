@@ -1,21 +1,22 @@
 {% for soldier in soldiers %}
-<tr class="soldier-row align-middle" data-name="{{ soldier.full_name|lower }}" data-national="{{ soldier.national_code }}">
+<tr class="soldier-row align-middle" data-name="{{ soldier.full_name|lower }}"
+    data-national="{{ soldier.national_code }}">
     <td>
         <strong class="text-light">{{ soldier.full_name }}</strong>
         {% if soldier.is_vip %}
-            <i class="fas fa-star text-warning ms-2" title="سرباز ویژه"></i>
+        <i class="fas fa-star text-warning ms-2" title="سرباز ویژه"></i>
         {% endif %}
     </td>
     <td><code class="text-info">{{ soldier.national_code }}</code></td>
     <td>
         {% if soldier.dossier_code %}
-            <span class="badge bg-primary rounded-pill px-3">{{ soldier.dossier_code }}</span>
+        <span class="badge bg-primary rounded-pill px-3">{{ soldier.dossier_code }}</span>
         {% else %}
-            <span class="text-muted">—</span>
+        <span class="text-muted">—</span>
         {% endif %}
     </td>
     <td>
-        <span class="badge bg-{{ soldier.dispatch_type|lower|cut:' '|default:'secondary' }} text-dark">
+        <span class="badge bg-secondary text-dark">
             {{ soldier.get_dispatch_type_display }}
         </span>
     </td>
@@ -24,40 +25,43 @@
     </td>
     <td>
         {% with end=soldier.service_end_date %}
-            {% if end %}
-                {% now "Y/m/d" as today %}
-                {% if end < today %}
-                    <span class="text-danger fw-bold">تمام شده</span>
-                {% else %}
-                    <span class="text-warning fw-bold">{{ end|date:"Y/m/d" }}</span>
-                {% endif %}
-            {% else %}
-                <span class="text-muted">نامشخص</span>
-            {% endif %}
+        {% if end %}
+        {% now "Y/m/d" as today %}
+        {% if end < today %}
+        <span class="text-danger fw-bold">تمام شده</span>
+        {% else %}
+        <span class="text-warning fw-bold">{{ end|date:"Y/m/d" }}</span>
+        {% endif %}
+        {% else %}
+        <span class="text-muted">نامشخص</span>
+        {% endif %}
         {% endwith %}
     </td>
     <td>
         {% if soldier.service_status.is_active_service %}
-            <span class="badge bg-success rounded-pill px-3">
+        <span class="badge bg-success rounded-pill px-3">
                 <i class="fas fa-check-circle"></i> در حال خدمت
             </span>
         {% else %}
-            <span class="badge bg-danger rounded-pill px-3">
+        <span class="badge bg-danger rounded-pill px-3">
                 <i class="fas fa-times-circle"></i> پایان خدمت
             </span>
         {% endif %}
     </td>
-    <td>
-        <div class="btn-group" role="group">
+    <td class="text-center py-3">
+        <div class="d-flex justify-content-center gap-2">
             <a href="{% url 'admin:core_soldier_change' soldier.id %}"
-               class="btn btn-sm btn-outline-primary" title="ویرایش">
+               class="btn btn-sm btn-outline-primary"
+               title="ویرایش">
                 <i class="fas fa-edit"></i>
             </a>
             <a href="/dashboard/soldier/{{ soldier.id }}/"
-               class="btn btn-sm btn-outline-info" title="جزئیات">
+               class="btn btn-sm btn-outline-info"
+               title="جزئیات">
                 <i class="fas fa-eye"></i>
             </a>
-            <button type="button" class="btn btn-sm btn-outline-danger"
+            <button type="button"
+                    class="btn btn-sm btn-outline-danger"
                     onclick="confirmDelete({{ soldier.id }}, '{{ soldier.full_name|escapejs }}')"
                     title="حذف">
                 <i class="fas fa-trash-alt"></i>

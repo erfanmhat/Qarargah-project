@@ -8,19 +8,19 @@
     </td>
     <td>
         {% if leave.leave_type == 'medical' %}
-            <span class="badge bg-danger rounded-pill px-3">
+        <span class="badge bg-danger rounded-pill px-3">
                 <i class="fas fa-heartbeat"></i> استعلاجی
             </span>
         {% elif leave.leave_type == 'reward' %}
-            <span class="badge bg-success rounded-pill px-3">
+        <span class="badge bg-success rounded-pill px-3">
                 <i class="fas fa-trophy"></i> تشویقی
             </span>
         {% elif leave.leave_type == 'emergency' %}
-            <span class="badge bg-warning text-dark rounded-pill px-3">
+        <span class="badge bg-warning text-dark rounded-pill px-3">
                 <i class="fas fa-exclamation-triangle"></i> اضطراری
             </span>
         {% else %}
-            <span class="badge bg-primary rounded-pill px-3">
+        <span class="badge bg-primary rounded-pill px-3">
                 <i class="fas fa-calendar"></i> {{ leave.get_leave_type_display }}
             </span>
         {% endif %}
@@ -34,30 +34,30 @@
     </td>
     <td>
         {% if leave.is_approved %}
-            <span class="badge bg-success rounded-pill px-3">
+        <span class="badge bg-success rounded-pill px-3">
                 <i class="fas fa-check-double"></i> تأیید شده
             </span>
         {% else %}
-            <span class="badge bg-warning text-dark rounded-pill px-3">
+        <span class="badge bg-warning text-dark rounded-pill px-3">
                 <i class="fas fa-clock"></i> در انتظار تأیید
             </span>
         {% endif %}
     </td>
     <td>
-        <small class="text-muted">{{ leave.created_at|date:"Y/m/d" }}</small><br>
-        <small class="text-muted">{{ leave.created_at|time:"H:i" }}</small>
+        <small class="text-light">{{ leave.created_at|date:"Y/m/d" }}</small><br>
+        <small class="text-light">{{ leave.created_at|time:"H:i" }}</small>
     </td>
-    <td>
-        <div class="btn-group" role="group">
+    <td class="text-center py-3">
+        <div class="d-flex justify-content-center gap-2">
             <a href="{% url 'admin:core_leave_change' leave.id %}"
                class="btn btn-sm btn-outline-primary" title="ویرایش">
                 <i class="fas fa-edit"></i>
             </a>
             {% if not leave.is_approved %}
-                <a href="{% url 'admin:core_leave_change' leave.id %}?next={{ request.path }}"
-                   class="btn btn-sm btn-outline-success" title="تأیید مرخصی">
-                    <i class="fas fa-check"></i>
-                </a>
+            <a href="{% url 'admin:core_leave_change' leave.id %}?next={{ request.path }}"
+               class="btn btn-sm btn-outline-success" title="تأیید مرخصی">
+                <i class="fas fa-check"></i>
+            </a>
             {% endif %}
             <button type="button" class="btn btn-sm btn-outline-danger"
                     onclick="confirmLeaveDelete({{ leave.id }}, '{{ leave.soldier.full_name|escapejs }}')"
