@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinLengthValidator
+from django.core.exceptions import ValidationError
 
 
 class TimeStampedModel(models.Model):
@@ -127,7 +128,7 @@ class Soldier(TimeStampedModel):
     current_location = models.ForeignKey(ServiceLocation, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="محل خدمت فعلی")
     expertises = models.ManyToManyField(Expertise, blank=True, verbose_name="تخصص‌ها")
 
-    service_start_date = models.DateField("تاریخ شروع خدمت")
+    service_start_date = models.DateField("تاریخ شروع خدمت", db_index=True)
     arrival_date = models.DateField("تاریخ ورود به ناحیه", null=True, blank=True)
     birth_date = models.DateField("تاریخ تولد")
 
@@ -163,6 +164,22 @@ class Soldier(TimeStampedModel):
         except:
             return None
 
+    def clean(self):
+        super().clean()
+        # Validate birth date is before service start date
+        if self.birth_date and self.service_start_date:
+            if self.birth_date >= self.service_start_date:
+                raise ValidationError({
+                    'birth_date': 'تاریخ تولد باید قبل از تاریخ شروع خدمت باشد.'
+                })
+        
+        # Validate arrival date is after service start date
+        if self.arrival_date and self.service_start_date:
+            if self.arrival_date < self.service_start_date:
+                raise ValidationError({
+                    'arrival_date': 'تاریخ ورود به ناحیه باید بعد از تاریخ شروع خدمت باشد.'
+                })
+
     def __str__(self):
         return f"{self.full_name()} - {self.national_code}"
 
@@ -185,13 +202,14 @@ class LeaveType(models.TextChoices):
     MEDICAL = 'medical', 'استعلاجی'
     REWARD = 'reward', 'تشویقی'
     ENTITLEMENT = 'entitlement', 'استحقاقی'
+    EMERGENCY = 'emergency', 'اضطراری'
 
 
 class Leave(TimeStampedModel):
     soldier = models.ForeignKey(Soldier, related_name='leaves', on_delete=models.CASCADE, verbose_name="سرباز")
     leave_type = models.CharField("نوع مرخصی", max_length=20, choices=LeaveType.choices)
-    start_date = models.DateField("تاریخ رفت")
-    end_date = models.DateField("تاریخ برگشت")
+    start_date = models.DateField("تاریخ رفت", db_index=True)
+    end_date = models.DateField("تاریخ برگشت", db_index=True)
     days = models.PositiveIntegerField("مدت (روز)", editable=False)
     is_approved = models.BooleanField("تأیید شده توسط فرمانده", default=False)
     notes = models.TextField("توضیحات", blank=True)
@@ -201,7 +219,24 @@ class Leave(TimeStampedModel):
         verbose_name_plural = "مرخصی‌ها"
         ordering = ['-created_at']
 
+    def clean(self):
+        super().clean()
+        # Validate end_date is after start_date
+        if self.end_date and self.start_date:
+            if self.end_date < self.start_date:
+                raise ValidationError({
+                    'end_date': 'تاریخ برگشت باید بعد از تاریخ رفت باشد.'
+                })
+            
+            # Validate leave doesn't exceed reasonable duration (e.g., 30 days)
+            days_diff = (self.end_date - self.start_date).days + 1
+            if days_diff > 30:
+                raise ValidationError({
+                    'end_date': 'مدت مرخصی نمی‌تواند بیشتر از ۳۰ روز باشد.'
+                })
+
     def save(self, *args, **kwargs):
+        self.full_clean()  # Call clean validation
         if self.end_date and self.start_date:
             self.days = (self.end_date - self.start_date).days + 1
         super().save(*args, **kwargs)

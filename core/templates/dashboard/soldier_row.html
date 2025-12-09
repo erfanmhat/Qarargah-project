@@ -3,9 +3,6 @@
     data-national="{{ soldier.national_code }}">
     <td>
         <strong class="text-light">{{ soldier.full_name }}</strong>
-        {% if soldier.is_vip %}
-        <i class="fas fa-star text-warning ms-2" title="سرباز ویژه"></i>
-        {% endif %}
     </td>
     <td><code class="text-info">{{ soldier.national_code }}</code></td>
     <td>
@@ -55,17 +52,17 @@
                title="ویرایش">
                 <i class="fas fa-edit"></i>
             </a>
-            <a href="/dashboard/soldier/{{ soldier.id }}/"
+            <a href="{% url 'panel_soldier_detail' soldier.id %}"
                class="btn btn-sm btn-outline-info"
                title="جزئیات">
                 <i class="fas fa-eye"></i>
             </a>
-            <button type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    onclick="confirmDelete({{ soldier.id }}, '{{ soldier.full_name|escapejs }}')"
-                    title="حذف">
+            <a href="{% url 'panel_soldier_delete' soldier.id %}"
+               class="btn btn-sm btn-outline-danger"
+               title="حذف"
+               onclick="return confirm('آیا از حذف سرباز \"{{ soldier.full_name|escapejs }}\" اطمینان دارید؟\nاین عمل قابل بازگشت نیست.');">
                 <i class="fas fa-trash-alt"></i>
-            </button>
+            </a>
         </div>
     </td>
 </tr>

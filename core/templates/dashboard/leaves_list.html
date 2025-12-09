@@ -3,6 +3,9 @@
 {% block page_title %}
 <i class="fas fa-calendar-check text-white"></i> مدیریت مرخصی‌ها
 <div class="float-end">
+    <a href="{% url 'export_leaves_excel' %}" class="btn btn-info rounded-pill shadow-sm me-2" title="خروجی Excel">
+        <i class="fas fa-file-excel"></i> خروجی Excel
+    </a>
     <a href="{% url 'admin:core_leave_add' %}" class="btn btn-success rounded-pill shadow-sm">
         <i class="fas fa-plus"></i> ثبت مرخصی جدید
     </a>
@@ -14,7 +17,7 @@
     <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
          style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
         <span><i class="fas fa-calendar-alt"></i> فهرست مرخصی‌های ثبت‌شده</span>
-        <small class="badge bg-dark opacity-90">{{ leaves|length }} مرخصی</small>
+        <small class="badge bg-dark opacity-90">{{ page_obj.paginator.count }} مرخصی</small>
     </div>
 
     <div class="card-body p-4">
@@ -45,7 +48,9 @@
                 </tr>
                 </thead>
                 <tbody id="tableBody">
+                {% for leave in page_obj %}
                 {% include "dashboard/leave_row.html" %}
+                {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -55,6 +60,37 @@
             <i class="fas fa-search fa-3x text-white opacity-50 mb-3"></i>
             <p class="text-white opacity-75 fs-5">مرخصی‌ای با این مشخصات یافت نشد.</p>
         </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="صفحه‌بندی">
+            <ul class="pagination justify-content-center mt-4">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">قبلی</a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">بعدی</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -80,12 +116,6 @@
         document.getElementById('noResults').classList.toggle('d-none', visibleCount > 0);
     });
 
-    // تأیید حذف مرخصی
-    function confirmLeaveDelete(id, soldier_name) {
-        if (confirm(`آیا از حذف مرخصی سرباز "${soldier_name}" اطمینان دارید؟`)) {
-            window.location.href = `/admin/core/leave/${id}/delete/`;
-        }
-    }
 
     // انیمیشن ورود ردیف‌ها
     document.querySelectorAll('.leave-row').forEach((row, i) => {

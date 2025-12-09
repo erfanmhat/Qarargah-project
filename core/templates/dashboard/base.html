@@ -42,12 +42,27 @@
             --border: #2d3748;
         }
 
+        [data-theme="light"] {
+            --bg-dark: #f5f5f5;
+            --card-bg: #ffffff;
+            --text: #1a1a1a;
+            --border: #dee2e6;
+        }
+
+        [data-theme="dark"] {
+            --bg-dark: #0e1117;
+            --card-bg: #1a1d29;
+            --text: #e8f5e8;
+            --border: #2d3748;
+        }
+
         body {
             background: var(--bg-dark);
             color: var(--text);
             font-family: 'IRANSans', Tahoma, sans-serif;
             min-height: 100vh;
             margin: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* بقیه استایل‌های زیبا (همون قبلی) */
@@ -65,6 +80,39 @@
         .btn-primary { background: var(--primary); border: none; border-radius: 50px; padding: 12px 32px; font-weight: bold; }
         .btn-primary:hover { background: #69f0ae; color: #000; transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,200,83,0.5); }
 
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary);
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        [data-theme="light"] .card {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="light"] .table-dark {
+            background-color: #ffffff;
+            color: #1a1a1a;
+        }
+
+        [data-theme="light"] .table-dark thead {
+            background-color: #f8f9fa !important;
+            color: #1a1a1a;
+        }
 
     </style>
 </head>
@@ -92,6 +140,9 @@
         </a>
         <a href="/dashboard/search/" class="nav-link {% if 'search' in request.path %}active{% endif %}">
             <i class="fas fa-search"></i> جستجوی پیشرفته
+        </a>
+        <a href="/dashboard/reports/" class="nav-link {% if 'reports' in request.path %}active{% endif %}">
+            <i class="fas fa-chart-bar"></i> گزارش‌ها
         </a>
         <hr class="border-secondary mx-4 my-4">
         <a href="/dashboard/logout/" class="nav-link text-danger">
@@ -129,6 +180,7 @@
 </div>
 
 <script src="{% static 'dashboard/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'dashboard/js/theme-toggle.js' %}"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

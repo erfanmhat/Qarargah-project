@@ -1,0 +1,154 @@
+{% extends "dashboard/base.html" %}
+
+{% block page_title %}
+<i class="fas fa-chart-bar text-white"></i> گزارش‌ها و آمار
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Monthly Leave Statistics -->
+    <div class="card border-0 shadow-lg mb-4">
+        <div class="card-header bg-gradient text-white fw-bold"
+             style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
+            <i class="fas fa-calendar-alt"></i> آمار مرخصی‌های ۶ ماه گذشته
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-dark">
+                    <thead>
+                        <tr>
+                            <th>ماه</th>
+                            <th>تعداد مرخصی</th>
+                            <th>تأیید شده</th>
+                            <th>کل روزهای مرخصی</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for month in monthly_leaves %}
+                        <tr>
+                            <td>{{ month.month }}</td>
+                            <td>{{ month.total }}</td>
+                            <td>{{ month.approved }}</td>
+                            <td>{{ month.total_days }} روز</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">داده‌ای موجود نیست</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Completion Forecast -->
+    <div class="card border-0 shadow-lg mb-4">
+        <div class="card-header bg-gradient text-white fw-bold"
+             style="background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;">
+            <i class="fas fa-clock"></i> پیش‌بینی پایان خدمت (۶ ماه آینده)
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-dark">
+                    <thead>
+                        <tr>
+                            <th>ماه</th>
+                            <th>تعداد سرباز</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for forecast in ending_forecast %}
+                        <tr>
+                            <td>{{ forecast.month }}</td>
+                            <td>
+                                <span class="badge bg-warning text-dark">{{ forecast.count }} سرباز</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Distribution -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-gradient text-white fw-bold"
+                     style="background: linear-gradient(90deg, #dc2626, #ef4444) !important;">
+                    <i class="fas fa-map-marker-alt"></i> توزیع سربازان بر اساس محل خدمت
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-dark">
+                            <thead>
+                                <tr>
+                                    <th>محل خدمت</th>
+                                    <th>تعداد سرباز</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for location in location_dist %}
+                                <tr>
+                                    <td>{{ location.name }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ location.soldier_count }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Distribution -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-gradient text-white fw-bold"
+                     style="background: linear-gradient(90deg, #d97706, #f59e0b) !important;">
+                    <i class="fas fa-info-circle"></i> توزیع سربازان بر اساس وضعیت خدمت
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-dark">
+                            <thead>
+                                <tr>
+                                    <th>وضعیت خدمت</th>
+                                    <th>تعداد سرباز</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status in status_dist %}
+                                <tr>
+                                    <td>{{ status.title }}</td>
+                                    <td>
+                                        <span class="badge bg-success">{{ status.soldier_count }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

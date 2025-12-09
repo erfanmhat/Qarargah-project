@@ -23,6 +23,11 @@ class SoldierForm(forms.ModelForm):
             'birth_date': JalaliDateInput(),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        # Additional form-level validation if needed
+        return cleaned_data
+
 
 class LeaveForm(forms.ModelForm):
     class Meta:
@@ -32,3 +37,8 @@ class LeaveForm(forms.ModelForm):
             'start_date': JalaliDateInput(),
             'end_date': JalaliDateInput(),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Additional form-level validation if needed
+        return cleaned_data

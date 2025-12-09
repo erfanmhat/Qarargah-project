@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+
+{% block page_title %}
+<i class="fas fa-exclamation-triangle text-danger"></i> تأیید حذف سرباز
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-lg">
+    <div class="card-header bg-danger text-white fw-bold">
+        <i class="fas fa-trash-alt"></i> حذف سرباز
+    </div>
+    <div class="card-body text-center py-5">
+        <i class="fas fa-exclamation-triangle fa-4x text-danger mb-4"></i>
+        <h4 class="text-white mb-3">آیا از حذف این سرباز اطمینان دارید؟</h4>
+        <div class="card bg-dark border-secondary mb-4 mx-auto" style="max-width: 500px;">
+            <div class="card-body">
+                <h5 class="text-white">{{ soldier.full_name }}</h5>
+                <p class="text-muted mb-0">کد ملی: {{ soldier.national_code }}</p>
+                {% if soldier.dossier_code %}
+                <p class="text-muted mb-0">کد پرونده: {{ soldier.dossier_code }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <p class="text-warning mb-4">
+            <i class="fas fa-info-circle"></i> این عمل قابل بازگشت نیست و تمام اطلاعات مرتبط با این سرباز حذف خواهد شد.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-lg me-2">
+                <i class="fas fa-trash-alt"></i> بله، حذف کن
+            </button>
+            <a href="{% url 'panel_soldiers' %}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times"></i> انصراف
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

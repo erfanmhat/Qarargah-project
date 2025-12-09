@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}صفحه یافت نشد - 404{% endblock %}
+
+{% block content %}
+<div class="container-fluid d-flex align-items-center justify-content-center" style="min-height: 70vh;">
+    <div class="text-center">
+        <h1 class="display-1 text-danger fw-bold">404</h1>
+        <h2 class="text-white mb-4">صفحه مورد نظر یافت نشد</h2>
+        <p class="text-white-50 mb-4">متأسفانه صفحه‌ای که به دنبال آن هستید وجود ندارد یا حذف شده است.</p>
+        <a href="{% url 'panel_dashboard' %}" class="btn btn-success btn-lg">
+            <i class="fas fa-home"></i> بازگشت به داشبورد
+        </a>
+    </div>
+</div>
+{% endblock %}
+

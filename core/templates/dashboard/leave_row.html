@@ -59,11 +59,12 @@
                 <i class="fas fa-check"></i>
             </a>
             {% endif %}
-            <button type="button" class="btn btn-sm btn-outline-danger"
-                    onclick="confirmLeaveDelete({{ leave.id }}, '{{ leave.soldier.full_name|escapejs }}')"
-                    title="حذف">
+            <a href="{% url 'panel_leave_delete' leave.id %}"
+               class="btn btn-sm btn-outline-danger"
+               title="حذف"
+               onclick="return confirm('آیا از حذف مرخصی سرباز \"{{ leave.soldier.full_name|escapejs }}\" اطمینان دارید؟');">
                 <i class="fas fa-trash-alt"></i>
-            </button>
+            </a>
         </div>
     </td>
 </tr>

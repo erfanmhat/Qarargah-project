@@ -4,3 +4,7 @@ gunicorn==23.0.0
 django-extensions==3.2.3
 django-import-export==3.3.8
 jdatetime
+pytest-django==4.8.0
+coverage==7.3.4
+djangorestframework==3.14.0
+openpyxl==3.1.2
