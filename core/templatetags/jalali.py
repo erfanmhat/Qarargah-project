@@ -24,3 +24,15 @@ def to_jalali_full(date):
         return jd.strftime('%A %d %B %Y')
     except:
         return '-'
+
+
+@register.simple_tag
+def jalali_now(format='%Y/%m/%d'):
+    """Get current date in Jalali format"""
+    try:
+        from django.utils import timezone
+        now = timezone.now()
+        jd = jdatetime.fromgregorian(datetime=now)
+        return jd.strftime(format)
+    except:
+        return ''

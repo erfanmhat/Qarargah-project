@@ -5,7 +5,7 @@ from .views import (
     panel_soldiers, panel_leaves, panel_search,
     panel_soldier_detail, panel_soldier_delete, panel_leave_delete,
     health_check, export_soldiers_excel, export_leaves_excel,
-    panel_reports
+    panel_reports, seed_data
 )
 
 urlpatterns = [
@@ -21,5 +21,6 @@ urlpatterns = [
     path('dashboard/leaves/export/', export_leaves_excel, name='export_leaves_excel'),
     path('dashboard/search/', panel_search, name='panel_search'),
     path('dashboard/reports/', panel_reports, name='panel_reports'),
+    path('dashboard/seed/', seed_data, name='seed_data'),
     path('health/', health_check, name='health_check'),
 ]

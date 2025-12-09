@@ -1,10 +1,15 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect as redirect_view
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls import handler404, handler500
 
+def root_redirect(request):
+    return redirect_view('/dashboard/')
+
 urlpatterns = [
+    path('', root_redirect, name='root_redirect'),
     path('', include('core.urls')),
     path('admin/', admin.site.urls),
     path('api/', include('core.api.urls')),

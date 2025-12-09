@@ -503,3 +503,153 @@ def panel_reports(request):
     }
     
     return render(request, 'dashboard/reports.html', context)
+
+
+@login_required
+def seed_data(request):
+    """Seed database with fake data for testing
+    
+    WARNING: This endpoint should be removed or commented in production!
+    """
+    from django.utils import timezone
+    from datetime import timedelta
+    import random
+    from core.models import (
+        ServiceLocation, HealthStatus, ServiceStatus, Expertise,
+        ServiceReductionType, Soldier, Leave, SoldierServiceReduction
+    )
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    try:
+        # Create reference data if not exists
+        locations = []
+        if not ServiceLocation.objects.exists():
+            locations = [
+                ServiceLocation.objects.create(name='پادگان مرکزی'),
+                ServiceLocation.objects.create(name='واحد آموزش'),
+                ServiceLocation.objects.create(name='واحد عملیات'),
+                ServiceLocation.objects.create(name='واحد پشتیبانی'),
+            ]
+        else:
+            locations = list(ServiceLocation.objects.all()[:4])
+        
+        health_statuses = []
+        if not HealthStatus.objects.exists():
+            health_statuses = [
+                HealthStatus.objects.create(title='سالم', is_exempt_from_combat=False),
+                HealthStatus.objects.create(title='معاف از رزم', is_exempt_from_combat=True),
+                HealthStatus.objects.create(title='محدود', is_exempt_from_combat=False),
+            ]
+        else:
+            health_statuses = list(HealthStatus.objects.all())
+        
+        service_statuses = []
+        if not ServiceStatus.objects.exists():
+            service_statuses = [
+                ServiceStatus.objects.create(title='در حال خدمت', is_active_service=True),
+                ServiceStatus.objects.create(title='پایان خدمت', is_active_service=False),
+                ServiceStatus.objects.create(title='مرخص', is_active_service=True),
+            ]
+        else:
+            service_statuses = list(ServiceStatus.objects.all())
+        
+        expertises = []
+        if not Expertise.objects.exists():
+            expertises = [
+                Expertise.objects.create(title='رایانه'),
+                Expertise.objects.create(title='برق'),
+                Expertise.objects.create(title='مکانیک'),
+                Expertise.objects.create(title='رانندگی'),
+            ]
+        else:
+            expertises = list(Expertise.objects.all())
+        
+        reduction_types = []
+        if not ServiceReductionType.objects.exists():
+            reduction_types = [
+                ServiceReductionType.objects.create(title='آموزشی', default_days=30),
+                ServiceReductionType.objects.create(title='خدمات عمومی', default_days=15),
+            ]
+        else:
+            reduction_types = list(ServiceReductionType.objects.all())
+        
+        # Persian first and last names
+        first_names = ['علی', 'محمد', 'حسن', 'حسین', 'رضا', 'امیر', 'سعید', 'مهدی', 'احمد', 'حامد',
+                      'فرهاد', 'کامران', 'بهرام', 'آرش', 'پویا', 'نیما', 'سینا', 'آرمان', 'امیرحسین', 'محمدحسین']
+        last_names = ['احمدی', 'محمدی', 'رضایی', 'حسینی', 'کریمی', 'موسوی', 'نوری', 'صادقی', 'جعفری', 'اکبری',
+                     'زمانی', 'کاظمی', 'شریفی', 'نظری', 'قاسمی', 'مرادی', 'یوسفی', 'باقری', 'طاهری', 'مهدوی']
+        
+        # Create 50 soldiers
+        soldiers_created = 0
+        today = timezone.now().date()
+        
+        for i in range(50):
+            # Random dates
+            service_start = today - timedelta(days=random.randint(30, 600))
+            birth_date = service_start - timedelta(days=random.randint(7000, 9000))
+            arrival_date = service_start + timedelta(days=random.randint(0, 30)) if random.choice([True, False]) else None
+            
+            soldier = Soldier.objects.create(
+                first_name=random.choice(first_names),
+                last_name=random.choice(last_names),
+                national_code=str(random.randint(1000000000, 9999999999)),
+                dossier_code=random.randint(1, 1000) if random.choice([True, False]) else 0,
+                dispatch_type=random.choice(['training', 'green_card', 'ansar_plan', 'guard_duty']),
+                service_start_date=service_start,
+                arrival_date=arrival_date,
+                birth_date=birth_date,
+                service_status=random.choice(service_statuses),
+                health_status=random.choice(health_statuses) if random.choice([True, False]) else None,
+                current_location=random.choice(locations) if random.choice([True, False]) else None,
+                phone_personal=f'09{random.randint(100000000, 999999999)}' if random.choice([True, False]) else '',
+                phone_parent=f'09{random.randint(100000000, 999999999)}' if random.choice([True, False]) else '',
+            )
+            
+            # Add expertises
+            if expertises and random.choice([True, False]):
+                soldier.expertises.add(*random.sample(expertises, random.randint(1, 2)))
+            
+            # Add service reductions
+            if reduction_types and random.choice([True, False]):
+                reduction_type = random.choice(reduction_types)
+                SoldierServiceReduction.objects.create(
+                    soldier=soldier,
+                    reduction_type=reduction_type,
+                    days=random.randint(5, reduction_type.default_days)
+                )
+            
+            # Create some leaves
+            if random.choice([True, False]):
+                leave_start = today - timedelta(days=random.randint(0, 180))
+                leave_end = leave_start + timedelta(days=random.randint(1, 10))
+                
+                Leave.objects.create(
+                    soldier=soldier,
+                    leave_type=random.choice(['medical', 'reward', 'entitlement', 'emergency']),
+                    start_date=leave_start,
+                    end_date=leave_end,
+                    is_approved=random.choice([True, False]),
+                    notes='مرخصی تستی' if random.choice([True, False]) else ''
+                )
+            
+            soldiers_created += 1
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully created {soldiers_created} soldiers with related data',
+            'soldiers_created': soldiers_created,
+            'locations': len(locations),
+            'health_statuses': len(health_statuses),
+            'service_statuses': len(service_statuses),
+            'expertises': len(expertises),
+            'reduction_types': len(reduction_types),
+        })
+    except Exception as e:
+        import traceback
+        logger.error(f'Error seeding data: {e}\n{traceback.format_exc()}')
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

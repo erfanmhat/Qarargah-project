@@ -18,16 +18,16 @@
         </span>
     </td>
     <td class="text-success fw-bold">
-        {{ soldier.service_start_date|date:"Y/m/d" }}
+        {{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}
     </td>
     <td>
         {% with end=soldier.service_end_date %}
         {% if end %}
-        {% now "Y/m/d" as today %}
-        {% if end < today %}
+        {% now "Y-m-d" as today %}
+        {% if end|date:"Y-m-d" < today %}
         <span class="text-danger fw-bold">تمام شده</span>
         {% else %}
-        <span class="text-warning fw-bold">{{ end|date:"Y/m/d" }}</span>
+        <span class="text-warning fw-bold">{{ end|to_jalali:"%Y/%m/%d" }}</span>
         {% endif %}
         {% else %}
         <span class="text-muted">نامشخص</span>

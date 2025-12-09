@@ -25,8 +25,8 @@
             </span>
         {% endif %}
     </td>
-    <td class="text-success fw-bold">{{ leave.start_date|date:"Y/m/d" }}</td>
-    <td class="text-warning fw-bold">{{ leave.end_date|date:"Y/m/d" }}</td>
+    <td class="text-success fw-bold">{{ leave.start_date|to_jalali:"%Y/%m/%d" }}</td>
+    <td class="text-warning fw-bold">{{ leave.end_date|to_jalali:"%Y/%m/%d" }}</td>
     <td>
         <span class="badge bg-info rounded-pill px-3 fs-6">
             {{ leave.days }} روز
@@ -44,7 +44,7 @@
         {% endif %}
     </td>
     <td>
-        <small class="text-light">{{ leave.created_at|date:"Y/m/d" }}</small><br>
+        <small class="text-light">{{ leave.created_at|to_jalali:"%Y/%m/%d" }}</small><br>
         <small class="text-light">{{ leave.created_at|time:"H:i" }}</small>
     </td>
     <td class="text-center py-3">

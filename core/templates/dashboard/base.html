@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{% csrf_token %}">
     <title>{% block title %}سامانه مدیریت خدمت سربازان{% endblock %}</title>
 
     {% load static %}
@@ -33,85 +34,307 @@
             font-display: swap;
         }
 
-        :root {
-            --primary: #00c853;
-            --primary-dark: #00a043;
-            --bg-dark: #0e1117;
-            --card-bg: #1a1d29;
-            --text: #e8f5e8;
-            --border: #2d3748;
-        }
-
-        [data-theme="light"] {
-            --bg-dark: #f5f5f5;
-            --card-bg: #ffffff;
-            --text: #1a1a1a;
-            --border: #dee2e6;
-        }
-
+        /* Dark Theme - Beautiful Modern Dark */
+        :root,
         [data-theme="dark"] {
-            --bg-dark: #0e1117;
-            --card-bg: #1a1d29;
-            --text: #e8f5e8;
-            --border: #2d3748;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+            
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            
+            --border: #334155;
+            --border-light: #475569;
+            
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Light Theme - Beautiful Modern Light */
+        [data-theme="light"] {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --card-bg: #ffffff;
+            --card-hover: #f8fafc;
+            
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            
+            --border: #e2e8f0;
+            --border-light: #cbd5e1;
+            
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-lg: rgba(0, 0, 0, 0.15);
         }
 
         body {
-            background: var(--bg-dark);
-            color: var(--text);
+            background: var(--bg-primary);
+            color: var(--text-primary);
             font-family: 'IRANSans', Tahoma, sans-serif;
             min-height: 100vh;
             margin: 0;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* بقیه استایل‌های زیبا (همون قبلی) */
-        .sidebar { width: 280px; background: linear-gradient(180deg, #0a1a0a 0%, #0d1e0d 100%); border-left: 6px solid var(--primary); position: fixed; top: 0; right: 0; bottom: 0; z-index: 1030; overflow-y: auto; box-shadow: -10px 0 30px rgba(0,200,83,0.3); }
-        .sidebar-header { padding: 2rem 1.5rem; text-align: center; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); }
-        .sidebar-header h4 { color: var(--primary); margin: 0; font-weight: 900; font-size: 1.7rem; }
-        .nav-link { color: #ddd !important; padding: 16px 28px; transition: all 0.35s ease; border-bottom: 1px solid var(--border); }
-        .nav-link:hover, .nav-link.active { background: var(--primary) !important; color: #000 !important; font-weight: bold; transform: translateX(-8px); }
-        .nav-link i { width: 36px; margin-left: 12px; }
-        .topbar { background: rgba(26,29,41,0.98); padding: 1rem 2rem; border-bottom: 4px solid var(--primary); position: fixed; left: 0; right: 280px; top: 0; z-index: 1020; display: flex; justify-content: space-between; align-items: center; }
-        .main-content { margin-right: 280px; padding: 2.5rem; padding-top: 100px; min-height: 100vh; }
-        .page-title { color: var(--primary); border-bottom: 5px solid var(--primary); padding-bottom: 15px; margin-bottom: 2.5rem; font-weight: 900; font-size: 2.1rem; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 12px 35px rgba(0,200,83,0.18); transition: all 0.3s ease; }
-        .card:hover { transform: translateY(-10px); box-shadow: 0 25px 60px rgba(0,200,83,0.35); }
-        .btn-primary { background: var(--primary); border: none; border-radius: 50px; padding: 12px 32px; font-weight: bold; }
-        .btn-primary:hover { background: #69f0ae; color: #000; transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,200,83,0.5); }
-
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-left: 4px solid var(--primary);
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1030;
+            overflow-y: auto;
+            box-shadow: -10px 0 30px var(--shadow-lg);
+        }
+        
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .sidebar-header h4 {
+            color: var(--primary);
+            margin: 0;
+            font-weight: 900;
+            font-size: 1.7rem;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+        
+        .nav-link {
+            color: var(--text-secondary) !important;
+            padding: 16px 28px;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--border);
+            border-radius: 0;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%) !important;
+            color: #ffffff !important;
+            font-weight: bold;
+            transform: translateX(-8px);
+            box-shadow: -4px 0 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .nav-link i {
+            width: 36px;
+            margin-left: 12px;
+        }
+        
+        /* Topbar */
+        .topbar {
+            background: var(--card-bg);
+            padding: 1rem 2rem;
+            border-bottom: 2px solid var(--border);
+            position: fixed;
+            left: 0;
+            right: 280px;
+            top: 0;
+            z-index: 1020;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+        
+        .topbar .text-white {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-right: 280px;
+            padding: 2.5rem;
+            padding-top: 100px;
+            min-height: 100vh;
+            background: var(--bg-primary);
+        }
+        
+        .page-title {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 2.5rem;
+            font-weight: 900;
+            font-size: 2.1rem;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+        
+        .card-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 32px;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #34d399 0%, var(--success) 100%);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, var(--info) 0%, #0891b2 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #22d3ee 0%, var(--info) 100%);
+            color: white;
+        }
+        
+        /* Theme Toggle */
         .theme-toggle {
             background: var(--card-bg);
             border: 2px solid var(--border);
-            color: var(--text);
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
+            color: var(--text-primary);
+            border-radius: 12px;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
+        
         .theme-toggle:hover {
             background: var(--primary);
-            color: #000;
-            transform: scale(1.1);
+            color: #ffffff;
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
-
-        [data-theme="light"] .card {
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        
+        /* Tables */
+        .table-dark {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
         }
-
-        [data-theme="light"] .table-dark {
-            background-color: #ffffff;
-            color: #1a1a1a;
+        
+        .table-dark thead {
+            background-color: var(--bg-secondary) !important;
+            color: var(--text-primary);
         }
-
-        [data-theme="light"] .table-dark thead {
-            background-color: #f8f9fa !important;
-            color: #1a1a1a;
+        
+        .table-dark tbody tr {
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .table-dark tbody tr:hover {
+            background-color: var(--card-hover) !important;
+        }
+        
+        /* Form Controls */
+        .form-control {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        
+        .form-control:focus {
+            background-color: var(--card-bg);
+            border-color: var(--primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+        }
+        
+        /* Badges */
+        .badge {
+            padding: 0.5em 0.8em;
+            border-radius: 8px;
+        }
+        
+        /* Alerts */
+        .alert {
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        /* Pagination */
+        .page-link {
+            background-color: var(--card-bg);
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+        
+        .page-link:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .page-item.active .page-link {
+            background-color: var(--primary);
+            border-color: var(--primary);
         }
 
     </style>
@@ -121,10 +344,10 @@
 <!-- سایدبار -->
 <div class="sidebar">
     <div class="sidebar-header">
-        <h4 class="text-white" style="text-shadow: 0 0 15px rgba(0,200,83,0.6);">
+        <h4 style="color: var(--primary); text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">
             سامانه خدمت
         </h4>
-        <small class="text-white opacity-90 d-block mt-2 fw-bold">
+        <small style="color: var(--text-secondary);" class="d-block mt-2 fw-bold">
             ناحیه مقاومت بسیج استان اردبیل
         </small>
     </div>
@@ -152,11 +375,11 @@
 </div>
 
 <!-- نوار بالا -->
-<div class="topbar">
-    <button class="theme-toggle" title="تغییر تم">
+    <div class="topbar">
+    <button class="theme-toggle" id="themeToggle" title="تغییر تم">
         <i class="fas fa-moon"></i>
     </button>
-    <div class="text-white">
+    <div>
         <i class="fas fa-user-shield text-success me-2"></i>
         خوش آمدید، <strong>{{ user.get_full_name|default:user.username }}</strong>
     </div>
@@ -165,6 +388,8 @@
 <!-- محتوای اصلی -->
 <div class="main-content">
     <h2 class="page-title">{% block page_title %}داشبورد مدیریت{% endblock %}</h2>
+    
+    {% csrf_token %}
 
     {% if messages %}
     {% for message in messages %}
@@ -179,8 +404,29 @@
     {% endblock %}
 </div>
 
-<script src="{% static 'dashboard/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/persiandate.min.js' %}"></script>
+<script src="{% static 'js/persian-datepicker.min.js' %}"></script>
 <script src="{% static 'dashboard/js/theme-toggle.js' %}"></script>
+<script>
+    // Initialize Persian Date Picker for all jalali-date inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof $ !== 'undefined' && $.fn.persianDatepicker) {
+            $('.jalali-date').persianDatepicker({
+                observer: true,
+                format: 'YYYY/MM/DD',
+                altField: '.jalali-date-alt',
+                altFormat: 'YYYY-MM-DD',
+                timePicker: {
+                    enabled: false
+                },
+                calendarType: 'persian',
+                initialValue: false,
+            });
+        }
+    });
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
