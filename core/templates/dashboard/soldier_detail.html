@@ -2,7 +2,7 @@
 {% load jalali %}
 
 {% block page_title %}
-<i class="fas fa-user text-white"></i> جزئیات سرباز
+<i class="fas fa-user"></i> جزئیات سرباز
 <div class="float-end">
     <a href="{% url 'admin:core_soldier_change' soldier.id %}" class="btn btn-primary">
         <i class="fas fa-edit"></i> ویرایش
@@ -25,34 +25,34 @@
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong class="text-success">نام:</strong>
-                        <p class="text-white">{{ soldier.first_name }}</p>
+                        <strong style="color: var(--success);">نام:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.first_name }}</p>
                     </div>
                     <div class="col-md-6">
-                        <strong class="text-success">نام خانوادگی:</strong>
-                        <p class="text-white">{{ soldier.last_name }}</p>
+                        <strong style="color: var(--success);">نام خانوادگی:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.last_name }}</p>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong class="text-success">کد ملی:</strong>
-                        <p class="text-white"><code>{{ soldier.national_code }}</code></p>
+                        <strong style="color: var(--success);">کد ملی:</strong>
+                        <p style="color: var(--text-primary);"><code>{{ soldier.national_code }}</code></p>
                     </div>
                     <div class="col-md-6">
-                        <strong class="text-success">کد پرونده:</strong>
-                        <p class="text-white">
+                        <strong style="color: var(--success);">کد پرونده:</strong>
+                        <p style="color: var(--text-primary);">
                             {% if soldier.dossier_code %}
                             <span class="badge bg-primary">{{ soldier.dossier_code }}</span>
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong class="text-success">تاریخ تولد:</strong>
-                        <p class="text-white">{{ soldier.birth_date|to_jalali:"%Y/%m/%d" }}</p>
+                        <strong style="color: var(--success);">تاریخ تولد:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.birth_date|to_jalali:"%Y/%m/%d" }}</p>
                     </div>
                     <div class="col-md-6">
                         <strong class="text-success">نوع اعزام:</strong>
@@ -72,36 +72,36 @@
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong class="text-info">تاریخ شروع خدمت:</strong>
-                        <p class="text-white">{{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}</p>
+                        <strong style="color: var(--info);">تاریخ شروع خدمت:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}</p>
                     </div>
                     <div class="col-md-6">
-                        <strong class="text-info">تاریخ ورود به ناحیه:</strong>
-                        <p class="text-white">
+                        <strong style="color: var(--info);">تاریخ ورود به ناحیه:</strong>
+                        <p style="color: var(--text-primary);">
                             {% if soldier.arrival_date %}
                             {{ soldier.arrival_date|to_jalali:"%Y/%m/%d" }}
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong class="text-info">تاریخ پایان خدمت:</strong>
-                        <p class="text-white">
+                        <strong style="color: var(--info);">تاریخ پایان خدمت:</strong>
+                        <p style="color: var(--text-primary);">
                             {% with end=soldier.service_end_date %}
                             {% if end %}
                             <span class="badge bg-warning">{{ end|to_jalali:"%Y/%m/%d" }}</span>
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                             {% endwith %}
                         </p>
                     </div>
                     <div class="col-md-6">
-                        <strong class="text-info">وضعیت خدمت:</strong>
-                        <p class="text-white">
+                        <strong style="color: var(--info);">وضعیت خدمت:</strong>
+                        <p style="color: var(--text-primary);">
                             {% if soldier.service_status %}
                                 {% if soldier.service_status.is_active_service %}
                                 <span class="badge bg-success">در حال خدمت</span>
@@ -109,43 +109,43 @@
                                 <span class="badge bg-danger">پایان خدمت</span>
                                 {% endif %}
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong class="text-info">محل خدمت فعلی:</strong>
-                        <p class="text-white">
+                        <strong style="color: var(--info);">محل خدمت فعلی:</strong>
+                        <p style="color: var(--text-primary);">
                             {% if soldier.current_location %}
                             {{ soldier.current_location.name }}
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                     <div class="col-md-6">
-                        <strong class="text-info">وضعیت سلامت:</strong>
-                        <p class="text-white">
+                        <strong style="color: var(--info);">وضعیت سلامت:</strong>
+                        <p style="color: var(--text-primary);">
                             {% if soldier.health_status %}
                             {{ soldier.health_status.title }}
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-12">
-                        <strong class="text-info">تخصص‌ها:</strong>
-                        <p class="text-white">
+                        <strong style="color: var(--info);">تخصص‌ها:</strong>
+                        <p style="color: var(--text-primary);">
                             {% if soldier.expertises.all %}
                             {% for expertise in soldier.expertises.all %}
                             <span class="badge bg-info me-1">{{ expertise.title }}</span>
                             {% endfor %}
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -161,35 +161,35 @@
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong class="text-danger">شماره همراه سرباز:</strong>
-                        <p class="text-white">{{ soldier.phone_personal|default:"—" }}</p>
+                        <strong style="color: var(--danger);">شماره همراه سرباز:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.phone_personal|default:"—" }}</p>
                     </div>
                     <div class="col-md-6">
-                        <strong class="text-danger">شماره والدین/همسر:</strong>
-                        <p class="text-white">{{ soldier.phone_parent|default:"—" }}</p>
+                        <strong style="color: var(--danger);">شماره والدین/همسر:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.phone_parent|default:"—" }}</p>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong class="text-danger">تلفن منزل:</strong>
-                        <p class="text-white">{{ soldier.phone_home|default:"—" }}</p>
+                        <strong style="color: var(--danger);">تلفن منزل:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.phone_home|default:"—" }}</p>
                     </div>
                     <div class="col-md-6">
-                        <strong class="text-danger">تلفن محل کار:</strong>
-                        <p class="text-white">{{ soldier.phone_work|default:"—" }}</p>
+                        <strong style="color: var(--danger);">تلفن محل کار:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.phone_work|default:"—" }}</p>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-12">
-                        <strong class="text-danger">آدرس منزل:</strong>
-                        <p class="text-white">{{ soldier.home_address|default:"—" }}</p>
+                        <strong style="color: var(--danger);">آدرس منزل:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.home_address|default:"—" }}</p>
                     </div>
                 </div>
                 {% if soldier.guard_code %}
                 <div class="row mt-3">
                     <div class="col-12">
-                        <strong class="text-danger">کد پاسداری:</strong>
-                        <p class="text-white"><code>{{ soldier.guard_code }}</code></p>
+                        <strong style="color: var(--danger);">کد پاسداری:</strong>
+                        <p style="color: var(--text-primary);"><code>{{ soldier.guard_code }}</code></p>
                     </div>
                 </div>
                 {% endif %}
@@ -208,10 +208,10 @@
                 {% if leaves %}
                 <div class="list-group">
                     {% for leave in leaves|slice:":10" %}
-                    <div class="list-group-item bg-dark border-secondary mb-2">
+                    <div class="list-group-item mb-2" style="background: var(--card-bg); border-color: var(--border);">
                         <div class="d-flex justify-content-between">
-                            <small class="text-white">{{ leave.get_leave_type_display }}</small>
-                            <small class="text-muted">{{ leave.start_date|to_jalali:"%Y/%m/%d" }}</small>
+                            <small style="color: var(--text-primary);">{{ leave.get_leave_type_display }}</small>
+                            <small style="color: var(--text-muted);">{{ leave.start_date|to_jalali:"%Y/%m/%d" }}</small>
                         </div>
                         <div class="d-flex justify-content-between mt-1">
                             <span class="badge bg-info">{{ leave.days }} روز</span>
@@ -230,7 +230,7 @@
                 </a>
                 {% endif %}
                 {% else %}
-                <p class="text-muted text-center">مرخصی ثبت نشده</p>
+                <p class="text-center" style="color: var(--text-muted);">مرخصی ثبت نشده</p>
                 {% endif %}
             </div>
         </div>
@@ -244,20 +244,20 @@
                 {% if reductions %}
                 <div class="list-group">
                     {% for reduction in reductions %}
-                    <div class="list-group-item bg-dark border-secondary mb-2">
+                    <div class="list-group-item mb-2" style="background: var(--card-bg); border-color: var(--border);">
                         <div class="d-flex justify-content-between">
-                            <small class="text-white">{{ reduction.reduction_type.title }}</small>
+                            <small style="color: var(--text-primary);">{{ reduction.reduction_type.title }}</small>
                             <span class="badge bg-danger">{{ reduction.days }} روز</span>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 <div class="mt-3">
-                    <strong class="text-white">جمع کل کسر خدمت:</strong>
+                    <strong style="color: var(--text-primary);">جمع کل کسر خدمت:</strong>
                     <span class="badge bg-danger fs-6">{{ soldier.total_reduction_days }} روز</span>
                 </div>
                 {% else %}
-                <p class="text-muted text-center">کسر خدمت ثبت نشده</p>
+                <p class="text-center" style="color: var(--text-muted);">کسر خدمت ثبت نشده</p>
                 {% endif %}
             </div>
         </div>

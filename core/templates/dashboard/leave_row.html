@@ -1,8 +1,8 @@
-{% for leave in leaves %}
+{% load jalali %}
 <tr class="leave-row align-middle" data-soldier="{{ leave.soldier.full_name|lower }}">
     <td>
-        <strong class="text-light">{{ leave.soldier.full_name }}</strong><br>
-        <small class="text-info">
+        <strong style="color: var(--text-primary);">{{ leave.soldier.full_name }}</strong><br>
+        <small style="color: var(--info);">
             <i class="fas fa-id-card"></i> {{ leave.soldier.national_code }}
         </small>
     </td>
@@ -25,8 +25,8 @@
             </span>
         {% endif %}
     </td>
-    <td class="text-success fw-bold">{{ leave.start_date|to_jalali:"%Y/%m/%d" }}</td>
-    <td class="text-warning fw-bold">{{ leave.end_date|to_jalali:"%Y/%m/%d" }}</td>
+    <td class="fw-bold" style="color: var(--success);">{{ leave.start_date|to_jalali:"%Y/%m/%d" }}</td>
+    <td class="fw-bold" style="color: var(--warning);">{{ leave.end_date|to_jalali:"%Y/%m/%d" }}</td>
     <td>
         <span class="badge bg-info rounded-pill px-3 fs-6">
             {{ leave.days }} روز
@@ -44,8 +44,8 @@
         {% endif %}
     </td>
     <td>
-        <small class="text-light">{{ leave.created_at|to_jalali:"%Y/%m/%d" }}</small><br>
-        <small class="text-light">{{ leave.created_at|time:"H:i" }}</small>
+        <small style="color: var(--text-primary);">{{ leave.created_at|to_jalali:"%Y/%m/%d" }}</small><br>
+        <small style="color: var(--text-primary);">{{ leave.created_at|time:"H:i" }}</small>
     </td>
     <td class="text-center py-3">
         <div class="d-flex justify-content-center gap-2">
@@ -68,13 +68,3 @@
         </div>
     </td>
 </tr>
-{% empty %}
-<tr>
-    <td colspan="8" class="text-center py-5">
-        <div class="text-white opacity-75">
-            <i class="fas fa-calendar-times fa-4x mb-4 text-primary opacity-50"></i>
-            <p class="fs-4">هنوز هیچ مرخصی‌ای ثبت نشده است</p>
-        </div>
-    </td>
-</tr>
-{% endfor %}

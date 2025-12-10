@@ -1,7 +1,8 @@
 {% extends "dashboard/base.html" %}
+{% load jalali %}
 
 {% block page_title %}
-<i class="fas fa-calendar-check text-white"></i> مدیریت مرخصی‌ها
+<i class="fas fa-calendar-check"></i> مدیریت مرخصی‌ها
 <div class="float-end">
     <a href="{% url 'export_leaves_excel' %}" class="btn btn-info rounded-pill shadow-sm me-2" title="خروجی Excel">
         <i class="fas fa-file-excel"></i> خروجی Excel
@@ -24,11 +25,11 @@
 
         <!-- جستجوی زنده -->
         <div class="position-relative mb-4">
-            <i class="fas fa-search position-absolute top-50 end-4 translate-middle-y text-white opacity-75"
-               style="left: 16px; z-index: 5;"></i>
-            <input type="text" id="searchInput" class="form-control form-control-lg search-box shadow-sm text-white"
+            <i class="fas fa-search position-absolute top-50 end-4 translate-middle-y opacity-75"
+               style="left: 16px; z-index: 5; color: var(--text-secondary);"></i>
+            <input type="text" id="searchInput" class="form-control form-control-lg search-box shadow-sm"
                    placeholder="جستجو در نام سرباز، کد ملی، نوع مرخصی، تاریخ..."
-                   style="background: rgba(30, 35, 50, 0.95) !important; border: 2px solid #00c853; color: white !important;"
+                   style="background: var(--card-bg) !important; border: 2px solid var(--primary); color: var(--text-primary) !important;"
                    autocomplete="off">
         </div>
 
@@ -57,8 +58,8 @@
 
         <!-- پیام عدم وجود نتیجه -->
         <div id="noResults" class="text-center py-5 d-none">
-            <i class="fas fa-search fa-3x text-white opacity-50 mb-3"></i>
-            <p class="text-white opacity-75 fs-5">مرخصی‌ای با این مشخصات یافت نشد.</p>
+            <i class="fas fa-search fa-3x mb-3" style="color: var(--text-muted);"></i>
+            <p class="fs-5" style="color: var(--text-secondary);">مرخصی‌ای با این مشخصات یافت نشد.</p>
         </div>
 
         <!-- Pagination -->
@@ -132,14 +133,14 @@
 
 <style>
     .search-box::placeholder {
-        color: rgba(255, 255, 255, 0.75) !important;
+        color: var(--text-muted) !important;
         font-weight: 500;
     }
     .search-box:focus::placeholder {
-        color: rgba(255, 255, 255, 0.95) !important;
+        color: var(--text-secondary) !important;
     }
     .table-hover tbody tr:hover {
-        background: rgba(0, 200, 83, 0.25) !important;
+        background: var(--card-hover) !important;
         transform: scale(1.01);
         transition: all 0.3s ease;
     }

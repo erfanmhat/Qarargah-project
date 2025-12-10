@@ -1,8 +1,8 @@
-{% for soldier in soldiers %}
+{% load jalali %}
 <tr class="soldier-row align-middle" data-name="{{ soldier.full_name|lower }}"
     data-national="{{ soldier.national_code }}">
     <td>
-        <strong class="text-light">{{ soldier.full_name }}</strong>
+        <strong style="color: var(--text-primary);">{{ soldier.full_name }}</strong>
     </td>
     <td><code class="text-info">{{ soldier.national_code }}</code></td>
     <td>
@@ -13,11 +13,11 @@
         {% endif %}
     </td>
     <td>
-        <span class="badge bg-secondary text-dark">
+        <span class="badge" style="background-color: var(--bg-tertiary); color: var(--text-primary);">
             {{ soldier.get_dispatch_type_display }}
         </span>
     </td>
-    <td class="text-success fw-bold">
+    <td class="fw-bold" style="color: var(--success);">
         {{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}
     </td>
     <td>
@@ -25,12 +25,12 @@
         {% if end %}
         {% now "Y-m-d" as today %}
         {% if end|date:"Y-m-d" < today %}
-        <span class="text-danger fw-bold">تمام شده</span>
+        <span class="fw-bold" style="color: var(--danger);">تمام شده</span>
         {% else %}
-        <span class="text-warning fw-bold">{{ end|to_jalali:"%Y/%m/%d" }}</span>
+        <span class="fw-bold" style="color: var(--warning);">{{ end|to_jalali:"%Y/%m/%d" }}</span>
         {% endif %}
         {% else %}
-        <span class="text-muted">نامشخص</span>
+        <span style="color: var(--text-muted);">نامشخص</span>
         {% endif %}
         {% endwith %}
     </td>
@@ -66,13 +66,3 @@
         </div>
     </td>
 </tr>
-{% empty %}
-<tr>
-    <td colspan="8" class="text-center py-5">
-        <div class="text-muted opacity-75">
-            <i class="fas fa-users fa-3x mb-3 text-primary"></i>
-            <p class="fs-5">هیچ سربازی ثبت نشده است</p>
-        </div>
-    </td>
-</tr>
-{% endfor %}

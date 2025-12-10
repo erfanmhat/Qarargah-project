@@ -99,8 +99,14 @@
 </div>
 {% endblock %}
 
-{% block extrajs %}
+{% block extra_js %}
 <script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script id="chart-data" type="application/json">
+{
+    "leaveData": {{ leave_chart_data|safe }},
+    "endingData": {{ ending_chart_data|safe }}
+}
+</script>
 <script>
 // Seed Data Button Handler
 document.addEventListener('DOMContentLoaded', function() {
@@ -180,8 +186,11 @@ document.addEventListener('DOMContentLoaded', function() {
 Chart.defaults.color = '#e0e0e0';
 Chart.defaults.borderColor = '#444';
 
-const leaveData = {{ leave_chart_data|safe }};
-const endingData = {{ ending_chart_data|safe }};
+// Load chart data from JSON script tag
+const chartDataScript = document.getElementById('chart-data');
+const chartData = chartDataScript ? JSON.parse(chartDataScript.textContent) : {};
+const leaveData = chartData.leaveData || { labels: [], data: [], colors: [] };
+const endingData = chartData.endingData || { labels: [], data: [] };
 
 // نمودار دایره‌ای مرخصی‌ها
 new Chart(document.getElementById('leaveChart'), {

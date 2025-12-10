@@ -653,3 +653,197 @@ def seed_data(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+
+@login_required
+def panel_backup_restore(request):
+    """Backup and restore page"""
+    return render(request, 'dashboard/backup_restore.html')
+
+
+@login_required
+def export_database(request):
+    """Export entire database to SQL dump file"""
+    import subprocess
+    import tempfile
+    import os
+    from django.conf import settings
+    from django.utils import timezone
+    
+    try:
+        db_config = settings.DATABASES['default']
+        db_name = db_config['NAME']
+        db_user = db_config['USER']
+        db_password = db_config['PASSWORD']
+        db_host = db_config['HOST']
+        db_port = db_config['PORT']
+        
+        # Create temporary file for dump
+        timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'soldier_db_backup_{timestamp}.sql'
+        
+        # Use temporary directory
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dump_path = os.path.join(tmpdir, filename)
+            
+            # Set PGPASSWORD environment variable
+            env = os.environ.copy()
+            env['PGPASSWORD'] = db_password
+            
+            # Build pg_dump command
+            # Using --no-password to prevent password prompt
+            cmd = [
+                'pg_dump',
+                '--host', db_host,
+                '--port', str(db_port),
+                '--username', db_user,
+                '--no-password',
+                '--verbose',
+                '--clean',
+                '--if-exists',
+                '--format=plain',
+                '--file', dump_path,
+                db_name
+            ]
+            
+            # Execute pg_dump
+            result = subprocess.run(
+                cmd,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minute timeout
+            )
+            
+            if result.returncode != 0:
+                logger.error(f'pg_dump failed: {result.stderr}')
+                messages.error(request, f'خطا در ایجاد پشتیبان: {result.stderr[:500]}')
+                return redirect('panel_backup_restore')
+            
+            # Read the dump file
+            if not os.path.exists(dump_path):
+                messages.error(request, 'فایل پشتیبان ایجاد نشد.')
+                return redirect('panel_backup_restore')
+            
+            with open(dump_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type='application/sql')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            logger.info(f'Database backup exported by user {request.user.username}')
+            return response
+        
+    except subprocess.TimeoutExpired:
+        logger.error('pg_dump timeout')
+        messages.error(request, 'زمان ایجاد پشتیبان به پایان رسید. لطفاً دوباره تلاش کنید.')
+        return redirect('panel_backup_restore')
+    except FileNotFoundError:
+        logger.error('pg_dump not found')
+        messages.error(request, 'ابزار pg_dump یافت نشد. لطفاً PostgreSQL client tools را نصب کنید.')
+        return redirect('panel_backup_restore')
+    except Exception as e:
+        logger.error(f'Error exporting database: {e}')
+        import traceback
+        logger.error(traceback.format_exc())
+        messages.error(request, f'خطا در ایجاد پشتیبان: {str(e)}')
+        return redirect('panel_backup_restore')
+
+
+@login_required
+def import_database(request):
+    """Import database from SQL dump file"""
+    import subprocess
+    import tempfile
+    import os
+    from django.conf import settings
+    from django.db import connection
+    
+    if request.method != 'POST':
+        messages.error(request, 'فقط درخواست POST مجاز است.')
+        return redirect('panel_backup_restore')
+    
+    if 'backup_file' not in request.FILES:
+        messages.error(request, 'لطفاً فایل پشتیبان را انتخاب کنید.')
+        return redirect('panel_backup_restore')
+    
+    backup_file = request.FILES['backup_file']
+    
+    # Validate file extension
+    if not backup_file.name.endswith('.sql'):
+        messages.error(request, 'فایل باید با پسوند .sql باشد.')
+        return redirect('panel_backup_restore')
+    
+    try:
+        db_config = settings.DATABASES['default']
+        db_name = db_config['NAME']
+        db_user = db_config['USER']
+        db_password = db_config['PASSWORD']
+        db_host = db_config['HOST']
+        db_port = db_config['PORT']
+        
+        # Save uploaded file temporarily
+        with tempfile.NamedTemporaryFile(mode='wb', suffix='.sql', delete=False) as tmp_file:
+            for chunk in backup_file.chunks():
+                tmp_file.write(chunk)
+            tmp_file_path = tmp_file.name
+        
+        try:
+            # Set PGPASSWORD environment variable
+            env = os.environ.copy()
+            env['PGPASSWORD'] = db_password
+            
+            # Build psql command
+            cmd = [
+                'psql',
+                '--host', db_host,
+                '--port', str(db_port),
+                '--username', db_user,
+                '--dbname', db_name,
+                '--no-password',
+                '--file', tmp_file_path,
+                '--quiet'
+            ]
+            
+            # Execute psql
+            result = subprocess.run(
+                cmd,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minute timeout
+            )
+            
+            if result.returncode != 0:
+                error_msg = result.stderr or result.stdout
+                logger.error(f'psql restore failed: {error_msg}')
+                messages.error(request, f'خطا در بازگردانی پشتیبان: {error_msg[:200]}')
+                return redirect('panel_backup_restore')
+            
+            # Close all database connections to ensure clean state
+            connection.close()
+            
+            logger.info(f'Database restored by user {request.user.username}')
+            messages.success(request, 'پشتیبان با موفقیت بازگردانی شد. لطفاً صفحه را رفرش کنید.')
+            
+        finally:
+            # Clean up temporary file
+            try:
+                os.remove(tmp_file_path)
+            except:
+                pass
+        
+        return redirect('panel_backup_restore')
+        
+    except subprocess.TimeoutExpired:
+        logger.error('psql restore timeout')
+        messages.error(request, 'زمان بازگردانی پشتیبان به پایان رسید. لطفاً دوباره تلاش کنید.')
+        return redirect('panel_backup_restore')
+    except FileNotFoundError:
+        logger.error('psql not found')
+        messages.error(request, 'ابزار psql یافت نشد. لطفاً PostgreSQL client tools را نصب کنید.')
+        return redirect('panel_backup_restore')
+    except Exception as e:
+        logger.error(f'Error importing database: {e}')
+        import traceback
+        logger.error(traceback.format_exc())
+        messages.error(request, f'خطا در بازگردانی پشتیبان: {str(e)}')
+        return redirect('panel_backup_restore')

@@ -5,7 +5,8 @@ from .views import (
     panel_soldiers, panel_leaves, panel_search,
     panel_soldier_detail, panel_soldier_delete, panel_leave_delete,
     health_check, export_soldiers_excel, export_leaves_excel,
-    panel_reports, seed_data
+    panel_reports, seed_data, panel_backup_restore,
+    export_database, import_database
 )
 
 urlpatterns = [
@@ -21,6 +22,9 @@ urlpatterns = [
     path('dashboard/leaves/export/', export_leaves_excel, name='export_leaves_excel'),
     path('dashboard/search/', panel_search, name='panel_search'),
     path('dashboard/reports/', panel_reports, name='panel_reports'),
+    path('dashboard/backup-restore/', panel_backup_restore, name='panel_backup_restore'),
+    path('dashboard/backup-restore/export/', export_database, name='export_database'),
+    path('dashboard/backup-restore/import/', import_database, name='import_database'),
     path('dashboard/seed/', seed_data, name='seed_data'),
     path('health/', health_check, name='health_check'),
 ]

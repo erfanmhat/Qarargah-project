@@ -1,7 +1,8 @@
 {% extends "dashboard/base.html" %}
+{% load jalali %}
 
 {% block page_title %}
-<i class="fas fa-users text-white"></i> مدیریت سربازان
+<i class="fas fa-users"></i> مدیریت سربازان
 <div class="float-end">
     <a href="{% url 'export_soldiers_excel' %}" class="btn btn-info rounded-pill shadow-sm me-2" title="خروجی Excel">
         <i class="fas fa-file-excel"></i> خروجی Excel
@@ -22,16 +23,16 @@
     <div class="card-body p-4">
 
         <div class="position-relative mb-4">
-            <i class="fas fa-search position-absolute top-50 translate-middle-y text-white opacity-75"
-               style="left: 16px; z-index: 5;"></i>
+            <i class="fas fa-search position-absolute top-50 translate-middle-y opacity-75"
+               style="left: 16px; z-index: 5; color: var(--text-secondary);"></i>
 
             <input type="text"
                    id="searchInput"
-                   class="form-control form-control-lg search-box shadow-sm text-white"
+                   class="form-control form-control-lg search-box shadow-sm"
                    placeholder="جستجو در نام، کد ملی، کد پرونده، تلفن..."
-                   style="background: rgba(30, 35, 50, 0.95) !important;
-                  border: 2px solid #00c853;
-                  color: white !important;"
+                   style="background: var(--card-bg) !important;
+                  border: 2px solid var(--primary);
+                  color: var(--text-primary) !important;"
                    autocomplete="off">
         </div>
 
@@ -58,8 +59,8 @@
         </div>
 
         <div id="noResults" class="text-center py-5 d-none">
-            <i class="fas fa-search fa-3x text-white opacity-50 mb-3"></i>
-            <p class="text-white opacity-75 fs-5">موردی با این مشخصات یافت نشد.</p>
+            <i class="fas fa-search fa-3x mb-3" style="color: var(--text-muted);"></i>
+            <p class="fs-5" style="color: var(--text-secondary);">موردی با این مشخصات یافت نشد.</p>
         </div>
 
         <!-- Pagination -->
@@ -135,14 +136,14 @@
 <style>
     /* تضمین خوانایی کامل */
     .search-box::placeholder {
-        color: rgba(255, 255, 255, 0.7) !important;
+        color: var(--text-muted) !important;
         font-weight: 400;
     }
     .search-box:focus::placeholder {
-        color: rgba(255, 255, 255, 0.9) !important;
+        color: var(--text-secondary) !important;
     }
     .table-hover tbody tr:hover {
-        background: rgba(0, 200, 83, 0.25) !important;
+        background: var(--card-hover) !important;
     }
 
 
