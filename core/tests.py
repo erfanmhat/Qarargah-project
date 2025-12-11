@@ -115,8 +115,7 @@ class LeaveModelTest(TestCase):
             soldier=self.soldier,
             leave_type="medical",
             start_date=timezone.now().date(),
-            end_date=timezone.now().date() + timedelta(days=5),
-            is_approved=True
+            end_date=timezone.now().date() + timedelta(days=5)
         )
         self.assertEqual(leave.days, 6)  # Including both start and end dates
 

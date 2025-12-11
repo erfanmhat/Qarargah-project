@@ -1,13 +1,14 @@
 # core/dashboard.py
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
+from jalali_date.admin import ModelAdminJalaliMixin
 from core.models import *
 from core.forms import SoldierForm, LeaveForm
 from core.templatetags.jalali import to_jalali
 
 
 @admin.register(Soldier)
-class SoldierAdmin(ImportExportModelAdmin):
+class SoldierAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
     form = SoldierForm
     list_display = ('full_name', 'national_code', 'dossier_code', 'get_dispatch_type_display',
                     'jalali_service_start', 'jalali_service_end', 'service_status')
@@ -21,7 +22,7 @@ class SoldierAdmin(ImportExportModelAdmin):
         }),
         ("اطلاعات خدمت", {
             'fields': ('dispatch_type', 'dossier_code', 'service_start_date', 'arrival_date',
-                       'current_location', 'service_status', 'health_status')
+                       'current_location', 'service_status', 'health_status', 'extra_service_days')
         }),
         ("اطلاعات تماس", {
             'fields': (('phone_personal', 'phone_parent'), ('phone_home', 'phone_work'), 'home_address', 'guard_code')
@@ -48,16 +49,16 @@ class SoldierAdmin(ImportExportModelAdmin):
 
 
 @admin.register(Leave)
-class LeaveAdmin(ImportExportModelAdmin):
+class LeaveAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
     form = LeaveForm
-    list_display = ('soldier', 'get_leave_type_display', 'jalali_start', 'jalali_end', 'days', 'is_approved')
-    list_filter = ('leave_type', 'is_approved', 'start_date')
+    list_display = ('soldier', 'get_leave_type_display', 'jalali_start', 'jalali_end', 'days')
+    list_filter = ('leave_type', 'start_date')
     search_fields = ('soldier__first_name', 'soldier__last_name', 'soldier__national_code')
     date_hierarchy = 'start_date'
 
     fieldsets = (
         ("اطلاعات اصلی مرخصی", {
-            'fields': ('soldier', 'leave_type', 'start_date', 'end_date', 'is_approved')
+            'fields': ('soldier', 'leave_type', 'start_date', 'end_date')
         }),
         ("توضیحات", {
             'fields': ('notes',),

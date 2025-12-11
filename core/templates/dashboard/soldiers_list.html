@@ -3,12 +3,19 @@
 
 {% block page_title %}
 <i class="fas fa-users"></i> مدیریت سربازان
-<div class="float-end">
-    <a href="{% url 'export_soldiers_excel' %}" class="btn btn-info rounded-pill shadow-sm me-2" title="خروجی Excel">
+<div class="float-end d-flex gap-2">
+    <a href="{% url 'export_soldiers_excel' %}" class="btn btn-info rounded-pill shadow-sm" title="خروجی Excel">
         <i class="fas fa-file-excel"></i> خروجی Excel
     </a>
     <a href="{% url 'admin:core_soldier_add' %}" class="btn btn-success rounded-pill shadow-sm">
         <i class="fas fa-plus"></i> افزودن سرباز جدید
+    </a>
+    <a href="?show_completed={% if show_completed %}0{% else %}1{% endif %}" class="btn btn-outline-light rounded-pill shadow-sm">
+        {% if show_completed %}
+            <i class="fas fa-eye-slash"></i> مخفی‌کردن پایان‌خدمت
+        {% else %}
+            <i class="fas fa-clipboard-check"></i> نمایش پایان‌خدمت
+        {% endif %}
     </a>
 </div>
 {% endblock %}
@@ -69,7 +76,7 @@
             <ul class="pagination justify-content-center mt-4">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">قبلی</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if show_completed %}&show_completed=1{% endif %}">قبلی</a>
                 </li>
                 {% endif %}
                 
@@ -87,7 +94,7 @@
                 
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">بعدی</a>
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if show_completed %}&show_completed=1{% endif %}">بعدی</a>
                 </li>
                 {% endif %}
             </ul>

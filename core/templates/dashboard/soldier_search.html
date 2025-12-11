@@ -42,10 +42,45 @@
                     </select>
                 </div>
             </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-3">
+                    <label class="form-label text-white">محل خدمت</label>
+                    <select name="location" class="form-select">
+                        <option value="">همه</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc.id }}" {% if selected_location == loc.id|stringformat:"s" %}selected{% endif %}>{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white">وضعیت سلامت</label>
+                    <select name="health_status" class="form-select">
+                        <option value="">همه</option>
+                        {% for health in health_statuses %}
+                        <option value="{{ health.id }}" {% if selected_health_status == health.id|stringformat:"s" %}selected{% endif %}>{{ health.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white">شروع خدمت از</label>
+                    <input type="date" name="start_from" class="form-control" value="{{ start_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white">تا تاریخ</label>
+                    <input type="date" name="start_to" class="form-control" value="{{ start_to }}">
+                </div>
+            </div>
             <div class="row mt-3">
                 <div class="col-12">
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-search"></i> جستجو
+                    </button>
+                    <button type="submit" name="show_completed" value="{% if show_completed %}1{% else %}1{% endif %}" class="btn btn-outline-light">
+                        {% if show_completed %}
+                        <i class="fas fa-user-check"></i> نمایش همه (شامل پایان خدمت)
+                        {% else %}
+                        <i class="fas fa-user-slash"></i> نمایش پایان خدمت
+                        {% endif %}
                     </button>
                     <a href="{% url 'panel_search' %}" class="btn btn-secondary">
                         <i class="fas fa-redo"></i> پاک کردن
@@ -111,7 +146,7 @@
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_dispatch_type %}&dispatch_type={{ selected_dispatch_type }}{% endif %}{% if selected_service_status %}&service_status={{ selected_service_status }}{% endif %}">قبلی</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if base_querystring %}&{{ base_querystring }}{% endif %}">قبلی</a>
                 </li>
                 {% endif %}
                 
@@ -122,14 +157,14 @@
                     </li>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_dispatch_type %}&dispatch_type={{ selected_dispatch_type }}{% endif %}{% if selected_service_status %}&service_status={{ selected_service_status }}{% endif %}">{{ num }}</a>
+                        <a class="page-link" href="?page={{ num }}{% if base_querystring %}&{{ base_querystring }}{% endif %}">{{ num }}</a>
                     </li>
                     {% endif %}
                 {% endfor %}
                 
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_dispatch_type %}&dispatch_type={{ selected_dispatch_type }}{% endif %}{% if selected_service_status %}&service_status={{ selected_service_status }}{% endif %}">بعدی</a>
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if base_querystring %}&{{ base_querystring }}{% endif %}">بعدی</a>
                 </li>
                 {% endif %}
             </ul>

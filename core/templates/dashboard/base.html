@@ -337,51 +337,80 @@
             border-color: var(--primary);
         }
 
+        /* Sidebar collapse */
+        body.sidebar-collapsed .sidebar {
+            width: 90px;
+        }
+        body.sidebar-collapsed .main-content {
+            margin-right: 90px;
+        }
+        body.sidebar-collapsed .sidebar .nav-link span {
+            display: none;
+        }
+        body.sidebar-collapsed .sidebar-header small,
+        body.sidebar-collapsed .sidebar-header h4 {
+            display: none;
+        }
+        body.sidebar-collapsed .sidebar .nav-link {
+            text-align: center;
+        }
+        body.sidebar-collapsed .sidebar .nav-link i {
+            margin-left: 0;
+        }
+
     </style>
 </head>
 <body>
 
 <!-- سایدبار -->
 <div class="sidebar">
-    <div class="sidebar-header">
-        <h4 style="color: var(--primary); text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">
-            سامانه خدمت
-        </h4>
+    <div class="sidebar-header text-center">
+        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" style="width:64px; height:64px;">
+            <span class="fw-bold text-white">لوگو</span>
+        </div>
         <small style="color: var(--text-secondary);" class="d-block mt-2 fw-bold">
             ناحیه مقاومت بسیج استان اردبیل
         </small>
     </div>
     <nav class="nav flex-column mt-3">
         <a href="/dashboard/" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}">
-            <i class="fas fa-home"></i> داشبورد
+            <i class="fas fa-home"></i> <span>داشبورد</span>
         </a>
         <a href="/dashboard/soldiers/" class="nav-link {% if 'soldiers' in request.path %}active{% endif %}">
-            <i class="fas fa-users"></i> سربازان
+            <i class="fas fa-users"></i> <span>سربازان</span>
         </a>
         <a href="/dashboard/leaves/" class="nav-link {% if 'leaves' in request.path %}active{% endif %}">
-            <i class="fas fa-calendar-check"></i> مرخصی‌ها
+            <i class="fas fa-calendar-check"></i> <span>مرخصی‌ها</span>
         </a>
         <a href="/dashboard/search/" class="nav-link {% if 'search' in request.path %}active{% endif %}">
-            <i class="fas fa-search"></i> جستجوی پیشرفته
+            <i class="fas fa-search"></i> <span>جستجوی پیشرفته</span>
         </a>
         <a href="/dashboard/reports/" class="nav-link {% if 'reports' in request.path %}active{% endif %}">
-            <i class="fas fa-chart-bar"></i> گزارش‌ها
+            <i class="fas fa-chart-bar"></i> <span>گزارش‌ها</span>
+        </a>
+        <a href="/dashboard/settings/" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
+            <i class="fas fa-cogs"></i> <span>تنظیمات سیستم</span>
         </a>
         <a href="/dashboard/backup-restore/" class="nav-link {% if 'backup-restore' in request.path %}active{% endif %}">
-            <i class="fas fa-database"></i> پشتیبان‌گیری
+            <i class="fas fa-database"></i> <span>پشتیبان‌گیری</span>
         </a>
         <hr class="border-secondary mx-4 my-4">
         <a href="/dashboard/logout/" class="nav-link text-danger">
-            <i class="fas fa-sign-out-alt"></i> خروج از حساب
+            <i class="fas fa-sign-out-alt"></i> <span>خروج از حساب</span>
         </a>
     </nav>
 </div>
 
 <!-- نوار بالا -->
     <div class="topbar">
-    <button class="theme-toggle" id="themeToggle" title="تغییر تم">
-        <i class="fas fa-moon"></i>
-    </button>
+    <div class="d-flex align-items-center gap-2">
+        <button class="theme-toggle" id="themeToggle" title="تغییر تم">
+            <i class="fas fa-moon"></i>
+        </button>
+        <button class="theme-toggle" id="sidebarToggle" title="جمع کردن منو">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
     <div>
         <i class="fas fa-user-shield text-success me-2"></i>
         خوش آمدید، <strong>{{ user.get_full_name|default:user.username }}</strong>
@@ -429,6 +458,22 @@
             });
         }
     });
+
+    // Sidebar toggle persistence
+    (function() {
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const body = document.body;
+        const collapsed = localStorage.getItem('sidebar-collapsed') === '1';
+        if (collapsed) {
+            body.classList.add('sidebar-collapsed');
+        }
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', body.classList.contains('sidebar-collapsed') ? '1' : '0');
+            });
+        }
+    })();
 </script>
 {% block extra_js %}{% endblock %}
 </body>

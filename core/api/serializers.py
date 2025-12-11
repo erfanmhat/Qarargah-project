@@ -51,7 +51,7 @@ class LeaveSerializer(serializers.ModelSerializer):
         model = Leave
         fields = [
             'id', 'soldier', 'soldier_name', 'soldier_national_code', 'leave_type',
-            'leave_type_display', 'start_date', 'end_date', 'days', 'is_approved',
+            'leave_type_display', 'start_date', 'end_date', 'days',
             'notes', 'created_at', 'updated_at'
         ]
         read_only_fields = ['days', 'created_at', 'updated_at']

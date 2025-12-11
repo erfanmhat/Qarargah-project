@@ -33,17 +33,6 @@
         </span>
     </td>
     <td>
-        {% if leave.is_approved %}
-        <span class="badge bg-success rounded-pill px-3">
-                <i class="fas fa-check-double"></i> تأیید شده
-            </span>
-        {% else %}
-        <span class="badge bg-warning text-dark rounded-pill px-3">
-                <i class="fas fa-clock"></i> در انتظار تأیید
-            </span>
-        {% endif %}
-    </td>
-    <td>
         <small style="color: var(--text-primary);">{{ leave.created_at|to_jalali:"%Y/%m/%d" }}</small><br>
         <small style="color: var(--text-primary);">{{ leave.created_at|time:"H:i" }}</small>
     </td>
@@ -53,12 +42,6 @@
                class="btn btn-sm btn-outline-primary" title="ویرایش">
                 <i class="fas fa-edit"></i>
             </a>
-            {% if not leave.is_approved %}
-            <a href="{% url 'admin:core_leave_change' leave.id %}?next={{ request.path }}"
-               class="btn btn-sm btn-outline-success" title="تأیید مرخصی">
-                <i class="fas fa-check"></i>
-            </a>
-            {% endif %}
             <a href="{% url 'panel_leave_delete' leave.id %}"
                class="btn btn-sm btn-outline-danger"
                title="حذف"

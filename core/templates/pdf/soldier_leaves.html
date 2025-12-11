@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: A4; margin: 12mm; }
+        body { font-family: 'IRANSans', sans-serif; color: #111; }
+        h1 { font-size: 18px; margin-bottom: 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 6px; border: 1px solid #ddd; }
+        th { background: #f3f4f6; }
+        .balances { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>گزارش مرخصی‌های {{ soldier.full_name }}</h1>
+    <div class="balances">
+        <strong>استحقاقی:</strong> مجاز {{ balances.entitlement.allowed }} | استفاده شده {{ balances.entitlement.used }} | باقی‌مانده {{ balances.entitlement.remaining }}<br>
+        <strong>استعلاجی:</strong> مجاز {{ balances.medical.allowed }} | استفاده شده {{ balances.medical.used }} | باقی‌مانده {{ balances.medical.remaining }}<br>
+        <strong>تشویقی:</strong> مجاز {{ balances.reward.allowed }} | استفاده شده {{ balances.reward.used }} | باقی‌مانده {{ balances.reward.remaining }}
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>نوع</th>
+                <th>تاریخ رفت</th>
+                <th>تاریخ برگشت</th>
+                <th>مدت (روز)</th>
+                <th>توضیحات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leave in leaves %}
+            <tr>
+                <td>{{ leave.get_leave_type_display }}</td>
+                <td>{{ leave.start_date|date:"Y/m/d" }}</td>
+                <td>{{ leave.end_date|date:"Y/m/d" }}</td>
+                <td>{{ leave.days }}</td>
+                <td>{{ leave.notes|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align:center;">مرخصی ثبت نشده است</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+

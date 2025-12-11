@@ -19,7 +19,6 @@
                         <tr>
                             <th>ماه</th>
                             <th>تعداد مرخصی</th>
-                            <th>تأیید شده</th>
                             <th>کل روزهای مرخصی</th>
                         </tr>
                     </thead>
@@ -28,12 +27,11 @@
                         <tr>
                             <td>{{ month.month }}</td>
                             <td>{{ month.total }}</td>
-                            <td>{{ month.approved }}</td>
                             <td>{{ month.total_days }} روز</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="4" class="text-center text-muted">داده‌ای موجود نیست</td>
+                            <td colspan="3" class="text-center text-muted">داده‌ای موجود نیست</td>
                         </tr>
                         {% endfor %}
                     </tbody>

@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+
+{% block page_title %}
+<i class="fas fa-cogs"></i> تنظیمات سیستم
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-lg">
+    <div class="card-header bg-gradient text-white fw-bold" style="background: linear-gradient(90deg, #6366f1, #8b5cf6) !important;">
+        <i class="fas fa-sliders-h"></i> تنظیمات عمومی
+    </div>
+    <div class="card-body">
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-4">
+                <label class="form-label">مدت پایه خدمت (ماه)</label>
+                {{ form.base_service_months }}
+            </div>
+            <div class="col-md-4 form-check mt-4 pt-2">
+                {{ form.enable_leave_entitlement }} <label class="form-check-label">فعال بودن مرخصی استحقاقی</label>
+            </div>
+            <div class="col-md-4 form-check mt-4 pt-2">
+                {{ form.enable_leave_medical }} <label class="form-check-label">فعال بودن مرخصی استعلاجی</label>
+            </div>
+            <div class="col-md-4 form-check mt-2 pt-2">
+                {{ form.enable_leave_reward }} <label class="form-check-label">فعال بودن مرخصی تشویقی</label>
+            </div>
+            <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> ذخیره تنظیمات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

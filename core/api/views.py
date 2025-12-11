@@ -94,11 +94,6 @@ class LeaveViewSet(viewsets.ModelViewSet):
         if leave_type:
             queryset = queryset.filter(leave_type=leave_type)
         
-        # Approval status filter
-        is_approved = self.request.query_params.get('is_approved', None)
-        if is_approved is not None:
-            queryset = queryset.filter(is_approved=is_approved.lower() == 'true')
-        
         # Date range filter
         start_date = self.request.query_params.get('start_date', None)
         if start_date:
@@ -114,14 +109,10 @@ class LeaveViewSet(viewsets.ModelViewSet):
     def stats(self, request):
         """Get leave statistics"""
         total = self.get_queryset().count()
-        approved = self.get_queryset().filter(is_approved=True).count()
-        pending = self.get_queryset().filter(is_approved=False).count()
-        
         today = timezone.now().date()
         on_leave_today = self.get_queryset().filter(
             start_date__lte=today,
-            end_date__gte=today,
-            is_approved=True
+            end_date__gte=today
         ).count()
         
         # Leave type distribution
@@ -131,8 +122,6 @@ class LeaveViewSet(viewsets.ModelViewSet):
         
         return Response({
             'total': total,
-            'approved': approved,
-            'pending': pending,
             'on_leave_today': on_leave_today,
             'by_type': list(leave_types)
         })
@@ -153,8 +142,7 @@ class DashboardViewSet(viewsets.ViewSet):
         total_soldiers = Soldier.objects.count()
         on_leave_today = Leave.objects.filter(
             start_date__lte=today,
-            end_date__gte=today,
-            is_approved=True
+            end_date__gte=today
         ).count()
         
         # Calculate ending soon

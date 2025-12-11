@@ -1,16 +1,6 @@
 from django import forms
+from jalali_date.widgets import AdminJalaliDateWidget
 from .models import Soldier, Leave
-
-
-class JalaliDateInput(forms.DateInput):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault('attrs', {})
-        kwargs['attrs'].update({
-            'class': 'form-control jalali-date',
-            'placeholder': '1404/09/12',
-            'autocomplete': 'off'
-        })
-        super().__init__(*args, **kwargs, format='%Y-%m-%d')
 
 
 class SoldierForm(forms.ModelForm):
@@ -18,14 +8,14 @@ class SoldierForm(forms.ModelForm):
         model = Soldier
         fields = '__all__'
         widgets = {
-            'service_start_date': JalaliDateInput(),
-            'arrival_date': JalaliDateInput(),
-            'birth_date': JalaliDateInput(),
+            # Update usage here as well
+            'service_start_date': AdminJalaliDateWidget(),
+            'arrival_date': AdminJalaliDateWidget(),
+            'birth_date': AdminJalaliDateWidget(),
         }
 
     def clean(self):
         cleaned_data = super().clean()
-        # Additional form-level validation if needed
         return cleaned_data
 
 
@@ -34,11 +24,18 @@ class LeaveForm(forms.ModelForm):
         model = Leave
         fields = '__all__'
         widgets = {
-            'start_date': JalaliDateInput(),
-            'end_date': JalaliDateInput(),
+            # Update usage here as well
+            'start_date': AdminJalaliDateWidget(),
+            'end_date': AdminJalaliDateWidget(),
         }
 
     def clean(self):
         cleaned_data = super().clean()
-        # Additional form-level validation if needed
         return cleaned_data
+
+
+class SettingsForm(forms.Form):
+    base_service_months = forms.IntegerField(label="مدت پایه خدمت (ماه)", min_value=1, initial=21)
+    enable_leave_entitlement = forms.BooleanField(label="فعال بودن مرخصی استحقاقی", required=False, initial=True)
+    enable_leave_medical = forms.BooleanField(label="فعال بودن مرخصی استعلاجی", required=False, initial=True)
+    enable_leave_reward = forms.BooleanField(label="فعال بودن مرخصی تشویقی", required=False, initial=True)

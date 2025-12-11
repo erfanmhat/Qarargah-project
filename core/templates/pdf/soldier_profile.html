@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: A5; margin: 12mm; }
+        body { font-family: 'IRANSans', sans-serif; color: #111; }
+        h1 { font-size: 18px; margin-bottom: 8px; }
+        .section { margin-bottom: 10px; }
+        .label { font-weight: bold; color: #555; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        td { padding: 4px 6px; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>پروفایل سرباز</h1>
+    <div class="section">
+        <table>
+            <tr><td class="label">نام</td><td>{{ soldier.first_name }}</td></tr>
+            <tr><td class="label">نام خانوادگی</td><td>{{ soldier.last_name }}</td></tr>
+            <tr><td class="label">کد ملی</td><td>{{ soldier.national_code }}</td></tr>
+            <tr><td class="label">کد پرونده</td><td>{{ soldier.dossier_code }}</td></tr>
+            <tr><td class="label">نوع اعزام</td><td>{{ soldier.get_dispatch_type_display }}</td></tr>
+            <tr><td class="label">تاریخ شروع خدمت</td><td>{{ soldier.service_start_date|date:"Y/m/d" }}</td></tr>
+            <tr><td class="label">پایان خدمت</td><td>{{ soldier.service_end_date|date:"Y/m/d" }}</td></tr>
+            <tr><td class="label">محل خدمت</td><td>{{ soldier.current_location.name|default:"-" }}</td></tr>
+            <tr><td class="label">وضعیت خدمت</td><td>{{ soldier.service_status.title|default:"-" }}</td></tr>
+            <tr><td class="label">وضعیت سلامت</td><td>{{ soldier.health_status.title|default:"-" }}</td></tr>
+            <tr><td class="label">تلفن همراه</td><td>{{ soldier.phone_personal|default:"-" }}</td></tr>
+            <tr><td class="label">تلفن والدین/همسر</td><td>{{ soldier.phone_parent|default:"-" }}</td></tr>
+            <tr><td class="label">آدرس</td><td>{{ soldier.home_address|default:"-" }}</td></tr>
+        </table>
+    </div>
+    <div class="section">
+        <h2 style="font-size:14px;">تراز مرخصی‌ها</h2>
+        <table>
+            <tr><td class="label">استحقاقی</td><td>مجاز: {{ balances.entitlement.allowed }} | استفاده‌شده: {{ balances.entitlement.used }} | باقی‌مانده: {{ balances.entitlement.remaining }}</td></tr>
+            <tr><td class="label">استعلاجی</td><td>مجاز: {{ balances.medical.allowed }} | استفاده‌شده: {{ balances.medical.used }} | باقی‌مانده: {{ balances.medical.remaining }}</td></tr>
+            <tr><td class="label">تشویقی</td><td>مجاز: {{ balances.reward.allowed }} | استفاده‌شده: {{ balances.reward.used }} | باقی‌مانده: {{ balances.reward.remaining }}</td></tr>
+        </table>
+    </div>
+</body>
+</html>
+
