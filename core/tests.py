@@ -7,6 +7,9 @@ from core.models import (
     ServiceReductionType, SoldierServiceReduction, SystemSetting
 )
 
+USERNAME = "root"
+PASSWORD = "123321"
+
 
 class SoldierModelTest(TestCase):
     def setUp(self):
@@ -176,8 +179,8 @@ class ViewTests(TestCase):
         """Setup test client and user"""
         self.client = Client()
         self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123',
+            username=USERNAME,
+            password=PASSWORD,
             is_staff=True
         )
         self.service_status = ServiceStatus.objects.create(
@@ -193,16 +196,16 @@ class ViewTests(TestCase):
     def test_login_view_post_success(self):
         """Test successful login"""
         response = self.client.post('/dashboard/login/', {
-            'username': 'testuser',
-            'password': 'testpass123'
+            'username': USERNAME,
+            'password': PASSWORD
         })
         self.assertEqual(response.status_code, 302)  # Redirect after login
 
     def test_login_view_post_failure(self):
         """Test failed login"""
         response = self.client.post('/dashboard/login/', {
-            'username': 'testuser',
-            'password': 'wrongpassword'
+            'username': USERNAME,
+            'password': PASSWORD
         })
         self.assertEqual(response.status_code, 200)  # Stay on login page
 
@@ -213,31 +216,31 @@ class ViewTests(TestCase):
 
     def test_dashboard_authenticated(self):
         """Test dashboard access for authenticated user"""
-        self.client.login(username='testuser', password='testpass123')
+        self.client.login(username=USERNAME, password=PASSWORD)
         response = self.client.get('/dashboard/')
         self.assertEqual(response.status_code, 200)
 
     def test_soldiers_list_authenticated(self):
         """Test soldiers list access"""
-        self.client.login(username='testuser', password='testpass123')
+        self.client.login(username=USERNAME, password=PASSWORD)
         response = self.client.get('/dashboard/soldiers/')
         self.assertEqual(response.status_code, 200)
 
     def test_leaves_list_authenticated(self):
         """Test leaves list access"""
-        self.client.login(username='testuser', password='testpass123')
+        self.client.login(username=USERNAME, password=PASSWORD)
         response = self.client.get('/dashboard/leaves/')
         self.assertEqual(response.status_code, 200)
 
     def test_search_page_authenticated(self):
         """Test search page access"""
-        self.client.login(username='testuser', password='testpass123')
+        self.client.login(username=USERNAME, password=PASSWORD)
         response = self.client.get('/dashboard/search/')
         self.assertEqual(response.status_code, 200)
 
     def test_logout(self):
         """Test logout functionality"""
-        self.client.login(username='testuser', password='testpass123')
+        self.client.login(username=USERNAME, password=PASSWORD)
         response = self.client.get('/dashboard/logout/')
         self.assertEqual(response.status_code, 302)  # Redirect after logout
 
@@ -253,7 +256,7 @@ class FormTests(TestCase):
     def test_soldier_form_validation(self):
         """Test soldier form validation"""
         from core.forms import SoldierForm
-        
+
         form_data = {
             'first_name': 'تست',
             'last_name': 'فرم',
@@ -269,7 +272,7 @@ class FormTests(TestCase):
     def test_leave_form_validation(self):
         """Test leave form validation"""
         from core.forms import LeaveForm
-        
+
         soldier = Soldier.objects.create(
             first_name="تست",
             last_name="سرباز",
@@ -279,7 +282,7 @@ class FormTests(TestCase):
             birth_date=timezone.now().date() - timedelta(days=8000),
             service_status=self.service_status
         )
-        
+
         form_data = {
             'soldier': soldier.id,
             'leave_type': 'medical',
