@@ -10,18 +10,18 @@
             <h3 class="mb-0 fw-bold">
                 <i class="fas fa-shield-alt"></i> سامانه مدیریت خدمت سربازان
             </h3>
-            <p class="mb-0 mt-2">پادگان شهید بهشتی</p>
+            <p class="mb-0 mt-2">ناحیه مقاومت بسیج استان اردبیل</p>
         </div>
         <div class="card-body p-5">
             <form method="post" class="needs-validation" novalidate>
                 {% csrf_token %}
 
                 {% if messages %}
-                    {% for message in messages %}
-                    <div class="alert alert-danger text-center">
-                        {{ message }}
-                    </div>
-                    {% endfor %}
+                {% for message in messages %}
+                <div class="alert alert-danger text-center">
+                    {{ message }}
+                </div>
+                {% endfor %}
                 {% endif %}
 
                 <div class="mb-4">

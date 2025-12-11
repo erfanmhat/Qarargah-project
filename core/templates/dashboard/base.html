@@ -358,6 +358,7 @@
             margin-left: 0;
         }
 
+
     </style>
 </head>
 <body>
@@ -365,8 +366,9 @@
 <!-- سایدبار -->
 <div class="sidebar">
     <div class="sidebar-header text-center">
-        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" style="width:64px; height:64px;">
-            <span class="fw-bold text-white">لوگو</span>
+        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center"
+             style="width:64px; height:64px;">
+            <img class="rounded-circle" src="{% static 'img/logo.jpg' %}" width="80" height="80">
         </div>
         <small style="color: var(--text-secondary);" class="d-block mt-2 fw-bold">
             ناحیه مقاومت بسیج استان اردبیل
@@ -391,7 +393,8 @@
         <a href="/dashboard/settings/" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
             <i class="fas fa-cogs"></i> <span>تنظیمات سیستم</span>
         </a>
-        <a href="/dashboard/backup-restore/" class="nav-link {% if 'backup-restore' in request.path %}active{% endif %}">
+        <a href="/dashboard/backup-restore/"
+           class="nav-link {% if 'backup-restore' in request.path %}active{% endif %}">
             <i class="fas fa-database"></i> <span>پشتیبان‌گیری</span>
         </a>
         <hr class="border-secondary mx-4 my-4">
@@ -402,7 +405,7 @@
 </div>
 
 <!-- نوار بالا -->
-    <div class="topbar">
+<div class="topbar">
     <div class="d-flex align-items-center gap-2">
         <button class="theme-toggle" id="themeToggle" title="تغییر تم">
             <i class="fas fa-moon"></i>
@@ -420,7 +423,7 @@
 <!-- محتوای اصلی -->
 <div class="main-content">
     <h2 class="page-title">{% block page_title %}داشبورد مدیریت{% endblock %}</h2>
-    
+
     {% csrf_token %}
 
     {% if messages %}
@@ -474,6 +477,7 @@
             });
         }
     })();
+
 </script>
 {% block extra_js %}{% endblock %}
 </body>

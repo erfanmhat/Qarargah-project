@@ -13,4 +13,5 @@ distutils-pytest
 django_jalali
 django-jalali-date==1.0.1
 python-dateutil==2.9.0
-WeasyPrint==61.2
+weasyprint>=63.0,<70
+pydyf>=0.11.0
