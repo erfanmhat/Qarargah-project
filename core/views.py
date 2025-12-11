@@ -1,3 +1,4 @@
+from weasyprint import HTML
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
@@ -298,36 +299,40 @@ def panel_soldier_detail(request, soldier_id):
 @login_required
 def soldier_profile_pdf(request, soldier_id):
     """Generate PDF profile for a soldier (A5 size)"""
-    from weasyprint import HTML
     soldier = get_object_or_404(Soldier, id=soldier_id)
     balances = soldier.leave_balances()
+    now = timezone.now()
+
     html = render_to_string('pdf/soldier_profile.html', {
         'soldier': soldier,
         'balances': balances,
         'request': request,
+        'now': now,
     })
     pdf_file = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
     response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=\"soldier_{soldier.id}_profile.pdf\"'
+    response['Content-Disposition'] = f'attachment; filename="soldier_{soldier.id}_profile.pdf"'
     return response
 
 
 @login_required
 def soldier_leaves_pdf(request, soldier_id):
     """Generate PDF report of all leaves for a soldier (A4)"""
-    from weasyprint import HTML
     soldier = get_object_or_404(Soldier, id=soldier_id)
     leaves = soldier.leaves.all().order_by('-start_date')
     balances = soldier.leave_balances()
+    now = timezone.now()
+
     html = render_to_string('pdf/soldier_leaves.html', {
         'soldier': soldier,
         'leaves': leaves,
         'balances': balances,
         'request': request,
+        'now': now,
     })
     pdf_file = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
     response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=\"soldier_{soldier.id}_leaves.pdf\"'
+    response['Content-Disposition'] = f'attachment; filename="soldier_{soldier.id}_leaves.pdf"'
     return response
 
 

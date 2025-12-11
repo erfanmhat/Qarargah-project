@@ -1,50 +1,267 @@
+{% load jalali %}
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <style>
-        @page { size: A4; margin: 12mm; }
-        body { font-family: 'IRANSans', sans-serif; color: #111; }
-        h1 { font-size: 18px; margin-bottom: 6px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { padding: 6px; border: 1px solid #ddd; }
-        th { background: #f3f4f6; }
-        .balances { margin: 10px 0; }
+        /* Page setup */
+        @page {
+            size: A4;
+            margin: 15mm 15mm 18mm 15mm;
+
+            @top-center {
+                content: "گزارش مرخصی‌های سرباز";
+                font-family: "IRANSans", sans-serif;
+                font-size: 11px;
+                color: #555;
+            }
+
+            @bottom-center {
+                content: "صفحه " counter(page) " از " counter(pages);
+                font-family: "IRANSans", sans-serif;
+                font-size: 10px;
+                color: #777;
+            }
+        }
+
+        body {
+            font-family: "IRANSans", sans-serif;
+            color: #111;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .report-container {
+            width: 100%;
+        }
+
+        /* Header */
+        .report-header {
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .report-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 4px 0;
+        }
+
+        .report-subtitle {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .soldier-meta {
+            margin-top: 6px;
+            font-size: 11px;
+        }
+
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+        }
+
+        .meta-item {
+            flex: 0 0 auto;
+        }
+
+        .meta-label {
+            font-weight: bold;
+            color: #374151;
+        }
+
+        /* Balances card */
+        .balances-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #f9fafb;
+            padding: 8px 10px;
+            margin: 10px 0 14px;
+        }
+
+        .balances-title {
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #111827;
+        }
+
+        .balances-grid {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .balance-row {
+            display: table-row;
+        }
+
+        .balance-cell {
+            display: table-cell;
+            padding: 3px 0;
+            font-size: 11px;
+            vertical-align: top;
+        }
+
+        .balance-label {
+            font-weight: bold;
+            color: #4b5563;
+            min-width: 60px;
+        }
+
+        .balance-details span {
+            margin-left: 4px;
+        }
+
+        /* Table styles */
+        table.leaves-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        table.leaves-table thead th {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 6px 4px;
+            text-align: center;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        table.leaves-table tbody td {
+            border: 1px solid #e5e7eb;
+            padding: 5px 4px;
+            vertical-align: middle;
+        }
+
+        table.leaves-table tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        table.leaves-table tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-muted {
+            color: #6b7280;
+        }
+
+        .empty-row {
+            text-align: center;
+            padding: 12px 0;
+            font-style: italic;
+            color: #6b7280;
+        }
+
     </style>
 </head>
 <body>
-    <h1>گزارش مرخصی‌های {{ soldier.full_name }}</h1>
-    <div class="balances">
-        <strong>استحقاقی:</strong> مجاز {{ balances.entitlement.allowed }} | استفاده شده {{ balances.entitlement.used }} | باقی‌مانده {{ balances.entitlement.remaining }}<br>
-        <strong>استعلاجی:</strong> مجاز {{ balances.medical.allowed }} | استفاده شده {{ balances.medical.used }} | باقی‌مانده {{ balances.medical.remaining }}<br>
-        <strong>تشویقی:</strong> مجاز {{ balances.reward.allowed }} | استفاده شده {{ balances.reward.used }} | باقی‌مانده {{ balances.reward.remaining }}
+<div class="report-container">
+
+    <!-- Header -->
+    <div class="report-header">
+        <h1 class="report-title">گزارش مرخصی‌های {{ soldier.full_name }}</h1>
+        <div class="report-subtitle">
+            تاریخ تهیه گزارش: {{ now|to_jalali }}
+        </div>
+
+        <div class="soldier-meta">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <span class="meta-label">کد ملی:</span>
+                    <span>{{ soldier.national_code }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">کد پرونده:</span>
+                    <span>{{ soldier.dossier_code|default:"-" }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">نوع اعزام:</span>
+                    <span>{{ soldier.get_dispatch_type_display }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">وضعیت خدمت:</span>
+                    <span>{{ soldier.service_status.title|default:"-" }}</span>
+                </div>
+            </div>
+        </div>
     </div>
-    <table>
+
+    <!-- Balances -->
+    <div class="balances-card">
+        <div class="balances-title">تراز مرخصی‌ها</div>
+        <div class="balances-grid">
+            <div class="balance-row">
+                <div class="balance-cell balance-label">استحقاقی</div>
+                <div class="balance-cell balance-details">
+                    <span>مجاز: {{ balances.entitlement.allowed }}</span> |
+                    <span>استفاده‌شده: {{ balances.entitlement.used }}</span> |
+                    <span>باقی‌مانده: {{ balances.entitlement.remaining }}</span>
+                </div>
+            </div>
+            <div class="balance-row">
+                <div class="balance-cell balance-label">استعلاجی</div>
+                <div class="balance-cell balance-details">
+                    <span>مجاز: {{ balances.medical.allowed }}</span> |
+                    <span>استفاده‌شده: {{ balances.medical.used }}</span> |
+                    <span>باقی‌مانده: {{ balances.medical.remaining }}</span>
+                </div>
+            </div>
+            <div class="balance-row">
+                <div class="balance-cell balance-label">تشویقی</div>
+                <div class="balance-cell balance-details">
+                    <span>مجاز: {{ balances.reward.allowed }}</span> |
+                    <span>استفاده‌شده: {{ balances.reward.used }}</span> |
+                    <span>باقی‌مانده: {{ balances.reward.remaining }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaves table -->
+    <table class="leaves-table">
         <thead>
-            <tr>
-                <th>نوع</th>
-                <th>تاریخ رفت</th>
-                <th>تاریخ برگشت</th>
-                <th>مدت (روز)</th>
-                <th>توضیحات</th>
-            </tr>
+        <tr>
+            <th>نوع</th>
+            <th>تاریخ رفت</th>
+            <th>تاریخ برگشت</th>
+            <th>مدت (روز)</th>
+            <th>توضیحات</th>
+        </tr>
         </thead>
         <tbody>
-            {% for leave in leaves %}
-            <tr>
-                <td>{{ leave.get_leave_type_display }}</td>
-                <td>{{ leave.start_date|date:"Y/m/d" }}</td>
-                <td>{{ leave.end_date|date:"Y/m/d" }}</td>
-                <td>{{ leave.days }}</td>
-                <td>{{ leave.notes|default:"-" }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" style="text-align:center;">مرخصی ثبت نشده است</td>
-            </tr>
-            {% endfor %}
+        {% for leave in leaves %}
+        <tr>
+            <td class="text-center">{{ leave.get_leave_type_display }}</td>
+            <td class="text-center">{{ leave.start_date|to_jalali }}</td>
+            <td class="text-center">{{ leave.end_date|to_jalali }}</td>
+            <td class="text-center">{{ leave.days }}</td>
+            <td class="text-right">
+                {{ leave.notes|default:"-" }}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="empty-row">
+                مرخصی ثبت نشده است
+            </td>
+        </tr>
+        {% endfor %}
         </tbody>
     </table>
+
+</div>
 </body>
 </html>
-
