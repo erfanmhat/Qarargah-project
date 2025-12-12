@@ -23,8 +23,7 @@ class SoldierModelTest(TestCase):
             is_exempt_from_combat=False
         )
         self.soldier = Soldier.objects.create(
-            first_name="علی",
-            last_name="احمدی",
+            full_name="علی احمدی",
             national_code="1234567890",
             dispatch_type="training",
             service_start_date=timezone.now().date() - timedelta(days=100),
@@ -83,8 +82,7 @@ class SoldierModelTest(TestCase):
         """Test soldier model validation"""
         # Test birth_date after service_start_date (should fail)
         soldier = Soldier(
-            first_name="تست",
-            last_name="تست",
+            full_name="تست تست",
             national_code="9876543210",
             dispatch_type="training",
             service_start_date=timezone.now().date(),
@@ -103,8 +101,7 @@ class LeaveModelTest(TestCase):
             is_active_service=True
         )
         self.soldier = Soldier.objects.create(
-            first_name="محمد",
-            last_name="رضایی",
+            full_name="محمد رضایی",
             national_code="1111111111",
             dispatch_type="training",
             service_start_date=timezone.now().date() - timedelta(days=100),
@@ -258,8 +255,7 @@ class FormTests(TestCase):
         from core.forms import SoldierForm
 
         form_data = {
-            'first_name': 'تست',
-            'last_name': 'فرم',
+            'full_name': 'تست فرم',
             'national_code': '1234567890',
             'dispatch_type': 'training',
             'service_start_date': timezone.now().date(),
@@ -274,8 +270,7 @@ class FormTests(TestCase):
         from core.forms import LeaveForm
 
         soldier = Soldier.objects.create(
-            first_name="تست",
-            last_name="سرباز",
+            full_name="تست سرباز",
             national_code="1111111111",
             dispatch_type="training",
             service_start_date=timezone.now().date() - timedelta(days=100),

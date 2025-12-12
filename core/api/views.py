@@ -26,8 +26,7 @@ class SoldierViewSet(viewsets.ModelViewSet):
         search = self.request.query_params.get('search', None)
         if search:
             queryset = queryset.filter(
-                Q(first_name__icontains=search) |
-                Q(last_name__icontains=search) |
+                Q(full_name__icontains=search) |
                 Q(national_code__icontains=search) |
                 Q(dossier_code__icontains=search)
             )
@@ -84,8 +83,7 @@ class LeaveViewSet(viewsets.ModelViewSet):
         search = self.request.query_params.get('search', None)
         if search:
             queryset = queryset.filter(
-                Q(soldier__first_name__icontains=search) |
-                Q(soldier__last_name__icontains=search) |
+                Q(soldier__full_name__icontains=search) |
                 Q(soldier__national_code__icontains=search)
             )
         

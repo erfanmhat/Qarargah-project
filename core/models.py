@@ -135,8 +135,7 @@ class SoldierManager(models.Manager):
 
 
 class Soldier(TimeStampedModel):
-    first_name = models.CharField("نام", max_length=100)
-    last_name = models.CharField("نام خانوادگی", max_length=100)
+    full_name = models.CharField("نام و نام خانوادگی", max_length=100)
     national_code = models.CharField("کد ملی", max_length=10, unique=True, validators=[MinLengthValidator(10)])
     dossier_code = models.IntegerField("کد پرونده", default=0, db_index=True, blank=True)
     dispatch_type = models.CharField("نوع اعزامی", max_length=20, choices=DispatchType.choices)
@@ -163,10 +162,6 @@ class Soldier(TimeStampedModel):
         verbose_name = "سرباز"
         verbose_name_plural = "سربازان"
         ordering = ['-service_start_date']
-
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
-    full_name.short_description = "نام و نام خانوادگی"
 
     def total_reduction_days(self):
         return sum(r.days for r in self.reductions.all())

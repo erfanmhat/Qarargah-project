@@ -35,6 +35,7 @@
         {% url 'panel_reports' as url_reports %}
         {% url 'panel_settings' as url_settings %}
         {% url 'panel_backup_restore' as url_backup %}
+        {% url 'import_excel' as import_excel %}
         {% url 'panel_logout' as url_logout %}
 
         <a href="{{ panel_dashboard }}" class="nav-link {% if request.path == panel_dashboard %}active{% endif %}">
@@ -57,6 +58,9 @@
         </a>
         <a href="{{ url_backup }}" class="nav-link {% if 'backup-restore' in request.path %}active{% endif %}">
             <i class="fas fa-database"></i><span>پشتیبان‌گیری</span>
+        </a>
+        <a href="{{ import_excel }}" class="nav-link {% if 'import_excel' in request.path %}active{% endif %}">
+            <i class="fas fa-file-excel"></i><span>ورود اطلاعات از اکسل</span>
         </a>
 
         <hr class="border-secondary mx-4 my-4">

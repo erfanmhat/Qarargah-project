@@ -1,4 +1,3 @@
-# core/dashboard.py
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
 from jalali_date.admin import ModelAdminJalaliMixin
@@ -12,13 +11,13 @@ class SoldierAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
     form = SoldierForm
     list_display = ('full_name', 'national_code', 'dossier_code', 'get_dispatch_type_display',
                     'jalali_service_start', 'jalali_service_end', 'service_status')
-    search_fields = ('first_name', 'last_name', 'national_code', 'dossier_code', 'phone_personal')
+    search_fields = ('full_name', 'national_code', 'dossier_code', 'phone_personal')
     list_filter = ('dispatch_type', 'service_status', 'health_status', 'current_location', 'expertises')
     readonly_fields = ('jalali_service_end',)
 
     fieldsets = (
         ("اطلاعات هویتی", {
-            'fields': ('first_name', 'last_name', 'national_code', 'birth_date')
+            'fields': ('full_name', 'national_code', 'birth_date')
         }),
         ("اطلاعات خدمت", {
             'fields': ('dispatch_type', 'dossier_code', 'service_start_date', 'arrival_date',
@@ -53,7 +52,7 @@ class LeaveAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
     form = LeaveForm
     list_display = ('soldier', 'get_leave_type_display', 'jalali_start', 'jalali_end', 'days')
     list_filter = ('leave_type', 'start_date')
-    search_fields = ('soldier__first_name', 'soldier__last_name', 'soldier__national_code')
+    search_fields = ('soldier__full_name', 'soldier__national_code')
     date_hierarchy = 'start_date'
 
     fieldsets = (

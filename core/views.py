@@ -1,10 +1,14 @@
+import uuid
+
+from django.core.exceptions import ValidationError
+from django.views.decorators.http import require_http_methods
 from weasyprint import HTML
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -12,11 +16,38 @@ from datetime import timedelta, datetime
 import json
 import logging
 from django.template.loader import render_to_string
-from core.models import Soldier, Leave, LeaveType, ServiceLocation, ServiceStatus, SystemSetting, HealthStatus
-from core.forms import SettingsForm
+from core.models import Soldier, Leave, LeaveType, ServiceLocation, ServiceStatus, SystemSetting, HealthStatus, \
+    SoldierServiceReduction, ServiceReductionType
+from core.forms import SettingsForm, ExcelImportForm, ExcelImportConfirmForm
 from jdatetime import datetime as jdatetime
 
+from core.utils.excel_parser import parse_workbook
+from core.utils.validators import parse_jalali_date
+import datetime as dt
+
 logger = logging.getLogger('core')
+
+import datetime as dt
+
+
+def _to_jsonable(v):
+    if isinstance(v, (dt.date, dt.datetime)):
+        return v.isoformat()
+    return v
+
+
+def _deep_jsonable(obj):
+    if isinstance(obj, dict):
+        return {k: _deep_jsonable(_to_jsonable(v)) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_deep_jsonable(_to_jsonable(x)) for x in obj]
+    return _to_jsonable(obj)
+
+
+def _iso_to_date(s):
+    if not s:
+        return None
+    return dt.date.fromisoformat(s)
 
 
 def parse_date_input(value):
@@ -186,8 +217,8 @@ def panel_soldiers(request):
         page_size = 25
 
     sort_map = {
-        'name': ('last_name', 'first_name'),
-        '-name': ('-last_name', '-first_name'),
+        'name': 'full_name',
+        '-name': '-full_name',
         'national_code': 'national_code',
         '-national_code': '-national_code',
         'start_date': 'service_start_date',
@@ -278,8 +309,7 @@ def panel_search(request):
 
     if query:
         soldiers = soldiers.filter(
-            Q(first_name__icontains=query) |
-            Q(last_name__icontains=query) |
+            Q(full_name__icontains=query) |
             Q(national_code__icontains=query) |
             Q(dossier_code__icontains=query) |
             Q(phone_personal__icontains=query) |
@@ -491,8 +521,7 @@ def export_soldiers_excel(request):
         for soldier in soldiers:
             end_date = soldier.service_end_date()
             ws.append([
-                soldier.first_name,
-                soldier.last_name,
+                soldier.full_name,
                 soldier.national_code,
                 soldier.dossier_code or '',
                 soldier.get_dispatch_type_display(),
@@ -567,17 +596,6 @@ def export_leaves_excel(request):
         logger.error(f'Error exporting leaves: {e}')
         messages.error(request, 'خطا در خروجی گرفتن اطلاعات')
         return redirect('panel_leaves')
-
-
-from datetime import timedelta
-from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Sum
-from django.shortcuts import render
-from django.utils import timezone
-
-import jdatetime
-
-from core.models import Leave, Soldier, ServiceLocation, ServiceStatus
 
 
 def _prev_month_start(d):
@@ -820,10 +838,9 @@ def seed_data(request):
                 dispatch_type = random.choice(dispatch_values)
 
                 soldier = Soldier(
-                    first_name=random.choice(first_names),
-                    last_name=random.choice(last_names),
+                    full_name=random.choice(first_names) + " " + random.choice(last_names),
                     national_code=national_code,
-                    dossier_code=0,  # auto-assign positive number in save()
+                    dossier_code=0,
                     dispatch_type=dispatch_type,
                     service_start_date=service_start,
                     arrival_date=arrival_date,
@@ -1086,3 +1103,214 @@ def import_database(request):
         logger.error(traceback.format_exc())
         messages.error(request, f'خطا در بازگردانی پشتیبان: {str(e)}')
         return redirect('panel_backup_restore')
+
+
+def _jalali_yyyySmmSdd_to_date(jalali_yyyySmmSdd: str):
+    """
+    14040401 -> datetime.date میلادی
+    نیازمند: pip install jdatetime
+    """
+    import jdatetime
+    s = str(jalali_yyyySmmSdd)
+    y = int(s.split("/")[0])
+    m = int(s.split("/")[1])
+    d = int(s.split("/")[2])
+    return jdatetime.date(y, m, d).togregorian()
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def import_excel(request):
+    if request.method == "GET":
+        return render(request, "dashboard/import_excel.html", {"form": ExcelImportForm()})
+
+    form = ExcelImportForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return render(request, "dashboard/import_excel.html", {"form": form})
+
+    f = form.cleaned_data["file"]
+    parsed = parse_workbook(f)
+
+    errors = []
+    normalized_items = []
+
+    for item in parsed:
+        sheet = item["sheet_name"]
+        sdata = item["soldier"]
+
+        # --- Required fields from parser ---
+        full_name = sdata.get("full_name")
+        dossier_code = sdata.get("dossier_code")
+        dispatch_jalali = sdata.get("dispatch_jalali")
+
+        if not full_name:
+            errors.append({"sheet": sheet, "section": "Soldier", "field": "full_name",
+                           "message": "نام کامل از سلول B6 خوانده نشد.", "value": sdata.get("full_name")})
+        if not dossier_code:
+            errors.append({"sheet": sheet, "section": "Soldier", "field": "dossier_code",
+                           "message": "کد پرونده از سلول B6 (بعد از خط تیره) خوانده نشد.",
+                           "value": sdata.get("dossier_code")})
+        if not dispatch_jalali:
+            errors.append({"sheet": sheet, "section": "Soldier", "field": "dispatch_date",
+                           "message": "تاریخ اعزام از سلول‌های G3/H3/I3 خوانده نشد.",
+                           "value": sdata.get("dispatch_jalali")})
+
+        # --- Build Soldier payload for DB ---
+        soldier_payload = {
+            "full_name": full_name,
+            "dossier_code": dossier_code,
+        }
+
+        # تاریخ اعزام را اگر مدل شما DateField دارد تبدیل می‌کنیم:
+        if dispatch_jalali:
+            try:
+                soldier_payload["service_start_date"] = _jalali_yyyySmmSdd_to_date(dispatch_jalali)
+            except Exception as e:
+                errors.append({"sheet": sheet, "section": "Soldier", "field": "service_start_date",
+                               "message": f"تبدیل تاریخ اعزام (جلالی→میلادی) ناموفق: {e}",
+                               "value": dispatch_jalali})
+
+        # --- Validate Soldier model (اختیاری ولی خوب) ---
+        try:
+            tmp = Soldier(**soldier_payload)
+            tmp.full_clean()
+        except ValidationError as ve:
+            for field, msgs in ve.message_dict.items():
+                for m in msgs:
+                    errors.append({"sheet": sheet, "section": "Soldier", "field": field,
+                                   "message": m, "value": soldier_payload.get(field)})
+
+        # --- Validate leaves ---
+        validated_leaves = []
+        for l in item["leaves"]:
+            # حداقل‌ها
+            if not l.get("leave_type_key"):
+                errors.append({"sheet": sheet, "section": "Leave", "field": "leave_type",
+                               "message": "نوع مرخصی معتبر نیست.", "value": l.get("leave_type_fa")})
+                continue
+            if not l.get("start_jalali"):
+                errors.append({"sheet": sheet, "section": "Leave", "field": "start_date",
+                               "message": "از تاریخ مرخصی خوانده نشد/نامعتبر است.", "value": l})
+                continue
+            if not l.get("duration_days"):
+                errors.append({"sheet": sheet, "section": "Leave", "field": "duration_days",
+                               "message": "مدت مرخصی (ستون D) خوانده نشد/نامعتبر است.", "value": l})
+                continue
+            if not l.get("end_jalali"):
+                errors.append({"sheet": sheet, "section": "Leave", "field": "end_date",
+                               "message": "تا تاریخ خالی است و محاسبه هم انجام نشد (jdatetime نصب نیست یا داده مشکل دارد).",
+                               "value": l})
+                continue
+
+            # تبدیل تاریخ‌ها
+            try:
+                start_date = _jalali_yyyySmmSdd_to_date(l["start_jalali"])
+                end_date = _jalali_yyyySmmSdd_to_date(l["end_jalali"])
+            except Exception as e:
+                errors.append({"sheet": sheet, "section": "Leave", "field": "date",
+                               "message": f"تبدیل تاریخ مرخصی (جلالی→میلادی) ناموفق: {e}", "value": l})
+                continue
+
+            # نمونه ولیدیشن مدل Leave
+            try:
+                dummy_soldier = Soldier(**soldier_payload)
+                leave_obj = Leave(
+                    soldier=dummy_soldier,
+                    leave_type=l["leave_type_key"],
+                    start_date=start_date,
+                    end_date=end_date,
+                    notes=""
+                )
+                leave_obj.full_clean()
+                validated_leaves.append({
+                    "leave_type": l["leave_type_key"],
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "duration_days": l["duration_days"],
+                    "row": l.get("row"),
+                    "leave_type_fa": l.get("leave_type_fa"),
+                })
+            except ValidationError as ve:
+                for field, msgs in ve.message_dict.items():
+                    for m in msgs:
+                        errors.append({"sheet": sheet, "section": "Leave", "field": field,
+                                       "message": m, "value": l})
+
+        normalized_items.append({
+            "sheet_name": sheet,
+            "soldier": _deep_jsonable(soldier_payload),
+            "leaves": _deep_jsonable(validated_leaves),
+            "reductions": _deep_jsonable(item.get("reductions", [])),
+            "raw_soldier": sdata,
+        })
+
+    token = str(uuid.uuid4())
+    request.session[f"import_preview_{token}"] = _deep_jsonable({
+        "items": normalized_items,
+        "errors": errors,
+    })
+    request.session.modified = True
+
+    return render(request, "dashboard/import_preview.html", {
+        "token": token,
+        "items": normalized_items,
+        "errors": errors,
+        "can_confirm": (len(errors) == 0),
+        "confirm_form": ExcelImportConfirmForm(initial={"token": token}),
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def import_excel_confirm(request):
+    form = ExcelImportConfirmForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "درخواست نامعتبر است.")
+        return redirect("import_excel")
+
+    token = form.cleaned_data["token"]
+    payload = request.session.get(f"import_preview_{token}")
+    if not payload:
+        messages.error(request, "اطلاعات پیش‌نمایش منقضی شده یا یافت نشد.")
+        return redirect("import_excel")
+
+    items = payload["items"]
+    errors = payload["errors"]
+    if errors:
+        messages.error(request, "هنوز خطا دارید؛ ابتدا اصلاح کنید.")
+        return redirect("import_excel")
+
+    with transaction.atomic():
+        for item in items:
+            sdata = item["soldier"]
+
+            if sdata.get("service_start_date"):
+                sdata["service_start_date"] = _iso_to_date(sdata["service_start_date"])
+
+            for l in item["leaves"]:
+                if l.get("start_date"):
+                    l["start_date"] = _iso_to_date(l["start_date"])
+                if l.get("end_date"):
+                    l["end_date"] = _iso_to_date(l["end_date"])
+
+            soldier, created = Soldier.objects.update_or_create(
+                dossier_code=sdata["dossier_code"],
+                defaults=sdata
+            )
+
+            for l in item["leaves"]:
+                Leave.objects.get_or_create(
+                    soldier=soldier,
+                    leave_type=l["leave_type"],
+                    start_date=l["start_date"],
+                    end_date=l["end_date"],
+                    defaults={"notes": ""}
+                )
+
+    try:
+        del request.session[f"import_preview_{token}"]
+    except KeyError:
+        pass
+
+    messages.success(request, "دیتا با موفقیت ذخیره شد.")
+    return redirect("import_excel")

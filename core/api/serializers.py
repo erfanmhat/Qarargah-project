@@ -25,7 +25,7 @@ class SoldierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Soldier
         fields = [
-            'id', 'first_name', 'last_name', 'full_name', 'national_code', 'dossier_code',
+            'id', 'full_name', 'national_code', 'dossier_code',
             'dispatch_type', 'service_start_date', 'arrival_date', 'birth_date',
             'service_status', 'service_status_title', 'health_status', 'health_status_title',
             'current_location', 'current_location_name',             'phone_personal', 'phone_parent',

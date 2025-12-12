@@ -1,5 +1,5 @@
 Django==5.1.2
-psycopg2-binary==2.9.9
+psycopg2-binary>=2.9.9
 gunicorn==23.0.0
 django-extensions==3.2.3
 django-import-export==3.3.8
@@ -13,5 +13,5 @@ distutils-pytest
 django_jalali
 django-jalali-date==1.0.1
 python-dateutil==2.9.0
-weasyprint>=63.0,<70
-pydyf>=0.11.0
+weasyprint==67.0
+pydyf==0.12.1

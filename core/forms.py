@@ -39,3 +39,11 @@ class SettingsForm(forms.Form):
     enable_leave_entitlement = forms.BooleanField(label="فعال بودن مرخصی استحقاقی", required=False, initial=True)
     enable_leave_medical = forms.BooleanField(label="فعال بودن مرخصی استعلاجی", required=False, initial=True)
     enable_leave_reward = forms.BooleanField(label="فعال بودن مرخصی تشویقی", required=False, initial=True)
+
+
+class ExcelImportForm(forms.Form):
+    file = forms.FileField()
+
+
+class ExcelImportConfirmForm(forms.Form):
+    token = forms.CharField(widget=forms.HiddenInput)  # برای نگه داشتن نتیجه parse در session/cache

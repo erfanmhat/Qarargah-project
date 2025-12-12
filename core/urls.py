@@ -7,7 +7,7 @@ from .views import (
     health_check, export_soldiers_excel, export_leaves_excel,
     panel_reports, seed_data, panel_backup_restore, panel_settings,
     export_database, import_database, soldier_profile_pdf,
-    soldier_leaves_pdf
+    soldier_leaves_pdf, import_excel, import_excel_confirm
 )
 
 urlpatterns = [
@@ -30,5 +30,7 @@ urlpatterns = [
     path('backup-restore/export/', export_database, name='export_database'),
     path('backup-restore/import/', import_database, name='import_database'),
     path('seed/', seed_data, name='seed_data'),
+    path("import/excel/", import_excel, name="import_excel"),
+    path("import/excel/confirm/", import_excel_confirm, name="import_excel_confirm"),
     path('health/', health_check, name='health_check'),
 ]
