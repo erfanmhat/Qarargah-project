@@ -8,7 +8,7 @@ from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 import json
 import logging
 from django.template.loader import render_to_string
@@ -17,6 +17,25 @@ from core.forms import SettingsForm
 from jdatetime import datetime as jdatetime
 
 logger = logging.getLogger('core')
+
+
+def parse_date_input(value):
+    """
+    Accepts Jalali (YYYY/MM/DD) or Gregorian (YYYY-MM-DD) strings and returns (gregorian_date, jalali_display).
+    """
+    value = (value or '').strip()
+    if not value:
+        return None, ''
+    try:
+        if '/' in value:
+            jd = jdatetime.strptime(value, '%Y/%m/%d')
+            greg = jd.togregorian().date()
+        else:
+            greg = datetime.fromisoformat(value).date()
+        jalali_display = jdatetime.fromgregorian(date=greg).strftime('%Y/%m/%d')
+        return greg, jalali_display
+    except Exception:
+        return None, value
 
 
 def panel_login(request):
@@ -157,21 +176,60 @@ def panel_dashboard(request):
 @login_required
 def panel_soldiers(request):
     show_completed = request.GET.get('show_completed') == '1'
+    sort_key = request.GET.get('sort', '-start_date')
+    page_size_raw = request.GET.get('page_size')
+
+    try:
+        page_size = int(page_size_raw)
+        page_size = max(5, min(page_size, 100))
+    except (TypeError, ValueError):
+        page_size = 25
+
+    sort_map = {
+        'name': ('last_name', 'first_name'),
+        '-name': ('-last_name', '-first_name'),
+        'national_code': 'national_code',
+        '-national_code': '-national_code',
+        'start_date': 'service_start_date',
+        '-start_date': '-service_start_date',
+        'dossier': 'dossier_code',
+        '-dossier': '-dossier_code',
+        'status': 'service_status__title',
+        '-status': '-service_status__title',
+        'location': 'current_location__name',
+        '-location': '-current_location__name',
+        'created': '-created_at',
+        '-created': '-created_at',
+    }
+    order_fields = sort_map.get(sort_key, ('-service_start_date',))
+    if isinstance(order_fields, str):
+        order_fields = (order_fields,)
+
     soldiers = Soldier.objects.select_related('service_status', 'current_location')
     if not show_completed:
         soldiers = soldiers.filter(Q(service_status__isnull=True) | Q(service_status__is_active_service=True) | Q(
             service_status__is_active_service__isnull=True))
-    soldiers = soldiers.all()
+    soldiers = soldiers.order_by(*order_fields)
 
-    # Pagination
-    paginator = Paginator(soldiers, 25)  # Show 25 soldiers per page
+    paginator = Paginator(soldiers, page_size)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    query_params = request.GET.copy()
+    for key in ('page', 'start_from_display', 'start_to_display'):
+        if key in query_params:
+            query_params.pop(key)
+    if 'page_size' not in query_params:
+        query_params['page_size'] = page_size
+    base_querystring = query_params.urlencode()
 
     return render(request, 'dashboard/soldiers_list.html', {
         'soldiers': page_obj,
         'page_obj': page_obj,
         'show_completed': show_completed,
+        'page_size': page_size,
+        'sort': sort_key if sort_key in sort_map else '-start_date',
+        'base_querystring': base_querystring,
     })
 
 
@@ -200,9 +258,19 @@ def panel_search(request):
     service_status_id = request.GET.get('service_status', '')
     location_id = request.GET.get('location', '')
     health_status_id = request.GET.get('health_status', '')
-    start_from = request.GET.get('start_from', '')
-    start_to = request.GET.get('start_to', '')
+    start_from_raw = request.GET.get('start_from', '')
+    start_to_raw = request.GET.get('start_to', '')
     show_completed = request.GET.get('show_completed') == '1'
+    page_size_raw = request.GET.get('page_size')
+
+    try:
+        page_size = int(page_size_raw)
+        page_size = max(5, min(page_size, 100))
+    except (TypeError, ValueError):
+        page_size = 25
+
+    start_from_date, start_from_display = parse_date_input(start_from_raw)
+    start_to_date, start_to_display = parse_date_input(start_to_raw)
 
     if not show_completed:
         soldiers = soldiers.filter(Q(service_status__isnull=True) | Q(service_status__is_active_service=True) | Q(
@@ -233,19 +301,21 @@ def panel_search(request):
     if health_status_id:
         soldiers = soldiers.filter(health_status_id=health_status_id)
 
-    if start_from:
-        soldiers = soldiers.filter(service_start_date__gte=start_from)
-    if start_to:
-        soldiers = soldiers.filter(service_start_date__lte=start_to)
+    if start_from_date:
+        soldiers = soldiers.filter(service_start_date__gte=start_from_date)
+    if start_to_date:
+        soldiers = soldiers.filter(service_start_date__lte=start_to_date)
 
     # Pagination with preserved query params
-    paginator = Paginator(soldiers, 25)
+    paginator = Paginator(soldiers, page_size)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     query_params = request.GET.copy()
     if 'page' in query_params:
         query_params.pop('page')
+    if 'page_size' not in query_params:
+        query_params['page_size'] = page_size
     base_querystring = query_params.urlencode()
 
     from core.models import DispatchType
@@ -262,10 +332,13 @@ def panel_search(request):
         'selected_service_status': service_status_id,
         'selected_location': location_id,
         'selected_health_status': health_status_id,
-        'start_from': start_from,
-        'start_to': start_to,
+        'start_from_display': start_from_display or start_from_raw,
+        'start_to_display': start_to_display or start_to_raw,
+        'start_from_value': (start_from_date.isoformat() if start_from_date else start_from_raw),
+        'start_to_value': (start_to_date.isoformat() if start_to_date else start_to_raw),
         'show_completed': show_completed,
         'base_querystring': base_querystring,
+        'page_size': page_size,
     }
 
     return render(request, 'dashboard/soldier_search.html', context)

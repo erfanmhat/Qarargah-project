@@ -72,8 +72,8 @@
     <div class="row g-4">
         <!-- توزیع انواع مرخصی -->
         <div class="col-lg-6">
-            <div class="card bg-dark text-white border-0 shadow">
-                <div class="card-header bg-success text-dark fw-bold fs-5 d-flex justify-content-between align-items-center">
+            <div class="card theme-card border-0 shadow">
+                <div class="card-header fw-bold fs-5 d-flex justify-content-between align-items-center" style="background: var(--bg-secondary); color: var(--text-primary);">
                     توزیع انواع مرخصی
                     <i class="fas fa-chart-pie"></i>
                 </div>
@@ -85,8 +85,8 @@
 
         <!-- پایان خدمت در ۶ ماه آینده -->
         <div class="col-lg-6">
-            <div class="card bg-dark text-white border-0 shadow">
-                <div class="card-header bg-success text-dark fw-bold fs-5 d-flex justify-content-between align-items-center">
+            <div class="card theme-card border-0 shadow">
+                <div class="card-header fw-bold fs-5 d-flex justify-content-between align-items-center" style="background: var(--bg-secondary); color: var(--text-primary);">
                     پایان خدمت در ۶ ماه آینده
                     <i class="fas fa-chart-bar"></i>
                 </div>
@@ -182,9 +182,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// تنظیمات کلی چارت
-Chart.defaults.color = '#e0e0e0';
-Chart.defaults.borderColor = '#444';
+function getThemeColors() {
+    const styles = getComputedStyle(document.documentElement);
+    return {
+        text: styles.getPropertyValue('--text-primary').trim() || '#e0e0e0',
+        muted: styles.getPropertyValue('--text-muted').trim() || '#94a3b8',
+        border: styles.getPropertyValue('--border').trim() || '#444',
+        borderLight: styles.getPropertyValue('--border-light').trim() || '#555',
+        primary: styles.getPropertyValue('--primary').trim() || '#6366f1',
+        success: styles.getPropertyValue('--success').trim() || '#10b981'
+    };
+}
+
+const themeColors = getThemeColors();
+Chart.defaults.color = themeColors.text;
+Chart.defaults.borderColor = themeColors.border;
 
 // Load chart data from JSON script tag
 const chartDataScript = document.getElementById('chart-data');
@@ -193,14 +205,14 @@ const leaveData = chartData.leaveData || { labels: [], data: [], colors: [] };
 const endingData = chartData.endingData || { labels: [], data: [] };
 
 // نمودار دایره‌ای مرخصی‌ها
-new Chart(document.getElementById('leaveChart'), {
+const leaveChart = new Chart(document.getElementById('leaveChart'), {
     type: 'doughnut',
     data: {
         labels: leaveData.labels,
         datasets: [{
             data: leaveData.data,
             backgroundColor: leaveData.colors,
-            borderColor: '#111',
+            borderColor: themeColors.border,
             borderWidth: 3,
             hoverOffset: 20
         }]
@@ -210,22 +222,26 @@ new Chart(document.getElementById('leaveChart'), {
         plugins: {
             legend: {
                 position: 'bottom',
-                labels: { padding: 20, font: { size: 14 } }
+                labels: { padding: 20, font: { size: 14 }, color: themeColors.text }
             },
-            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} روز` } }
+            tooltip: { 
+                callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} روز` },
+                titleColor: themeColors.text,
+                bodyColor: themeColors.text
+            }
         }
     }
 });
 
 // نمودار میله‌ای پایان خدمت
-new Chart(document.getElementById('endingChart'), {
+const endingChart = new Chart(document.getElementById('endingChart'), {
     type: 'bar',
     data: {
         labels: endingData.labels,
         datasets: [{
             label: 'تعداد سرباز',
             data: endingData.data,
-            backgroundColor: '#00c853',
+            backgroundColor: themeColors.success,
             borderRadius: 10,
             borderSkipped: false,
             barThickness: 40
@@ -235,13 +251,46 @@ new Chart(document.getElementById('endingChart'), {
         responsive: true,
         plugins: {
             legend: { display: false },
-            tooltip: { callbacks: { label: ctx => `${ctx.parsed.y} سرباز` } }
+            tooltip: { 
+                callbacks: { label: ctx => `${ctx.parsed.y} سرباز` },
+                titleColor: themeColors.text,
+                bodyColor: themeColors.text
+            }
         },
         scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1 } },
-            x: { grid: { display: false } }
+            y: { 
+                beginAtZero: true, 
+                ticks: { stepSize: 1, color: themeColors.text },
+                grid: { color: themeColors.border }
+            },
+            x: { 
+                grid: { color: themeColors.borderLight }, 
+                ticks: { color: themeColors.text }
+            }
         }
     }
+});
+
+// Update charts when theme changes
+window.addEventListener('themechange', () => {
+    const colors = getThemeColors();
+    Chart.defaults.color = colors.text;
+    Chart.defaults.borderColor = colors.border;
+
+    leaveChart.options.plugins.legend.labels.color = colors.text;
+    leaveChart.options.plugins.tooltip.titleColor = colors.text;
+    leaveChart.options.plugins.tooltip.bodyColor = colors.text;
+    leaveChart.data.datasets[0].borderColor = colors.border;
+    leaveChart.update();
+
+    endingChart.options.plugins.tooltip.titleColor = colors.text;
+    endingChart.options.plugins.tooltip.bodyColor = colors.text;
+    endingChart.options.scales.y.ticks.color = colors.text;
+    endingChart.options.scales.y.grid.color = colors.border;
+    endingChart.options.scales.x.ticks.color = colors.text;
+    endingChart.options.scales.x.grid.color = colors.borderLight;
+    endingChart.data.datasets[0].backgroundColor = colors.success;
+    endingChart.update();
 });
 </script>
 {% endblock %}

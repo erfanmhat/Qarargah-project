@@ -1,498 +1,115 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{% csrf_token %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}سامانه مدیریت خدمت سربازان{% endblock %}</title>
 
     {% load static %}
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="{% static 'fonts/IRANSansWeb.woff2' %}" as="font" type="font/woff2" crossorigin>
 
-    <!-- Bootstrap RTL محلی -->
-    <link href="{% static 'dashboard/css/bootstrap.rtl.min.css' %}" rel="stylesheet">
-
-    <!-- Font Awesome 6 محلی (با webfonts درست) -->
-    <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
-
-    <!-- فونت IRANSansWeb (دقیقاً همون چیزی که آپلود کردی) -->
-    <style>
-        @font-face {
-            font-family: 'IRANSans';
-            src: url('{% static "fonts/IRANSansWeb.woff2" %}') format('woff2'),
-                 url('{% static "fonts/IRANSansWeb.woff" %}') format('woff'),
-                 url('{% static "fonts/IRANSansWeb.ttf" %}') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'IRANSans';
-            src: url('{% static "fonts/IRANSansWeb.woff2" %}') format('woff2'),
-                 url('{% static "fonts/IRANSansWeb.woff" %}') format('woff');
-            font-weight: bold;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        /* Dark Theme - Beautiful Modern Dark */
-        :root,
-        [data-theme="dark"] {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --secondary: #8b5cf6;
-            --accent: #ec4899;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #06b6d4;
-            
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --card-bg: #1e293b;
-            --card-hover: #334155;
-            
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            
-            --border: #334155;
-            --border-light: #475569;
-            
-            --shadow: rgba(0, 0, 0, 0.3);
-            --shadow-lg: rgba(0, 0, 0, 0.5);
-        }
-
-        /* Light Theme - Beautiful Modern Light */
-        [data-theme="light"] {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --secondary: #8b5cf6;
-            --accent: #ec4899;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #06b6d4;
-            
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8fafc;
-            --bg-tertiary: #f1f5f9;
-            --card-bg: #ffffff;
-            --card-hover: #f8fafc;
-            
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            
-            --border: #e2e8f0;
-            --border-light: #cbd5e1;
-            
-            --shadow: rgba(0, 0, 0, 0.1);
-            --shadow-lg: rgba(0, 0, 0, 0.15);
-        }
-
-        body {
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'IRANSans', Tahoma, sans-serif;
-            min-height: 100vh;
-            margin: 0;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 280px;
-            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-            border-left: 4px solid var(--primary);
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 1030;
-            overflow-y: auto;
-            box-shadow: -10px 0 30px var(--shadow-lg);
-        }
-        
-        .sidebar-header {
-            padding: 2rem 1.5rem;
-            text-align: center;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .sidebar-header h4 {
-            color: var(--primary);
-            margin: 0;
-            font-weight: 900;
-            font-size: 1.7rem;
-            text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-        }
-        
-        .nav-link {
-            color: var(--text-secondary) !important;
-            padding: 16px 28px;
-            transition: all 0.3s ease;
-            border-bottom: 1px solid var(--border);
-            border-radius: 0;
-        }
-        
-        .nav-link:hover,
-        .nav-link.active {
-            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%) !important;
-            color: #ffffff !important;
-            font-weight: bold;
-            transform: translateX(-8px);
-            box-shadow: -4px 0 12px rgba(99, 102, 241, 0.3);
-        }
-        
-        .nav-link i {
-            width: 36px;
-            margin-left: 12px;
-        }
-        
-        /* Topbar */
-        .topbar {
-            background: var(--card-bg);
-            padding: 1rem 2rem;
-            border-bottom: 2px solid var(--border);
-            position: fixed;
-            left: 0;
-            right: 280px;
-            top: 0;
-            z-index: 1020;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px var(--shadow);
-        }
-        
-        .topbar .text-white {
-            color: var(--text-primary) !important;
-        }
-        
-        /* Main Content */
-        .main-content {
-            margin-right: 280px;
-            padding: 2.5rem;
-            padding-top: 100px;
-            min-height: 100vh;
-            background: var(--bg-primary);
-        }
-        
-        .page-title {
-            color: var(--primary);
-            border-bottom: 3px solid var(--primary);
-            padding-bottom: 15px;
-            margin-bottom: 2.5rem;
-            font-weight: 900;
-            font-size: 2.1rem;
-        }
-        
-        /* Cards */
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 4px 20px var(--shadow);
-            transition: all 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px var(--shadow-lg);
-            border-color: var(--primary-light);
-        }
-        
-        .card-header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-        }
-        
-        /* Buttons */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border: none;
-            border-radius: 12px;
-            padding: 12px 32px;
-            font-weight: bold;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
-            color: white;
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-            border: none;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: linear-gradient(135deg, #34d399 0%, var(--success) 100%);
-            color: white;
-        }
-        
-        .btn-info {
-            background: linear-gradient(135deg, var(--info) 0%, #0891b2 100%);
-            border: none;
-            color: white;
-        }
-        
-        .btn-info:hover {
-            background: linear-gradient(135deg, #22d3ee 0%, var(--info) 100%);
-            color: white;
-        }
-        
-        /* Theme Toggle */
-        .theme-toggle {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            color: var(--text-primary);
-            border-radius: 12px;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .theme-toggle:hover {
-            background: var(--primary);
-            color: #ffffff;
-            transform: scale(1.05);
-            border-color: var(--primary);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-        }
-        
-        /* Tables */
-        .table-dark {
-            background-color: var(--card-bg);
-            color: var(--text-primary);
-        }
-        
-        .table-dark thead {
-            background-color: var(--bg-secondary) !important;
-            color: var(--text-primary);
-        }
-        
-        .table-dark tbody tr {
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .table-dark tbody tr:hover {
-            background-color: var(--card-hover) !important;
-        }
-        
-        /* Form Controls */
-        .form-control {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
-        
-        .form-control:focus {
-            background-color: var(--card-bg);
-            border-color: var(--primary);
-            color: var(--text-primary);
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
-        }
-
-        /* Form Select */
-        .form-select {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
-
-        .form-select:focus {
-            background-color: var(--card-bg);
-            border-color: var(--primary);
-            color: var(--text-primary);
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
-        }
-        
-        /* Badges */
-        .badge {
-            padding: 0.5em 0.8em;
-            border-radius: 8px;
-        }
-        
-        /* Alerts */
-        .alert {
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-        
-        /* Pagination */
-        .page-link {
-            background-color: var(--card-bg);
-            border-color: var(--border);
-            color: var(--text-primary);
-        }
-        
-        .page-link:hover {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-        
-        .page-item.active .page-link {
-            background-color: var(--primary);
-            border-color: var(--primary);
-        }
-
-        /* Sidebar collapse */
-        body.sidebar-collapsed .sidebar {
-            width: 90px;
-        }
-        body.sidebar-collapsed .main-content {
-            margin-right: 90px;
-        }
-        body.sidebar-collapsed .sidebar .nav-link span {
-            display: none;
-        }
-        body.sidebar-collapsed .sidebar-header small,
-        body.sidebar-collapsed .sidebar-header h4 {
-            display: none;
-        }
-        body.sidebar-collapsed .sidebar .nav-link {
-            text-align: center;
-        }
-        body.sidebar-collapsed .sidebar .nav-link i {
-            margin-left: 0;
-        }
-
-
-    </style>
+    <!-- Styles -->
+    <link rel="stylesheet" href="{% static 'dashboard/css/bootstrap.rtl.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/persian-datepicker.min.css' %}">
+    <link rel="stylesheet" href="{% static 'dashboard/css/base.css' %}">
 </head>
 <body>
 
-<!-- سایدبار -->
-<div class="sidebar">
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-header text-center">
-        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center"
-             style="width:64px; height:64px;">
-            <img class="rounded-circle" src="{% static 'img/logo.jpg' %}" width="80" height="80">
+        <div class="logo-wrapper">
+            <img src="{% static 'img/logo.jpg' %}" alt="لوگو" class="rounded-circle" width="50px" height="50px">
         </div>
-        <small style="color: var(--text-secondary);" class="d-block mt-2 fw-bold">
-            ناحیه مقاومت بسیج استان اردبیل
-        </small>
+        <small class="org-name fw-bold">ناحیه مقاومت بسیج استان اردبیل</small>
     </div>
+
     <nav class="nav flex-column mt-3">
-        <a href="/dashboard/" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}">
-            <i class="fas fa-home"></i> <span>داشبورد</span>
+        {% url 'panel_dashboard' as panel_dashboard %}
+        {% url 'panel_soldiers' as url_soldiers %}
+        {% url 'panel_leaves' as url_leaves %}
+        {% url 'panel_search' as url_search %}
+        {% url 'panel_reports' as url_reports %}
+        {% url 'panel_settings' as url_settings %}
+        {% url 'panel_backup_restore' as url_backup %}
+        {% url 'panel_logout' as url_logout %}
+
+        <a href="{{ panel_dashboard }}" class="nav-link {% if request.path == panel_dashboard %}active{% endif %}">
+            <i class="fas fa-home"></i><span>داشبورد</span>
         </a>
-        <a href="/dashboard/soldiers/" class="nav-link {% if 'soldiers' in request.path %}active{% endif %}">
-            <i class="fas fa-users"></i> <span>سربازان</span>
+        <a href="{{ url_soldiers }}" class="nav-link {% if 'soldiers' in request.path %}active{% endif %}">
+            <i class="fas fa-users"></i><span>سربازان</span>
         </a>
-        <a href="/dashboard/leaves/" class="nav-link {% if 'leaves' in request.path %}active{% endif %}">
-            <i class="fas fa-calendar-check"></i> <span>مرخصی‌ها</span>
+        <a href="{{ url_leaves }}" class="nav-link {% if 'leaves' in request.path %}active{% endif %}">
+            <i class="fas fa-calendar-check"></i><span>مرخصی‌ها</span>
         </a>
-        <a href="/dashboard/search/" class="nav-link {% if 'search' in request.path %}active{% endif %}">
-            <i class="fas fa-search"></i> <span>جستجوی پیشرفته</span>
+        <a href="{{ url_search }}" class="nav-link {% if 'search' in request.path %}active{% endif %}">
+            <i class="fas fa-search"></i><span>جستجوی پیشرفته</span>
         </a>
-        <a href="/dashboard/reports/" class="nav-link {% if 'reports' in request.path %}active{% endif %}">
-            <i class="fas fa-chart-bar"></i> <span>گزارش‌ها</span>
+        <a href="{{ url_reports }}" class="nav-link {% if 'reports' in request.path %}active{% endif %}">
+            <i class="fas fa-chart-bar"></i><span>گزارش‌ها</span>
         </a>
-        <a href="/dashboard/settings/" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
-            <i class="fas fa-cogs"></i> <span>تنظیمات سیستم</span>
+        <a href="{{ url_settings }}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
+            <i class="fas fa-cogs"></i><span>تنظیمات سیستم</span>
         </a>
-        <a href="/dashboard/backup-restore/"
-           class="nav-link {% if 'backup-restore' in request.path %}active{% endif %}">
-            <i class="fas fa-database"></i> <span>پشتیبان‌گیری</span>
+        <a href="{{ url_backup }}" class="nav-link {% if 'backup-restore' in request.path %}active{% endif %}">
+            <i class="fas fa-database"></i><span>پشتیبان‌گیری</span>
         </a>
+
         <hr class="border-secondary mx-4 my-4">
-        <a href="/dashboard/logout/" class="nav-link text-danger">
-            <i class="fas fa-sign-out-alt"></i> <span>خروج از حساب</span>
+        <a href="{{ url_logout }}" class="nav-link text-danger">
+            <i class="fas fa-sign-out-alt"></i><span>خروج از حساب</span>
         </a>
     </nav>
-</div>
+</aside>
 
-<!-- نوار بالا -->
-<div class="topbar">
-    <div class="d-flex align-items-center gap-2">
+<!-- Topbar -->
+<header class="topbar">
+    <div class="d-flex gap-2">
+        <button class="theme-toggle" id="sidebarToggle" title="جمع/باز کردن منو">
+            <i class="fas fa-bars"></i>
+        </button>
         <button class="theme-toggle" id="themeToggle" title="تغییر تم">
             <i class="fas fa-moon"></i>
         </button>
-        <button class="theme-toggle" id="sidebarToggle" title="جمع کردن منو">
-            <i class="fas fa-bars"></i>
-        </button>
     </div>
-    <div>
+    <div class="user-greeting">
         <i class="fas fa-user-shield text-success me-2"></i>
         خوش آمدید، <strong>{{ user.get_full_name|default:user.username }}</strong>
     </div>
-</div>
+</header>
 
-<!-- محتوای اصلی -->
-<div class="main-content">
+<!-- Main Content -->
+<main class="main-content">
     <h2 class="page-title">{% block page_title %}داشبورد مدیریت{% endblock %}</h2>
-
-    {% csrf_token %}
 
     {% if messages %}
     {% for message in messages %}
     <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show text-center mb-4">
         <i class="fas fa-bell"></i> {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
     </div>
     {% endfor %}
     {% endif %}
 
-    {% block content %}
-    {% endblock %}
-</div>
+    {% block content %}{% endblock %}
+</main>
 
 <script src="{% static 'js/jquery.min.js' %}"></script>
-<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'js/persiandate.min.js' %}"></script>
+<!--<script src="{% static 'js/persian-date.min.js' %}"></script>-->
 <script src="{% static 'js/persian-datepicker.min.js' %}"></script>
-<script src="{% static 'dashboard/js/theme-toggle.js' %}"></script>
-<script>
-    // Initialize Persian Date Picker for all jalali-date inputs
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof $ !== 'undefined' && $.fn.persianDatepicker) {
-            $('.jalali-date').persianDatepicker({
-                observer: true,
-                format: 'YYYY/MM/DD',
-                altField: '.jalali-date-alt',
-                altFormat: 'YYYY-MM-DD',
-                timePicker: {
-                    enabled: false
-                },
-                calendarType: 'persian',
-                initialValue: false,
-            });
-        }
-    });
 
-    // Sidebar toggle persistence
-    (function() {
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const body = document.body;
-        const collapsed = localStorage.getItem('sidebar-collapsed') === '1';
-        if (collapsed) {
-            body.classList.add('sidebar-collapsed');
-        }
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', function() {
-                body.classList.toggle('sidebar-collapsed');
-                localStorage.setItem('sidebar-collapsed', body.classList.contains('sidebar-collapsed') ? '1' : '0');
-            });
-        }
-    })();
+<script src="{% static 'dashboard/js/base.js' %}"></script>
 
-</script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/persian-date.min.js' %}"></script>
+
+<script src="{% static 'dashboard/js/theme-toggle.js' %}" defer></script>
+<script src="{% static 'dashboard/js/base.js' %}" defer></script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

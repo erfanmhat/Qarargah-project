@@ -20,6 +20,7 @@
                 document.documentElement.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
                 updateThemeIcon(newTheme);
+                window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newTheme } }));
             });
         }
     }
@@ -48,5 +49,8 @@
     } else {
         initThemeToggle();
     }
+
+    // Broadcast theme on load so listeners can sync colors
+    window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: currentTheme } }));
 })();
 

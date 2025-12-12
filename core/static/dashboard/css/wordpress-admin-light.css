@@ -1,8 +1,0 @@
-.light-mode body { background: #f1f1f1 !important; color: #333 !important; }
-.light-mode .sidebar { background: #fff !important; border-left-color: #2271b1; }
-.light-mode .sidebar-header { background: #2271b1 !important; }
-.light-mode .sidebar-menu a { color: #333; }
-.light-mode .sidebar-menu a:hover, .light-mode .sidebar-menu a.active { background: #2271b1; color: #fff !important; }
-.light-mode .topbar { background: #2271b1 !important; }
-.light-mode .card { background: #fff !important; color: #333 !important; }
-.light-mode .table-dark { background: #fff !important; color: #333 !important; }

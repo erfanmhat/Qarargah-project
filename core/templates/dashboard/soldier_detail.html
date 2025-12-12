@@ -56,7 +56,7 @@
                     </div>
                     <div class="col-md-6">
                         <strong class="text-success">نوع اعزام:</strong>
-                        <p class="text-white">
+                        <p style="color: var(--text-primary);">
                             <span class="badge bg-secondary">{{ soldier.get_dispatch_type_display }}</span>
                         </p>
                     </div>
@@ -221,15 +221,15 @@
             </div>
             <div class="card-body">
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item bg-dark text-white d-flex justify-content-between">
+                    <li class="list-group-item d-flex justify-content-between">
                         <span>استحقاقی</span>
                         <span>مجاز: {{ leave_balances.entitlement.allowed }} / استفاده: {{ leave_balances.entitlement.used }} / باقی: {{ leave_balances.entitlement.remaining }}</span>
                     </li>
-                    <li class="list-group-item bg-dark text-white d-flex justify-content-between">
+                    <li class="list-group-item d-flex justify-content-between">
                         <span>استعلاجی</span>
                         <span>مجاز: {{ leave_balances.medical.allowed }} / استفاده: {{ leave_balances.medical.used }} / باقی: {{ leave_balances.medical.remaining }}</span>
                     </li>
-                    <li class="list-group-item bg-dark text-white d-flex justify-content-between">
+                    <li class="list-group-item d-flex justify-content-between">
                         <span>تشویقی</span>
                         <span>مجاز: {{ leave_balances.reward.allowed }} / استفاده: {{ leave_balances.reward.used }} / باقی: {{ leave_balances.reward.remaining }}</span>
                     </li>

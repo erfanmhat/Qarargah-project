@@ -13,14 +13,15 @@
     </div>
     <div class="card-body p-4">
         <form method="get" action="{% url 'panel_search' %}" class="mb-4">
+            <input type="hidden" name="show_completed" value="{% if show_completed %}1{% else %}0{% endif %}">
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label text-white">جستجو در نام، کد ملی، کد پرونده</label>
+                    <label class="form-label">جستجو در نام، کد ملی، کد پرونده</label>
                     <input type="text" name="q" class="form-control" value="{{ query }}" 
                            placeholder="نام، کد ملی، کد پرونده...">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-white">نوع اعزام</label>
+                    <label class="form-label">نوع اعزام</label>
                     <select name="dispatch_type" class="form-select">
                         <option value="">همه</option>
                         {% for value, label in dispatch_types %}
@@ -31,7 +32,7 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-white">وضعیت خدمت</label>
+                    <label class="form-label">وضعیت خدمت</label>
                     <select name="service_status" class="form-select">
                         <option value="">همه</option>
                         {% for status in service_statuses %}
@@ -44,7 +45,7 @@
             </div>
             <div class="row g-3 mt-2">
                 <div class="col-md-3">
-                    <label class="form-label text-white">محل خدمت</label>
+                    <label class="form-label">محل خدمت</label>
                     <select name="location" class="form-select">
                         <option value="">همه</option>
                         {% for loc in locations %}
@@ -53,7 +54,7 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-white">وضعیت سلامت</label>
+                    <label class="form-label">وضعیت سلامت</label>
                     <select name="health_status" class="form-select">
                         <option value="">همه</option>
                         {% for health in health_statuses %}
@@ -62,20 +63,41 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-white">شروع خدمت از</label>
-                    <input type="date" name="start_from" class="form-control" value="{{ start_from }}">
+                    <label class="form-label">شروع خدمت از</label>
+                    <input type="text"
+                           name="start_from_display"
+                           class="form-control jalali-date"
+                           data-alt-field="#start_from"
+                           value="{{ start_from_display }}"
+                           placeholder="مثال: 1402/01/15">
+                    <input type="hidden" id="start_from" name="start_from" class="jalali-date-alt" value="{{ start_from_value }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-white">تا تاریخ</label>
-                    <input type="date" name="start_to" class="form-control" value="{{ start_to }}">
+                    <label class="form-label">تا تاریخ</label>
+                    <input type="text"
+                           name="start_to_display"
+                           class="form-control jalali-date"
+                           data-alt-field="#start_to"
+                           value="{{ start_to_display }}"
+                           placeholder="مثال: 1402/12/30">
+                    <input type="hidden" id="start_to" name="start_to" class="jalali-date-alt" value="{{ start_to_value }}">
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-12">
+            <div class="row mt-3 align-items-end g-3">
+                <div class="col-md-3">
+                    <label class="form-label">تعداد در هر صفحه</label>
+                    <select name="page_size" class="form-select" onchange="this.form.submit()">
+                        <option value="10" {% if page_size == 10 %}selected{% endif %}>10</option>
+                        <option value="25" {% if page_size == 25 %}selected{% endif %}>25</option>
+                        <option value="50" {% if page_size == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if page_size == 100 %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+                <div class="col-md-9 d-flex flex-wrap gap-2">
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-search"></i> جستجو
                     </button>
-                    <button type="submit" name="show_completed" value="{% if show_completed %}1{% else %}1{% endif %}" class="btn btn-outline-light">
+                    <button type="submit" name="show_completed" value="{% if show_completed %}0{% else %}1{% endif %}" class="btn btn-outline-secondary">
                         {% if show_completed %}
                         <i class="fas fa-user-check"></i> نمایش همه (شامل پایان خدمت)
                         {% else %}
@@ -91,8 +113,8 @@
 
         {% if soldiers %}
         <div class="table-responsive rounded-3 overflow-hidden shadow-sm">
-            <table class="table table-hover align-middle mb-0 table-dark">
-                <thead class="text-white" style="background: var(--card-bg) !important;">
+            <table class="table table-hover align-middle mb-0 theme-table">
+                <thead>
                 <tr>
                     <th>نام و نام خانوادگی</th>
                     <th>کد ملی</th>
@@ -105,8 +127,8 @@
                 <tbody>
                 {% for soldier in soldiers %}
                 <tr>
-                    <td><strong class="text-light">{{ soldier.full_name }}</strong></td>
-                    <td><code class="text-info">{{ soldier.national_code }}</code></td>
+                    <td><strong style="color: var(--text-primary);">{{ soldier.full_name }}</strong></td>
+                    <td><code style="color: var(--info);">{{ soldier.national_code }}</code></td>
                     <td>
                         {% if soldier.dossier_code %}
                         <span class="badge bg-primary">{{ soldier.dossier_code }}</span>
@@ -172,11 +194,33 @@
         {% endif %}
         {% elif query or selected_dispatch_type or selected_service_status %}
         <div class="text-center py-5">
-            <i class="fas fa-search fa-3x text-white opacity-50 mb-3"></i>
-            <p class="text-white opacity-75 fs-5">نتیجه‌ای یافت نشد.</p>
+            <i class="fas fa-search fa-3x opacity-50 mb-3" style="color: var(--text-muted);"></i>
+            <p class="fs-5" style="color: var(--text-primary); opacity: 0.85;">نتیجه‌ای یافت نشد.</p>
         </div>
         {% endif %}
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[action="{% url 'panel_search' %}"]');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const pairs = [
+                { display: form.querySelector('[name="start_from_display"]'), hidden: form.querySelector('#start_from') },
+                { display: form.querySelector('[name="start_to_display"]'), hidden: form.querySelector('#start_to') },
+            ];
+            pairs.forEach(({ display, hidden }) => {
+                if (display && hidden && display.value && !hidden.value) {
+                    hidden.value = display.value;
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
+
 
