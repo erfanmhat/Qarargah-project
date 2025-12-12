@@ -1,37 +1,42 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // === Persian Datepicker (DATE ONLY, POPUP) ===
-  document.querySelectorAll('.jalali-date').forEach((el) => {
-    const altField = el.getAttribute('data-alt-field'); // like "#start_from"
+// dashboard/js/base.js
+document.addEventListener('DOMContentLoaded', function () {
+    // === Persian Datepicker (DATE ONLY, SAFE) ===
+    if (window.jQuery && $.fn && $.fn.persianDatepicker) {
+        document.querySelectorAll('.jalali-date').forEach(function (input) {
+            var altField = input.dataset.altField;
 
-    $(el).persianDatepicker({
-      format: 'YYYY/MM/DD',
-      initialValue: false,
-      autoClose: true,
-      observer: true,
-      timePicker: { enabled: false },
+            $(input).persianDatepicker({
+                observer: true,
+                format: 'YYYY/MM/DD',
+                altField: altField || undefined,
+                altFormat: 'YYYY-MM-DD',  // for hidden miladi field
+                timePicker: { enabled: false },
+                calendarType: 'persian',
+                initialValue: !!input.value
+            });
 
-      // If you use hidden inputs (you do), wire them correctly:
-      altField: altField || undefined,
-      altFormat: 'YYYY/MM/DD',
+            // Prevent manual typing
+            input.setAttribute('readonly', 'readonly');
+        });
+    }
 
-      // safer for bootstrap cards/rtl layouts
-      container: 'body'
-    });
+    // === Sidebar Collapse ===
+    var sidebarToggle = document.getElementById('sidebarToggle');
+    var body = document.body;
 
-    // prevent manual typing but still allow click to open picker
-    el.setAttribute('readonly', 'readonly');
-  });
+    // Apply saved state
+    if (localStorage.getItem('sidebar-collapsed') === 'true') {
+        body.classList.add('sidebar-collapsed');
+    }
 
-  // === Sidebar Collapse ===
-  const sidebarToggle = document.getElementById('sidebarToggle');
-  const body = document.body;
-
-  if (localStorage.getItem('sidebar-collapsed') === 'true') {
-    body.classList.add('sidebar-collapsed');
-  }
-
-  sidebarToggle?.addEventListener('click', () => {
-    body.classList.toggle('sidebar-collapsed');
-    localStorage.setItem('sidebar-collapsed', body.classList.contains('sidebar-collapsed'));
-  });
+    // Click handler
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function () {
+            body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem(
+                'sidebar-collapsed',
+                body.classList.contains('sidebar-collapsed')
+            );
+        });
+    }
 });

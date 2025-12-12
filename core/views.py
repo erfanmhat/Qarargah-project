@@ -569,99 +569,116 @@ def export_leaves_excel(request):
         return redirect('panel_leaves')
 
 
+from datetime import timedelta
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Sum
+from django.shortcuts import render
+from django.utils import timezone
+
+import jdatetime
+
+from core.models import Leave, Soldier, ServiceLocation, ServiceStatus
+
+
+def _prev_month_start(d):
+    """Return the first day of the previous month for a given date d (date object)."""
+    first = d.replace(day=1)
+    # go to last day of previous month, then set day=1
+    prev_last = first - timedelta(days=1)
+    return prev_last.replace(day=1)
+
+
+def _jalali_ym(d):
+    """Format a Gregorian date as Jalali YYYY/MM (string)."""
+    try:
+        # jdatetime.date.fromgregorian expects a date
+        jd = jdatetime.date.fromgregorian(date=d)
+        return jd.strftime("%Y/%m")
+    except Exception:
+        return d.strftime("%Y/%m")
+
+
 @login_required
 def panel_reports(request):
     """Reports page"""
-    from django.db.models import Count, Sum
-    from datetime import datetime
 
-    # Monthly leave statistics
-    today = timezone.now().date()
+    today = timezone.localdate()
     current_month_start = today.replace(day=1)
 
-    # Get last 6 months
+    # ----- Monthly leave statistics (last 6 full months + current partial month) -----
     monthly_leaves = []
-    for i in range(6):
-        month_start = current_month_start
-        if month_start.month == 1:
-            month_start = month_start.replace(year=month_start.year - 1, month=12)
-        else:
-            month_start = month_start.replace(month=month_start.month - 1)
 
-        month_end = current_month_start
-        if i == 0:
-            month_end = today
+    # Build 6 months labels ending at current month
+    # For each month: [month_start, next_month_start)
+    cursor = current_month_start
+    for _ in range(6):
+        month_start = cursor
+        next_month_start = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)  # first of next month
 
         leaves_in_month = Leave.objects.filter(
             start_date__gte=month_start,
-            start_date__lt=month_end
+            start_date__lt=next_month_start
         )
 
         monthly_leaves.append({
-            'month': month_start.strftime('%Y/%m'),
-            'total': leaves_in_month.count(),
-            'total_days': leaves_in_month.aggregate(Sum('days'))['days__sum'] or 0,
+            # send Jalali month label to template
+            "month": _jalali_ym(month_start),
+            "total": leaves_in_month.count(),
+            "total_days": leaves_in_month.aggregate(total_days=Sum("days"))["total_days"] or 0,
         })
 
-        current_month_start = month_start
+        cursor = _prev_month_start(cursor)
 
     monthly_leaves.reverse()
 
-    # Service completion forecast
+    # ----- Service completion forecast (next 6 months) -----
     six_months_later = today + timedelta(days=180)
     ending_forecast = []
     current_month = today.replace(day=1)
 
-    for i in range(6):
-        if current_month.month == 12:
-            month_end = current_month.replace(year=current_month.year + 1, month=1)
-        else:
-            month_end = current_month.replace(month=current_month.month + 1)
+    soldiers = list(
+        Soldier.objects.select_related("service_status").prefetch_related("reductions").all()
+    )
 
-        if i == 5:
-            month_end = six_months_later
+    for i in range(6):
+        next_month = (current_month.replace(day=28) + timedelta(days=4)).replace(day=1)
+
+        # last bucket ends at six_months_later
+        month_end = six_months_later if i == 5 else next_month
 
         count = 0
-        soldiers = Soldier.objects.select_related('service_status').prefetch_related('reductions').all()
         for soldier in soldiers:
             try:
                 end_date = soldier.service_end_date()
-                if end_date and current_month <= end_date < month_end:
-                    count += 1
-            except:
+            except Exception:
                 continue
 
-        try:
-            jd = jdatetime.fromgregorian(date=current_month)
-            month_label = jd.strftime('%Y/%m')
-        except:
-            month_label = current_month.strftime('%Y/%m')
+            if end_date and current_month <= end_date < month_end:
+                count += 1
 
         ending_forecast.append({
-            'month': month_label,
-            'count': count
+            "month": _jalali_ym(current_month),
+            "count": count,
         })
 
-        current_month = month_end
+        current_month = next_month
 
-    # Soldier distribution by location
+    # ----- Soldier distribution -----
     location_dist = ServiceLocation.objects.annotate(
-        soldier_count=Count('soldier')
-    ).filter(soldier_count__gt=0).order_by('-soldier_count')[:10]
+        soldier_count=Count("soldier")
+    ).filter(soldier_count__gt=0).order_by("-soldier_count")[:10]
 
-    # Soldier distribution by status
     status_dist = ServiceStatus.objects.annotate(
-        soldier_count=Count('soldier')
-    ).order_by('-soldier_count')
+        soldier_count=Count("soldier")
+    ).order_by("-soldier_count")
 
     context = {
-        'monthly_leaves': monthly_leaves,
-        'ending_forecast': ending_forecast,
-        'location_dist': location_dist,
-        'status_dist': status_dist,
+        "monthly_leaves": monthly_leaves,
+        "ending_forecast": ending_forecast,
+        "location_dist": location_dist,
+        "status_dist": status_dist,
     }
-
-    return render(request, 'dashboard/reports.html', context)
+    return render(request, "dashboard/reports.html", context)
 
 
 @login_required

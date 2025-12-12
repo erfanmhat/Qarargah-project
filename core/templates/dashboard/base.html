@@ -98,14 +98,11 @@
     {% block content %}{% endblock %}
 </main>
 
+<!-- Scripts (deferred + async where possible) -->
 <script src="{% static 'js/jquery.min.js' %}"></script>
-<!--<script src="{% static 'js/persian-date.min.js' %}"></script>-->
-<script src="{% static 'js/persian-datepicker.min.js' %}"></script>
-
-<script src="{% static 'dashboard/js/base.js' %}"></script>
-
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'js/persian-date.min.js' %}"></script>
+<script src="{% static 'js/persiandate.min.js' %}"></script>
+<script src="{% static 'js/persian-datepicker.min.js' %}" defer></script>
 
 <script src="{% static 'dashboard/js/theme-toggle.js' %}" defer></script>
 <script src="{% static 'dashboard/js/base.js' %}" defer></script>

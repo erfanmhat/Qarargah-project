@@ -16,24 +16,24 @@
             <div class="table-responsive">
                 <table class="table table-hover theme-table">
                     <thead>
-                        <tr>
-                            <th>ماه</th>
-                            <th>تعداد مرخصی</th>
-                            <th>کل روزهای مرخصی</th>
-                        </tr>
+                    <tr>
+                        <th>ماه</th>
+                        <th>تعداد مرخصی</th>
+                        <th>کل روزهای مرخصی</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {% for month in monthly_leaves %}
-                        <tr>
-                            <td>{{ month.month }}</td>
-                            <td>{{ month.total }}</td>
-                            <td>{{ month.total_days }} روز</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center text-muted">داده‌ای موجود نیست</td>
-                        </tr>
-                        {% endfor %}
+                    {% for month in monthly_leaves %}
+                    <tr>
+                        <td>{{ month.month }}</td>
+                        <td>{{ month.total }}</td>
+                        <td>{{ month.total_days }} روز</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">داده‌ای موجود نیست</td>
+                    </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -50,24 +50,24 @@
             <div class="table-responsive">
                 <table class="table table-hover theme-table">
                     <thead>
-                        <tr>
-                            <th>ماه</th>
-                            <th>تعداد سرباز</th>
-                        </tr>
+                    <tr>
+                        <th>ماه</th>
+                        <th>تعداد سرباز</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {% for forecast in ending_forecast %}
-                        <tr>
-                            <td>{{ forecast.month }}</td>
-                            <td>
-                                <span class="badge bg-warning text-dark">{{ forecast.count }} سرباز</span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
-                        </tr>
-                        {% endfor %}
+                    {% for forecast in ending_forecast %}
+                    <tr>
+                        <td>{{ forecast.month }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">{{ forecast.count }} سرباز</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
+                    </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -84,26 +84,26 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                <table class="table table-hover theme-table">
+                        <table class="table table-hover theme-table">
                             <thead>
-                                <tr>
-                                    <th>محل خدمت</th>
-                                    <th>تعداد سرباز</th>
-                                </tr>
+                            <tr>
+                                <th>محل خدمت</th>
+                                <th>تعداد سرباز</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                {% for location in location_dist %}
-                                <tr>
-                                    <td>{{ location.name }}</td>
-                                    <td>
-                                        <span class="badge bg-primary">{{ location.soldier_count }}</span>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
-                                </tr>
-                                {% endfor %}
+                            {% for location in location_dist %}
+                            <tr>
+                                <td>{{ location.name }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ location.soldier_count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
+                            </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -120,26 +120,26 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                    <table class="table table-hover theme-table">
+                        <table class="table table-hover theme-table">
                             <thead>
-                                <tr>
-                                    <th>وضعیت خدمت</th>
-                                    <th>تعداد سرباز</th>
-                                </tr>
+                            <tr>
+                                <th>وضعیت خدمت</th>
+                                <th>تعداد سرباز</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                {% for status in status_dist %}
-                                <tr>
-                                    <td>{{ status.title }}</td>
-                                    <td>
-                                        <span class="badge bg-success">{{ status.soldier_count }}</span>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
-                                </tr>
-                                {% endfor %}
+                            {% for status in status_dist %}
+                            <tr>
+                                <td>{{ status.title }}</td>
+                                <td>
+                                    <span class="badge bg-success">{{ status.soldier_count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
+                            </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>

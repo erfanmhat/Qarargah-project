@@ -1,17 +1,14 @@
 /* ===== Font Face ===== */
 @font-face {
     font-family: 'IRANSans';
-    src: url('../../fonts/IRANSansWeb.woff2') format('woff2'),
-         url('../../fonts/IRANSansWeb.woff') format('woff'),
-         url('../../fonts/IRANSansWeb.ttf') format('truetype');
+    src: url('../../fonts/Vazirmatn-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRANSans';
-    src: url('../../fonts/IRANSansWeb_Bold.woff2') format('woff2'),
-         url('../../fonts/IRANSansWeb_Bold.woff') format('woff');
+    src: url('../../fonts/Vazirmatn-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -293,4 +290,73 @@ body.sidebar-collapsed .nav-link span {
 body.sidebar-collapsed .nav-link i {
   width: auto !important;
   margin: 0 !important;
+}
+
+/* Persian Datepicker (Babakhani) - Dark Theme */
+html[data-theme="dark"] .datepicker-plot-area {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-lg) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .datepicker-plot-area * {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .datepicker-plot-area .datepicker-navigator,
+html[data-theme="dark"] .datepicker-plot-area .datepicker-header {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border) !important;
+}
+
+html[data-theme="dark"] .datepicker-plot-area .datepicker-day-view .table-days td span,
+html[data-theme="dark"] .datepicker-plot-area .datepicker-month-view .month-item,
+html[data-theme="dark"] .datepicker-plot-area .datepicker-year-view .year-item {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .datepicker-plot-area .datepicker-day-view .table-days td span:hover,
+html[data-theme="dark"] .datepicker-plot-area .month-item:hover,
+html[data-theme="dark"] .datepicker-plot-area .year-item:hover {
+  background: rgba(255,255,255,0.08) !important;
+}
+
+html[data-theme="dark"] .datepicker-plot-area .datepicker-day-view .table-days td.selected span,
+html[data-theme="dark"] .datepicker-plot-area .month-item.selected,
+html[data-theme="dark"] .datepicker-plot-area .year-item.selected {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+/* Disabled/outside days */
+html[data-theme="dark"] .datepicker-plot-area .disabled,
+html[data-theme="dark"] .datepicker-plot-area .disabled * {
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}
+
+/* Ensure popup is above your fixed topbar/sidebar (z-index 1020/1030) */
+.datepicker-plot-area { z-index: 5000 !important; }
+
+html, body, .table td, .table th, .nav-link, .badge {
+  line-height: 1.6 !important;
+}
+
+/* Don't clip Persian glyph dots/diacritics in table wrappers */
+.table-responsive.overflow-hidden {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Fix Persian/Arabic glyph clipping inside badges */
+.theme-table .badge,
+.table .badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1.9 !important;
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.35rem !important;
+  overflow: visible !important;
 }
