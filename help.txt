@@ -1,0 +1,1 @@
+python -m pyinstaller --noconfirm --onedir --name SoldierServer run_server.py
