@@ -2,7 +2,6 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.views.decorators.http import require_http_methods
-from weasyprint import HTML
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
@@ -22,6 +21,8 @@ from core.forms import SettingsForm, ExcelImportForm, ExcelImportConfirmForm
 from jdatetime import datetime as jdatetime
 
 from core.utils.excel_parser import parse_workbook
+from core.utils.pdf_util_leaves import build_soldier_leaves_pdf
+from core.utils.pdf_util_soldier_profile import build_soldier_profile_pdf
 from core.utils.validators import parse_jalali_date
 import datetime as dt
 
@@ -401,18 +402,11 @@ def panel_soldier_detail(request, soldier_id):
 
 @login_required
 def soldier_profile_pdf(request, soldier_id):
-    """Generate PDF profile for a soldier (A5 size)"""
     soldier = get_object_or_404(Soldier, id=soldier_id)
     balances = soldier.leave_balances()
     now = timezone.now()
 
-    html = render_to_string('pdf/soldier_profile.html', {
-        'soldier': soldier,
-        'balances': balances,
-        'request': request,
-        'now': now,
-    })
-    pdf_file = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
+    pdf_file = build_soldier_profile_pdf(soldier, balances, now)
     response = HttpResponse(pdf_file, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="soldier_{soldier.id}_profile.pdf"'
     return response
@@ -420,20 +414,12 @@ def soldier_profile_pdf(request, soldier_id):
 
 @login_required
 def soldier_leaves_pdf(request, soldier_id):
-    """Generate PDF report of all leaves for a soldier (A4)"""
     soldier = get_object_or_404(Soldier, id=soldier_id)
     leaves = soldier.leaves.all().order_by('-start_date')
     balances = soldier.leave_balances()
     now = timezone.now()
 
-    html = render_to_string('pdf/soldier_leaves.html', {
-        'soldier': soldier,
-        'leaves': leaves,
-        'balances': balances,
-        'request': request,
-        'now': now,
-    })
-    pdf_file = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
+    pdf_file = build_soldier_leaves_pdf(soldier, leaves, balances, now)
     response = HttpResponse(pdf_file, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="soldier_{soldier.id}_leaves.pdf"'
     return response
