@@ -1104,6 +1104,11 @@ def _jalali_yyyySmmSdd_to_date(jalali_yyyySmmSdd: str):
     return jdatetime.date(y, m, d).togregorian()
 
 
+def _ranges_overlap(a_start, a_end, b_start, b_end):
+    """Overlap (inclusive)"""
+    return a_start <= b_end and b_start <= a_end
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def import_excel(request):
@@ -1120,108 +1125,162 @@ def import_excel(request):
     errors = []
     normalized_items = []
 
-    for item in parsed:
-        sheet = item["sheet_name"]
-        sdata = item["soldier"]
+    def add_error(sheet, section, field, message, value=None):
+        errors.append({
+            "sheet": sheet,
+            "section": section,
+            "field": field,
+            "message": message,
+            "value": value,
+        })
 
-        # --- Required fields from parser ---
+    for item in parsed:
+        sheet = item.get("sheet_name")
+        sdata = item.get("soldier") or {}
+
+        # -------- Soldier required fields --------
         full_name = sdata.get("full_name")
         dossier_code = sdata.get("dossier_code")
         dispatch_jalali = sdata.get("dispatch_jalali")
 
         if not full_name:
-            errors.append({"sheet": sheet, "section": "Soldier", "field": "full_name",
-                           "message": "نام کامل از سلول B6 خوانده نشد.", "value": sdata.get("full_name")})
+            add_error(sheet, "Soldier", "full_name", "نام کامل از سلول B6 خوانده نشد.", sdata.get("full_name"))
         if not dossier_code:
-            errors.append({"sheet": sheet, "section": "Soldier", "field": "dossier_code",
-                           "message": "کد پرونده از سلول B6 (بعد از خط تیره) خوانده نشد.",
-                           "value": sdata.get("dossier_code")})
+            add_error(sheet, "Soldier", "dossier_code", "کد پرونده از سلول B6 (بعد از خط تیره) خوانده نشد.", sdata.get("dossier_code"))
         if not dispatch_jalali:
-            errors.append({"sheet": sheet, "section": "Soldier", "field": "dispatch_date",
-                           "message": "تاریخ اعزام از سلول‌های G3/H3/I3 خوانده نشد.",
-                           "value": sdata.get("dispatch_jalali")})
+            add_error(sheet, "Soldier", "dispatch_date", "تاریخ اعزام از سلول‌های G3/H3/I3 خوانده نشد.", sdata.get("dispatch_jalali"))
 
-        # --- Build Soldier payload for DB ---
         soldier_payload = {
             "full_name": full_name,
             "dossier_code": dossier_code,
         }
 
-        # تاریخ اعزام را اگر مدل شما DateField دارد تبدیل می‌کنیم:
         if dispatch_jalali:
             try:
                 soldier_payload["service_start_date"] = _jalali_yyyySmmSdd_to_date(dispatch_jalali)
             except Exception as e:
-                errors.append({"sheet": sheet, "section": "Soldier", "field": "service_start_date",
-                               "message": f"تبدیل تاریخ اعزام (جلالی→میلادی) ناموفق: {e}",
-                               "value": dispatch_jalali})
+                add_error(sheet, "Soldier", "service_start_date",
+                          f"تبدیل تاریخ اعزام (جلالی→میلادی) ناموفق: {e}", dispatch_jalali)
 
-        # --- Validate Soldier model (اختیاری ولی خوب) ---
+        # -------- Soldier validation (بدون DB-dependent checks) --------
         try:
-            tmp = Soldier(**soldier_payload)
-            tmp.full_clean()
+            tmp_soldier = Soldier(**soldier_payload)
+            # clean_fields فقط ولیدیشن فیلدهاست و DB نمی‌زند
+            tmp_soldier.clean_fields()
+            # اگر داخل clean مدل شما DB query دارد، بهتر است این خط را حذف کنید:
+            # tmp_soldier.clean()
         except ValidationError as ve:
             for field, msgs in ve.message_dict.items():
                 for m in msgs:
-                    errors.append({"sheet": sheet, "section": "Soldier", "field": field,
-                                   "message": m, "value": soldier_payload.get(field)})
+                    add_error(sheet, "Soldier", field, m, soldier_payload.get(field))
 
-        # --- Validate leaves ---
+        # -------- Leaves validation --------
         validated_leaves = []
-        for l in item["leaves"]:
-            # حداقل‌ها
-            if not l.get("leave_type_key"):
-                errors.append({"sheet": sheet, "section": "Leave", "field": "leave_type",
-                               "message": "نوع مرخصی معتبر نیست.", "value": l.get("leave_type_fa")})
-                continue
-            if not l.get("start_jalali"):
-                errors.append({"sheet": sheet, "section": "Leave", "field": "start_date",
-                               "message": "از تاریخ مرخصی خوانده نشد/نامعتبر است.", "value": l})
-                continue
-            if not l.get("duration_days"):
-                errors.append({"sheet": sheet, "section": "Leave", "field": "duration_days",
-                               "message": "مدت مرخصی (ستون D) خوانده نشد/نامعتبر است.", "value": l})
-                continue
-            if not l.get("end_jalali"):
-                errors.append({"sheet": sheet, "section": "Leave", "field": "end_date",
-                               "message": "تا تاریخ خالی است و محاسبه هم انجام نشد (jdatetime نصب نیست یا داده مشکل دارد).",
-                               "value": l})
+        raw_leaves = item.get("leaves") or []
+
+        for l in raw_leaves:
+            leave_type_fa = l.get("leave_type_fa")
+            start_jalali = l.get("start_jalali")
+            end_jalali = l.get("end_jalali")
+            duration_days = l.get("duration_days")
+            row = l.get("row")
+
+            if not leave_type_fa:
+                add_error(sheet, "Leave", "leave_type",
+                          "نوع مرخصی معتبر نیست.", l.get("leave_type_fa"))
                 continue
 
-            # تبدیل تاریخ‌ها
+            if not start_jalali:
+                add_error(sheet, "Leave", "start_date",
+                          "از تاریخ مرخصی خوانده نشد/نامعتبر است.", {"row": row, **l})
+                continue
+
+            if not duration_days:
+                add_error(sheet, "Leave", "duration_days",
+                          "مدت مرخصی (ستون D) خوانده نشد/نامعتبر است.", {"row": row, **l})
+                continue
+
+            if not end_jalali:
+                add_error(sheet, "Leave", "end_date",
+                          "تا تاریخ خالی است و محاسبه هم انجام نشد.", {"row": row, **l})
+                continue
+
             try:
-                start_date = _jalali_yyyySmmSdd_to_date(l["start_jalali"])
-                end_date = _jalali_yyyySmmSdd_to_date(l["end_jalali"])
+                start_date = _jalali_yyyySmmSdd_to_date(start_jalali)
+                end_date = _jalali_yyyySmmSdd_to_date(end_jalali)
             except Exception as e:
-                errors.append({"sheet": sheet, "section": "Leave", "field": "date",
-                               "message": f"تبدیل تاریخ مرخصی (جلالی→میلادی) ناموفق: {e}", "value": l})
+                add_error(sheet, "Leave", "date",
+                          f"تبدیل تاریخ مرخصی (جلالی→میلادی) ناموفق: {e}", {"row": row, **l})
                 continue
 
-            # نمونه ولیدیشن مدل Leave
+            if start_date > end_date:
+                add_error(sheet, "Leave", "date_range",
+                          "بازه تاریخ مرخصی نامعتبر است (از تاریخ بزرگتر از تا تاریخ).",
+                          {"row": row, "leave_type": leave_type_fa, "start": start_date, "end": end_date})
+                continue
+
+            # ولیدیشن فیلدهای Leave بدون اینکه clean() مدل را صدا بزنیم (چون ممکن است DB بزند)
             try:
-                dummy_soldier = Soldier(**soldier_payload)
+                dummy_soldier = Soldier(**soldier_payload)  # unsaved
                 leave_obj = Leave(
                     soldier=dummy_soldier,
-                    leave_type=l["leave_type_key"],
+                    leave_type=leave_type_fa,
                     start_date=start_date,
                     end_date=end_date,
-                    notes=""
+                    notes="",
                 )
-                leave_obj.full_clean()
-                validated_leaves.append({
-                    "leave_type": l["leave_type_key"],
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "duration_days": l["duration_days"],
-                    "row": l.get("row"),
-                    "leave_type_fa": l.get("leave_type_fa"),
-                })
+                leave_obj.clean_fields()
             except ValidationError as ve:
                 for field, msgs in ve.message_dict.items():
                     for m in msgs:
-                        errors.append({"sheet": sheet, "section": "Leave", "field": field,
-                                       "message": m, "value": l})
+                        add_error(sheet, "Leave", field, m, {"row": row, **l})
+                continue
 
+            validated_leaves.append({
+                "leave_type": leave_type_fa,
+                "start_date": start_date,
+                "end_date": end_date,
+                "duration_days": duration_days,
+                "row": row,
+                "leave_type_fa": leave_type_fa,
+                "notes": l.get("notes", ""),
+            })
+
+        # -------- Conflict checks (داخل همین Sheet / اکسل) --------
+        # اگر می‌خواهید کانفلیکت فقط برای leave_type یکسان حساب شود، flag زیر را True کنید
+        CHECK_CONFLICT_ONLY_IF_SAME_TYPE = False
+
+        # 1) تکراری دقیق: نوع + تاریخ شروع + تاریخ پایان
+        seen = set()
+        for lv in validated_leaves:
+            key = (lv["leave_type"], lv["start_date"], lv["end_date"])
+            if key in seen:
+                add_error(sheet, "Leave", "duplicate",
+                          "مرخصی تکراری (نوع و بازه تاریخ کاملاً یکسان) در فایل وجود دارد.",
+                          {"row": lv.get("row"), "leave_type": lv["leave_type"], "start": lv["start_date"], "end": lv["end_date"]})
+            else:
+                seen.add(key)
+
+        # 2) هم‌پوشانی بازه‌ها
+        # مرتب‌سازی برای اینکه با چک همسایه‌ها تداخل‌ها را بگیریم
+        sorted_leaves = sorted(validated_leaves, key=lambda x: (x["start_date"], x["end_date"]))
+
+        for i in range(len(sorted_leaves) - 1):
+            a = sorted_leaves[i]
+            b = sorted_leaves[i + 1]
+
+            if CHECK_CONFLICT_ONLY_IF_SAME_TYPE and a["leave_type"] != b["leave_type"]:
+                continue
+
+            if _ranges_overlap(a["start_date"], a["end_date"], b["start_date"], b["end_date"]):
+                add_error(sheet, "Leave", "overlap",
+                          "تداخل (هم‌پوشانی) بین مرخصی‌ها در همین فایل وجود دارد.",
+                          {
+                              "a": {"row": a.get("row"), "type": a["leave_type"], "start": a["start_date"], "end": a["end_date"]},
+                              "b": {"row": b.get("row"), "type": b["leave_type"], "start": b["start_date"], "end": b["end_date"]},
+                          })
+
+        # -------- collect preview payload --------
         normalized_items.append({
             "sheet_name": sheet,
             "soldier": _deep_jsonable(soldier_payload),

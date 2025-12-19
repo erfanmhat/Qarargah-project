@@ -1,6 +1,6 @@
 from openpyxl import load_workbook
 import re
-from datetime import date, timedelta
+import jdatetime
 
 
 # --- helpers ---
@@ -9,6 +9,16 @@ def normalize(v):
         return None
     s = str(v).strip()
     s = s.replace("ي", "ی").replace("ك", "ک")
+    s = s.replace("۰", "0") \
+        .replace("۱", "1") \
+        .replace("۲", "2") \
+        .replace("۳", "3") \
+        .replace("۴", "4") \
+        .replace("۵", "5") \
+        .replace("۶", "6") \
+        .replace("۷", "7") \
+        .replace("۸", "8") \
+        .replace("۹", "9")
     s = re.sub(r"\s+", " ", s)
     return s or None
 
@@ -62,24 +72,29 @@ def parse_jalali_str(s):
     return None
 
 
-def add_days_jalali_yyyymmdd(start_yyyymmdd, days):
-    """
-    چون جلالی است، جمع روز روی جلالی دقیق نیست مگر با jdatetime.
-    برای اینکه خروجی درست باشد، پیشنهاد می‌کنم در پروژه jdatetime نصب شود.
-    این تابع را طوری نوشته‌ام که اگر jdatetime موجود باشد دقیق حساب کند،
-    وگرنه همان C را خالی می‌گذارد تا خطا/هشدار بدهیم.
-    """
+from datetime import timedelta
+
+
+def add_days_jalali(start_jalali, days):
+    if not start_jalali or days in (None, ""):
+        return None
+
     try:
-        import jdatetime
-        y = int(start_yyyymmdd[:4])
-        m = int(start_yyyymmdd[4:6])
-        d = int(start_yyyymmdd[6:8])
+        days = int(days)
+        if days < 1:
+            return None
+
+        s = str(start_jalali).replace("/", "").strip()
+        if len(s) != 8 or not s.isdigit():
+            return None
+
+        y, m, d = int(s[:4]), int(s[4:6]), int(s[6:8])
+
         jd = jdatetime.date(y, m, d)
-        # اگر مدت مرخصی 1 روز باشد، end همان start است => + (days-1)
-        jd2 = jd + (days - 1)
-        g = jd2.togregorian()  # صرفاً برای امنیت، ولی ما خروجی جلالی می‌خواهیم:
-        # برگرداندن جلالی:
+        jd2 = jd + timedelta(days=days - 1)
+
         return f"{jd2.year:04d}{jd2.month:02d}{jd2.day:02d}"
+
     except Exception:
         return None
 
@@ -133,15 +148,9 @@ def parse_sheet_fixed(ws, sheet_name):
     row = 8
     while True:
         leave_type_fa = normalize(ws[f"A{row}"].value)
-        start_raw = ws[f"B{row}"].value
-        end_raw = ws[f"C{row}"].value
-        duration_raw = ws[f"D{row}"].value
-        print("=" * 80)
-        print(leave_type_fa)
-        print(start_raw)
-        print(end_raw)
-        print(duration_raw)
-        print("#" * 80)
+        start_raw = normalize(ws[f"B{row}"].value)
+        end_raw = normalize(ws[f"C{row}"].value)
+        duration_raw = normalize(ws[f"D{row}"].value)
 
         # شرط پایان: اگر نوع مرخصی خالی شد و بقیه هم خالی، خروج
         if not leave_type_fa and start_raw is None and end_raw is None and duration_raw is None:
@@ -166,14 +175,10 @@ def parse_sheet_fixed(ws, sheet_name):
         except Exception:
             duration_days = None
 
-        # end (اگر خالی بود، محاسبه کن)
         end_yyyymmdd = None
-        end_parts = parse_jalali_str(end_raw)
-        if end_parts:
-            end_yyyymmdd = jalali_to_yyyymmdd(*end_parts)
-        else:
-            if start_yyyymmdd and duration_days and duration_days > 0:
-                end_yyyymmdd = add_days_jalali_yyyymmdd(start_yyyymmdd, duration_days)
+        # end_parts = parse_jalali_str(end_raw)
+        if start_yyyymmdd and duration_days and duration_days > 0:
+            end_yyyymmdd = add_days_jalali(start_yyyymmdd, duration_days)
 
         leaves.append({
             "leave_type_fa": leave_type_fa,

@@ -136,18 +136,22 @@ class SoldierManager(models.Manager):
 
 class Soldier(TimeStampedModel):
     full_name = models.CharField("نام و نام خانوادگی", max_length=100)
-    national_code = models.CharField("کد ملی", max_length=10, unique=True, validators=[MinLengthValidator(10)])
+    national_code = models.CharField("کد ملی", null=True, blank=True, max_length=10, unique=True,
+                                     validators=[MinLengthValidator(10)])
     dossier_code = models.IntegerField("کد پرونده", default=0, db_index=True, blank=True)
-    dispatch_type = models.CharField("نوع اعزامی", max_length=20, choices=DispatchType.choices)
-    health_status = models.ForeignKey(HealthStatus, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="وضعیت سلامت")
-    service_status = models.ForeignKey(ServiceStatus, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="وضعیت خدمت")
-    current_location = models.ForeignKey(ServiceLocation, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="محل خدمت فعلی")
+    dispatch_type = models.CharField("نوع اعزامی", null=True, blank=True, max_length=20, choices=DispatchType.choices)
+    health_status = models.ForeignKey(HealthStatus, null=True, blank=True, on_delete=models.SET_NULL,
+                                      verbose_name="وضعیت سلامت")
+    service_status = models.ForeignKey(ServiceStatus, null=True, blank=True, on_delete=models.SET_NULL,
+                                       verbose_name="وضعیت خدمت")
+    current_location = models.ForeignKey(ServiceLocation, null=True, blank=True, on_delete=models.SET_NULL,
+                                         verbose_name="محل خدمت فعلی")
     expertises = models.ManyToManyField(Expertise, blank=True, verbose_name="تخصص‌ها")
     extra_service_days = models.IntegerField("روزهای اضافه خدمت", default=0)
 
     service_start_date = models.DateField("تاریخ شروع خدمت", db_index=True)
     arrival_date = models.DateField("تاریخ ورود به ناحیه", null=True, blank=True)
-    birth_date = models.DateField("تاریخ تولد")
+    birth_date = models.DateField("تاریخ تولد", null=True, blank=True)
 
     phone_personal = models.CharField("شماره همراه سرباز", max_length=11, blank=True)
     phone_parent = models.CharField("شماره والدین/همسر", max_length=11, blank=True)
@@ -286,7 +290,7 @@ class Soldier(TimeStampedModel):
                 raise ValidationError({
                     'birth_date': 'تاریخ تولد باید قبل از تاریخ شروع خدمت باشد.'
                 })
-        
+
         # Validate arrival date is after service start date
         if self.arrival_date and self.service_start_date:
             if self.arrival_date < self.service_start_date:
@@ -319,6 +323,8 @@ class LeaveType(models.TextChoices):
     EMERGENCY = 'emergency', 'اضطراری'
 
 
+# TODO remove emergency
+
 class Leave(TimeStampedModel):
     soldier = models.ForeignKey(Soldier, related_name='leaves', on_delete=models.CASCADE, verbose_name="سرباز")
     leave_type = models.CharField("نوع مرخصی", max_length=20, choices=LeaveType.choices)
@@ -340,7 +346,7 @@ class Leave(TimeStampedModel):
                 raise ValidationError({
                     'end_date': 'تاریخ برگشت باید بعد از تاریخ رفت باشد.'
                 })
-            
+
             # Validate leave doesn't exceed reasonable duration (e.g., 30 days)
             days_diff = (self.end_date - self.start_date).days + 1
             if days_diff > 30:
@@ -367,7 +373,8 @@ class Leave(TimeStampedModel):
 
             # Caps for medical and reward leaves
             if self.pk:
-                other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type).exclude(pk=self.pk)
+                other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type).exclude(
+                    pk=self.pk)
             else:
                 other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type)
 
