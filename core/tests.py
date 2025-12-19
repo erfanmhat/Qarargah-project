@@ -34,7 +34,7 @@ class SoldierModelTest(TestCase):
 
     def test_soldier_creation(self):
         """Test soldier creation"""
-        self.assertEqual(self.soldier.full_name(), "علی احمدی")
+        self.assertEqual(self.soldier.full_name, "علی احمدی")
         self.assertEqual(str(self.soldier), "علی احمدی - 1234567890")
 
     def test_service_end_date_calculation(self):

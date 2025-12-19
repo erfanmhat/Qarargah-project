@@ -299,7 +299,7 @@ class Soldier(TimeStampedModel):
                 })
 
     def __str__(self):
-        return f"{self.full_name()} - {self.national_code}"
+        return f"{self.full_name} - {self.national_code}"
 
 
 class SoldierServiceReduction(TimeStampedModel):
@@ -320,13 +320,11 @@ class LeaveType(models.TextChoices):
     MEDICAL = 'medical', 'استعلاجی'
     REWARD = 'reward', 'تشویقی'
     ENTITLEMENT = 'entitlement', 'استحقاقی'
-    EMERGENCY = 'emergency', 'اضطراری'
 
-
-# TODO remove emergency
 
 class Leave(TimeStampedModel):
-    soldier = models.ForeignKey(Soldier, related_name='leaves', on_delete=models.CASCADE, verbose_name="سرباز")
+    soldier = models.ForeignKey(Soldier, null=True, blank=True, related_name='leaves', on_delete=models.CASCADE,
+                                verbose_name="سرباز")
     leave_type = models.CharField("نوع مرخصی", max_length=20, choices=LeaveType.choices)
     start_date = models.DateField("تاریخ رفت", db_index=True)
     end_date = models.DateField("تاریخ برگشت", db_index=True)

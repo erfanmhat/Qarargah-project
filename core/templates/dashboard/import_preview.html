@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% load static %}
+{% load jalali %}
 
 {% block title %}پیش‌نمایش ورود اکسل{% endblock %}
 {% block page_title %}پیش‌نمایش و خطاهای ورود اکسل{% endblock %}
@@ -167,8 +168,28 @@
                                                     <tbody>
                                                     {% for k, v in item.soldier.items %}
                                                     <tr>
-                                                        <td style="width: 220px;"><code>{{ k }}</code></td>
-                                                        <td>{% if v %}{{ v }}{% else %}-{% endif %}</td>
+                                                        <td style="width: 220px;"><code>
+                                                            {% if k == "full_name" %}
+                                                            نام و نام خانوادگی
+                                                            {% elif k == "dossier_code" %}
+                                                            کد پرونده
+                                                            {% elif k == "service_start_date" %}
+                                                            تاریخ اعزام
+                                                            {% else %}
+                                                            {{ k }}
+                                                            {% endif %}
+                                                        </code></td>
+                                                        <td>
+                                                            {% if v %}
+                                                            {% if k == "service_start_date" %}
+                                                            {{ v|to_jalali }}
+                                                            {% else %}
+                                                            {{ v }}
+                                                            {% endif %}
+                                                            {% else %}
+                                                            -
+                                                            {% endif %}
+                                                        </td>
                                                     </tr>
                                                     {% endfor %}
                                                     </tbody>
@@ -198,17 +219,35 @@
                                                         <th>نوع</th>
                                                         <th>از تاریخ</th>
                                                         <th>تا تاریخ</th>
+                                                        <th>مدت (روز)</th>
                                                         <th>توضیحات</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
                                                     {% for l in item.leaves %}
                                                     <tr>
-                                                        <td><code>{{ l.leave_type }}</code></td>
-                                                        <td>{{ l.start_date }}</td>
-                                                        <td>{{ l.end_date }}</td>
-                                                        <td class="text-muted">{% if l.notes %}{{ l.notes }}{% else
-                                                            %}-{% endif %}
+                                                        <td><code>
+                                                            {% if l.leave_type == "medical" %}
+                                                            استعلاجی
+                                                            {% elif l.leave_type == "reward" %}
+                                                            تشویقی
+                                                            {% elif l.leave_type == "entitlement" %}
+                                                            استحقاقی
+                                                            {% else %}
+                                                            {{ l.leave_type }}
+                                                            {% endif %}
+                                                        </code></td>
+
+                                                        <td>{{ l.start_date|to_jalali }}</td>
+                                                        <td>{{ l.end_date|to_jalali }}</td>
+                                                        <td>{{ l.duration_days }}</td>
+
+                                                        <td class="text-muted">
+                                                            {% if l.notes and l.notes|length != 0 %}
+                                                            {{ l.notes }}
+                                                            {% else %}
+                                                            -
+                                                            {% endif %}
                                                         </td>
                                                     </tr>
                                                     {% endfor %}
@@ -222,45 +261,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Reductions -->
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <div class="card border-0 shadow-sm">
-                                        <div class="card-body">
-                                            <h6 class="mb-3">
-                                                <i class="fas fa-minus-circle text-danger ms-2"></i>
-                                                کسر خدمت
-                                                <span class="badge bg-danger me-2">{{ item.reductions|length }}</span>
-                                            </h6>
-
-                                            {% if item.reductions %}
-                                            <div class="table-responsive">
-                                                <table class="table table-dark table-hover mb-0">
-                                                    <thead>
-                                                    <tr>
-                                                        <th>نوع</th>
-                                                        <th>روز</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    {% for r in item.reductions %}
-                                                    <tr>
-                                                        <td>{{ r.reduction_type_title }}</td>
-                                                        <td><code>{{ r.days }}</code></td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            {% else %}
-                                            <div class="text-muted">کسر خدمتی ثبت/تشخیص داده نشد.</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
                 </div>

@@ -15,10 +15,6 @@
         <span class="badge bg-success rounded-pill px-3">
                 <i class="fas fa-trophy"></i> تشویقی
             </span>
-        {% elif leave.leave_type == 'emergency' %}
-        <span class="badge bg-warning text-dark rounded-pill px-3">
-                <i class="fas fa-exclamation-triangle"></i> اضطراری
-            </span>
         {% else %}
         <span class="badge bg-primary rounded-pill px-3">
                 <i class="fas fa-calendar"></i> {{ leave.get_leave_type_display }}
@@ -45,8 +41,9 @@
             <a href="{% url 'panel_leave_delete' leave.id %}"
                class="btn btn-sm btn-outline-danger"
                title="حذف"
-               onclick="return confirm('آیا از حذف مرخصی سرباز \"{{ leave.soldier.full_name|escapejs }}\" اطمینان دارید؟');">
-                <i class="fas fa-trash-alt"></i>
+               onclick="return confirm('آیا از حذف مرخصی سرباز \" {{ leave.soldier.full_name|escapejs }}\" اطمینان
+            دارید؟');">
+            <i class="fas fa-trash-alt"></i>
             </a>
         </div>
     </td>

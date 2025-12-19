@@ -14,17 +14,12 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 import json
 import logging
-from django.template.loader import render_to_string
-from core.models import Soldier, Leave, LeaveType, ServiceLocation, ServiceStatus, SystemSetting, HealthStatus, \
-    SoldierServiceReduction, ServiceReductionType
+from core.models import Soldier, Leave, LeaveType, ServiceLocation, ServiceStatus, SystemSetting, HealthStatus
 from core.forms import SettingsForm, ExcelImportForm, ExcelImportConfirmForm
 from jdatetime import datetime as jdatetime
 
 from core.utils.excel_parser import parse_workbook
-from core.utils.pdf_util_leaves import build_soldier_leaves_pdf
-from core.utils.pdf_util_soldier_profile import build_soldier_profile_pdf
-from core.utils.validators import parse_jalali_date
-import datetime as dt
+from core.utils.pdf_fpdf import build_soldier_profile_pdf, build_soldier_leaves_pdf
 
 logger = logging.getLogger('core')
 
@@ -404,25 +399,21 @@ def panel_soldier_detail(request, soldier_id):
 def soldier_profile_pdf(request, soldier_id):
     soldier = get_object_or_404(Soldier, id=soldier_id)
     balances = soldier.leave_balances()
-    now = timezone.now()
+    now = timezone.localtime(timezone.now())
 
-    pdf_file = build_soldier_profile_pdf(soldier, balances, now)
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="soldier_{soldier.id}_profile.pdf"'
-    return response
+    pdf_bytes = build_soldier_profile_pdf(soldier, balances, now)
+    return HttpResponse(pdf_bytes, content_type="application/pdf")
 
 
 @login_required
 def soldier_leaves_pdf(request, soldier_id):
     soldier = get_object_or_404(Soldier, id=soldier_id)
-    leaves = soldier.leaves.all().order_by('-start_date')
+    leaves = soldier.leaves.all().order_by("-start_date")
     balances = soldier.leave_balances()
-    now = timezone.now()
+    now = timezone.localtime(timezone.now())
 
-    pdf_file = build_soldier_leaves_pdf(soldier, leaves, balances, now)
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="soldier_{soldier.id}_leaves.pdf"'
-    return response
+    pdf_bytes = build_soldier_leaves_pdf(soldier, leaves, balances, now)
+    return HttpResponse(pdf_bytes, content_type="application/pdf")
 
 
 @login_required
@@ -430,7 +421,7 @@ def panel_soldier_delete(request, soldier_id):
     soldier = get_object_or_404(Soldier, id=soldier_id)
 
     if request.method == 'POST':
-        soldier_name = soldier.full_name()
+        soldier_name = soldier.full_name
         soldier_id = soldier.id
         soldier.delete()
         logger.info(f'Soldier {soldier_id} ({soldier_name}) deleted by user {request.user.username}')
@@ -445,7 +436,7 @@ def panel_leave_delete(request, leave_id):
     leave = get_object_or_404(Leave, id=leave_id)
 
     if request.method == 'POST':
-        soldier_name = leave.soldier.full_name()
+        soldier_name = leave.soldier.full_name
         leave_id = leave.id
         leave.delete()
         logger.info(f'Leave {leave_id} for soldier {soldier_name} deleted by user {request.user.username}')
@@ -560,7 +551,7 @@ def export_leaves_excel(request):
         # Data
         for leave in leaves:
             ws.append([
-                leave.soldier.full_name(),
+                leave.soldier.full_name,
                 leave.soldier.national_code,
                 leave.get_leave_type_display(),
                 leave.start_date.strftime('%Y/%m/%d'),
@@ -756,8 +747,8 @@ def seed_data(request):
                     defaults={'is_exempt_from_combat': True}
                 )[0],
                 HealthStatus.objects.get_or_create(
-                    title='محدود',
-                    defaults={'is_exempt_from_combat': False}
+                    title='گروه ب',
+                    defaults={'is_exempt_from_combat': True}
                 )[0],
             ]
 
@@ -788,12 +779,16 @@ def seed_data(request):
 
             reduction_types = [
                 ServiceReductionType.objects.get_or_create(
-                    title='آموزشی',
-                    defaults={'default_days': 30}
+                    title='متاهل',
+                    defaults={'default_days': 60}
                 )[0],
                 ServiceReductionType.objects.get_or_create(
-                    title='خدمات عمومی',
-                    defaults={'default_days': 15}
+                    title='فرزند اول',
+                    defaults={'default_days': 90}
+                )[0],
+                ServiceReductionType.objects.get_or_create(
+                    title='فرزند دوم',
+                    defaults={'default_days': 120}
                 )[0],
             ]
 
@@ -861,8 +856,7 @@ def seed_data(request):
 
                     available_leave_types = [
                         LeaveType.MEDICAL,
-                        LeaveType.REWARD,
-                        LeaveType.EMERGENCY,
+                        LeaveType.REWARD
                     ]
                     if soldier.dispatch_type != DispatchType.ANSAR_PLAN:
                         available_leave_types.append(LeaveType.ENTITLEMENT)
@@ -1146,9 +1140,11 @@ def import_excel(request):
         if not full_name:
             add_error(sheet, "Soldier", "full_name", "نام کامل از سلول B6 خوانده نشد.", sdata.get("full_name"))
         if not dossier_code:
-            add_error(sheet, "Soldier", "dossier_code", "کد پرونده از سلول B6 (بعد از خط تیره) خوانده نشد.", sdata.get("dossier_code"))
+            add_error(sheet, "Soldier", "dossier_code", "کد پرونده از سلول B6 (بعد از خط تیره) خوانده نشد.",
+                      sdata.get("dossier_code"))
         if not dispatch_jalali:
-            add_error(sheet, "Soldier", "dispatch_date", "تاریخ اعزام از سلول‌های G3/H3/I3 خوانده نشد.", sdata.get("dispatch_jalali"))
+            add_error(sheet, "Soldier", "dispatch_date", "تاریخ اعزام از سلول‌های G3/H3/I3 خوانده نشد.",
+                      sdata.get("dispatch_jalali"))
 
         soldier_payload = {
             "full_name": full_name,
@@ -1179,13 +1175,17 @@ def import_excel(request):
         raw_leaves = item.get("leaves") or []
 
         for l in raw_leaves:
-            leave_type_fa = l.get("leave_type_fa")
+            leave_type = {
+                "استعلاجی": "medical",
+                "تشویقی": "reward",
+                "استحقاقی": "entitlement"
+            }[l.get("leave_type_fa")]
             start_jalali = l.get("start_jalali")
             end_jalali = l.get("end_jalali")
             duration_days = l.get("duration_days")
             row = l.get("row")
 
-            if not leave_type_fa:
+            if not leave_type:
                 add_error(sheet, "Leave", "leave_type",
                           "نوع مرخصی معتبر نیست.", l.get("leave_type_fa"))
                 continue
@@ -1213,18 +1213,12 @@ def import_excel(request):
                           f"تبدیل تاریخ مرخصی (جلالی→میلادی) ناموفق: {e}", {"row": row, **l})
                 continue
 
-            if start_date > end_date:
-                add_error(sheet, "Leave", "date_range",
-                          "بازه تاریخ مرخصی نامعتبر است (از تاریخ بزرگتر از تا تاریخ).",
-                          {"row": row, "leave_type": leave_type_fa, "start": start_date, "end": end_date})
-                continue
-
             # ولیدیشن فیلدهای Leave بدون اینکه clean() مدل را صدا بزنیم (چون ممکن است DB بزند)
             try:
                 dummy_soldier = Soldier(**soldier_payload)  # unsaved
                 leave_obj = Leave(
                     soldier=dummy_soldier,
-                    leave_type=leave_type_fa,
+                    leave_type=leave_type,
                     start_date=start_date,
                     end_date=end_date,
                     notes="",
@@ -1235,14 +1229,13 @@ def import_excel(request):
                     for m in msgs:
                         add_error(sheet, "Leave", field, m, {"row": row, **l})
                 continue
-
             validated_leaves.append({
-                "leave_type": leave_type_fa,
+                "leave_type": leave_type,
                 "start_date": start_date,
                 "end_date": end_date,
                 "duration_days": duration_days,
                 "row": row,
-                "leave_type_fa": leave_type_fa,
+                "leave_type_fa": leave_type,
                 "notes": l.get("notes", ""),
             })
 
@@ -1257,28 +1250,10 @@ def import_excel(request):
             if key in seen:
                 add_error(sheet, "Leave", "duplicate",
                           "مرخصی تکراری (نوع و بازه تاریخ کاملاً یکسان) در فایل وجود دارد.",
-                          {"row": lv.get("row"), "leave_type": lv["leave_type"], "start": lv["start_date"], "end": lv["end_date"]})
+                          {"row": lv.get("row"), "leave_type": lv["leave_type"], "start": lv["start_date"],
+                           "end": lv["end_date"]})
             else:
                 seen.add(key)
-
-        # 2) هم‌پوشانی بازه‌ها
-        # مرتب‌سازی برای اینکه با چک همسایه‌ها تداخل‌ها را بگیریم
-        sorted_leaves = sorted(validated_leaves, key=lambda x: (x["start_date"], x["end_date"]))
-
-        for i in range(len(sorted_leaves) - 1):
-            a = sorted_leaves[i]
-            b = sorted_leaves[i + 1]
-
-            if CHECK_CONFLICT_ONLY_IF_SAME_TYPE and a["leave_type"] != b["leave_type"]:
-                continue
-
-            if _ranges_overlap(a["start_date"], a["end_date"], b["start_date"], b["end_date"]):
-                add_error(sheet, "Leave", "overlap",
-                          "تداخل (هم‌پوشانی) بین مرخصی‌ها در همین فایل وجود دارد.",
-                          {
-                              "a": {"row": a.get("row"), "type": a["leave_type"], "start": a["start_date"], "end": a["end_date"]},
-                              "b": {"row": b.get("row"), "type": b["leave_type"], "start": b["start_date"], "end": b["end_date"]},
-                          })
 
         # -------- collect preview payload --------
         normalized_items.append({

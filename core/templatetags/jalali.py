@@ -1,17 +1,31 @@
 from django import template
 from jdatetime import datetime as jdatetime
+from datetime import datetime, date
 
 register = template.Library()
 
 
 @register.filter
-def to_jalali(date, format='%Y/%m/%d'):
-    if not date:
+def to_jalali(value, fmt='%Y/%m/%d'):
+    if not value:
         return '-'
+
     try:
-        jd = jdatetime.fromgregorian(datetime=date)
-        return jd.strftime(format)
-    except:
+        # If it's already a date/datetime
+        if isinstance(value, (date, datetime)):
+            jd = jdatetime.fromgregorian(date=value)
+
+        # If it's a string like "2025-08-14"
+        elif isinstance(value, str):
+            g_date = datetime.strptime(value, "%Y-%m-%d").date()
+            jd = jdatetime.fromgregorian(date=g_date)
+
+        else:
+            return '-'
+
+        return jd.strftime(fmt)
+
+    except Exception:
         return '-'
 
 
