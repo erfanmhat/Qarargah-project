@@ -1,1 +1,11 @@
-python -m pyinstaller --noconfirm --onedir --name SoldierServer run_server.py
+.\\venv\\Scripts\\activate
+pyinstaller --noconfirm --onedir --name SoldierServer run_server.py
+cd dist
+cd SoldierServer
+cd _internal
+mkdir logs
+cd logs
+type nul > soldier_management.log
+cd ../../../..
+
+pyinstaller SoldierServer.spec --clean
