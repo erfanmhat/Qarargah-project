@@ -19,7 +19,7 @@ from core.forms import SettingsForm, ExcelImportForm, ExcelImportConfirmForm
 from jdatetime import datetime as jdatetime
 
 from core.utils.excel_parser import parse_workbook
-from core.utils.pdf_fpdf import build_soldier_profile_pdf, build_soldier_leaves_pdf
+from core.utils.pdf_xhtml2pdf import build_soldier_profile_pdf, build_soldier_leaves_pdf
 
 logger = logging.getLogger('core')
 
@@ -401,7 +401,7 @@ def soldier_profile_pdf(request, soldier_id):
     balances = soldier.leave_balances()
     now = timezone.localtime(timezone.now())
 
-    pdf_bytes = build_soldier_profile_pdf(soldier, balances, now)
+    pdf_bytes = build_soldier_profile_pdf(request, soldier, balances, now)
     return HttpResponse(pdf_bytes, content_type="application/pdf")
 
 
@@ -412,7 +412,7 @@ def soldier_leaves_pdf(request, soldier_id):
     balances = soldier.leave_balances()
     now = timezone.localtime(timezone.now())
 
-    pdf_bytes = build_soldier_leaves_pdf(soldier, leaves, balances, now)
+    pdf_bytes = build_soldier_leaves_pdf(request, soldier, leaves, balances, now)
     return HttpResponse(pdf_bytes, content_type="application/pdf")
 
 
@@ -1096,11 +1096,6 @@ def _jalali_yyyySmmSdd_to_date(jalali_yyyySmmSdd: str):
     m = int(s.split("/")[1])
     d = int(s.split("/")[2])
     return jdatetime.date(y, m, d).togregorian()
-
-
-def _ranges_overlap(a_start, a_end, b_start, b_end):
-    """Overlap (inclusive)"""
-    return a_start <= b_end and b_start <= a_end
 
 
 @login_required

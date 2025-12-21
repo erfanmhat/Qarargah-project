@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    @page { size: {{ page_size }}; margin: 12mm; }
+
+    @font-face {
+      font-family: "Vazir";
+      src: url("{{ font_regular }}");
+      font-weight: normal;
+    }
+    @font-face {
+      font-family: "Vazir";
+      src: url("{{ font_bold }}");
+      font-weight: bold;
+    }
+
+    body { font-family: "Vazir"; font-size: 10pt; direction: rtl; }
+    h1 { font-size: 16pt; text-align: center; margin: 0 0 4mm 0; font-weight: bold; }
+
+    .meta { text-align: right; margin-bottom: 3mm; }
+    .section-title { font-weight: bold; margin: 4mm 0 2mm 0; font-size: 11pt; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+    th, td { border: 1px solid #333; padding: 3px 4px; vertical-align: top; }
+    th { font-weight: bold; text-align: center; }
+
+    .center { text-align: center; }
+    .right { text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>{{ title }}</h1>
+
+  <div class="meta">تاریخ: {{ date }}</div>
+  <div class="meta">سرباز: {{ soldier_name }}</div>
+
+  <div class="section-title">خلاصه مانده مرخصی‌ها</div>
+  <table>
+    <thead>
+      <tr>
+        <th>نوع</th>
+        <th>مجاز</th>
+        <th>مصرف</th>
+        <th>مانده</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if balances %}
+        {% for b in balances %}
+        <tr>
+          <td class="right">{{ b.type }}</td>
+          <td class="center">{{ b.allowed }}</td>
+          <td class="center">{{ b.used }}</td>
+          <td class="center">{{ b.remaining }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="4" class="center">اطلاعاتی موجود نیست</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <div class="section-title">مرخصی‌ها</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:7%">ردیف</th>
+        <th style="width:13%">نوع</th>
+        <th style="width:15%">از تاریخ</th>
+        <th style="width:15%">تا تاریخ</th>
+        <th style="width:10%">روز</th>
+        <th>توضیحات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lv in leaves %}
+      <tr>
+        <td class="center">{{ lv.idx }}</td>
+        <td class="right">{{ lv.type }}</td>
+        <td class="center">{{ lv.start }}</td>
+        <td class="center">{{ lv.end }}</td>
+        <td class="center">{{ lv.days }}</td>
+        <td class="right">{{ lv.notes }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="center">مرخصی‌ای ثبت نشده است</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

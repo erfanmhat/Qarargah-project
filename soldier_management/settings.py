@@ -10,10 +10,46 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _runtime_base_dir() -> Path:
+    # وقتی exe هستیم (PyInstaller)
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        # مسیر پوشه‌ای که exe از آن اجرا شده (کنار SoldierServer.exe)
+        return Path(sys.executable).resolve().parent
+    return BASE_DIR
+
+
+RUNTIME_DIR = _runtime_base_dir()
+LOG_DIR = RUNTIME_DIR / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+LOG_FILE = str(LOG_DIR / "soldier_management.log")
+
+def runtime_dir() -> Path:
+    # اگر exe هستیم:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent  # کنار SoldierServer.exe
+    return BASE_DIR
+
+RUNTIME_DIR = runtime_dir()
+DB_DIR = RUNTIME_DIR / "data"
+DB_DIR.mkdir(parents=True, exist_ok=True)
+
+def runtime_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent  # کنار exe
+    return BASE_DIR
+
+RUNTIME_DIR = runtime_dir()
+
+STATIC_URL = "/static/"
+STATIC_ROOT = str(RUNTIME_DIR / "static")  # مهم: کنار exe
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -79,10 +115,10 @@ WSGI_APPLICATION = 'soldier_management.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-  "default": {
-    "ENGINE": "django.db.backends.sqlite3",
-    "NAME": str(BASE_DIR / "db.sqlite3"),
-  }
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": str(DB_DIR / "db.sqlite3"),
+    }
 }
 
 # Password validation
@@ -134,47 +170,18 @@ LOGOUT_REDIRECT_URL = '/dashboard/login/'
 
 # Logging configuration
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler",
+            "level": "INFO",
+            "filename": LOG_FILE,
+            "encoding": "utf-8",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
+        "console": {"class": "logging.StreamHandler", "level": "INFO"},
     },
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'soldier_management.log',
-            'formatter': 'verbose',
-        },
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-    },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'core': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-    },
+    "root": {"handlers": ["console", "file"], "level": "INFO"},
 }
 
 # Security settings for production
