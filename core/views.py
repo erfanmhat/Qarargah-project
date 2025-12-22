@@ -208,9 +208,9 @@ def panel_soldiers(request):
 
     try:
         page_size = int(page_size_raw)
-        page_size = max(5, min(page_size, 100))
+        page_size = max(5, min(page_size, 10000))
     except (TypeError, ValueError):
-        page_size = 25
+        page_size = 250
 
     sort_map = {
         'name': 'full_name',
@@ -265,7 +265,7 @@ def panel_leaves(request):
     leaves = Leave.objects.select_related('soldier').order_by('-created_at')
 
     # Pagination
-    paginator = Paginator(leaves, 25)  # Show 25 leaves per page
+    paginator = Paginator(leaves, 250)  # Show 250 leaves per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -292,9 +292,9 @@ def panel_search(request):
 
     try:
         page_size = int(page_size_raw)
-        page_size = max(5, min(page_size, 100))
+        page_size = max(5, min(page_size, 10000))
     except (TypeError, ValueError):
-        page_size = 25
+        page_size = 250
 
     start_from_date, start_from_display = parse_date_input(start_from_raw)
     start_to_date, start_to_display = parse_date_input(start_to_raw)
