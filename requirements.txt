@@ -9,7 +9,4 @@ python-dateutil==2.9.0
 openpyxl==3.1.2
 waitress==2.1.2
 pyinstaller==6.3.0
-xhtml2pdf==0.2.15
-reportlab
-html5lib
-pypdf
+openpyxl

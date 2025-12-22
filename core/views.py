@@ -19,7 +19,7 @@ from core.forms import SettingsForm, ExcelImportForm, ExcelImportConfirmForm
 from jdatetime import datetime as jdatetime
 
 from core.utils.excel_parser import parse_workbook
-from core.utils.pdf_xhtml2pdf import build_soldier_profile_pdf, build_soldier_leaves_pdf
+from core.utils.data_to_excel import build_soldier_leaves_excel, build_soldier_profile_excel
 
 logger = logging.getLogger('core')
 
@@ -396,24 +396,36 @@ def panel_soldier_detail(request, soldier_id):
 
 
 @login_required
-def soldier_profile_pdf(request, soldier_id):
+def soldier_profile_excel(request, soldier_id):
     soldier = get_object_or_404(Soldier, id=soldier_id)
     balances = soldier.leave_balances()
     now = timezone.localtime(timezone.now())
 
-    pdf_bytes = build_soldier_profile_pdf(request, soldier, balances, now)
-    return HttpResponse(pdf_bytes, content_type="application/pdf")
+    xlsx_bytes = build_soldier_profile_excel(request, soldier, balances, now)
+
+    resp = HttpResponse(
+        xlsx_bytes,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    resp["Content-Disposition"] = f'attachment; filename="soldier_{soldier_id}_profile.xlsx"'
+    return resp
 
 
 @login_required
-def soldier_leaves_pdf(request, soldier_id):
+def soldier_leaves_excel(request, soldier_id):
     soldier = get_object_or_404(Soldier, id=soldier_id)
     leaves = soldier.leaves.all().order_by("-start_date")
     balances = soldier.leave_balances()
     now = timezone.localtime(timezone.now())
 
-    pdf_bytes = build_soldier_leaves_pdf(request, soldier, leaves, balances, now)
-    return HttpResponse(pdf_bytes, content_type="application/pdf")
+    xlsx_bytes = build_soldier_leaves_excel(request, soldier, leaves, balances, now)
+
+    resp = HttpResponse(
+        xlsx_bytes,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    resp["Content-Disposition"] = f'attachment; filename="soldier_{soldier_id}_leaves.xlsx"'
+    return resp
 
 
 @login_required

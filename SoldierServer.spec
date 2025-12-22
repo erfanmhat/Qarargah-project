@@ -20,20 +20,6 @@ else:
 ENTRY_SCRIPT = PROJECT_ROOT / "run_server.py"
 if not ENTRY_SCRIPT.exists():
     raise SystemExit(f"ENTRY_SCRIPT not found: {ENTRY_SCRIPT}")
-
-# ------------------------------------------------------------
-# Hidden imports
-# ------------------------------------------------------------
-hiddenimports = []
-hiddenimports += collect_submodules("xhtml2pdf")
-hiddenimports += collect_submodules("reportlab")
-hiddenimports += [
-    "reportlab.graphics.barcode",
-    "reportlab.graphics.barcode.code128",
-]
-hiddenimports += collect_submodules("html5lib")
-hiddenimports += collect_submodules("pypdf")
-
 # ------------------------------------------------------------
 # Datas (MUST be list of (src, dest))
 # ------------------------------------------------------------
@@ -57,10 +43,6 @@ fonts_dir = PROJECT_ROOT / "core" / "static" / "fonts"
 if fonts_dir.exists():
     datas.append((str(fonts_dir), "core/static/fonts"))
 
-# Collect package data
-datas += collect_data_files("xhtml2pdf")
-datas += collect_data_files("reportlab")
-
 
 static_dir = PROJECT_ROOT / "staticfiles"
 if static_dir.exists():
@@ -79,7 +61,7 @@ a = Analysis(
     pathex=[str(PROJECT_ROOT)],
     binaries=[],
     datas=datas,
-    hiddenimports=hiddenimports,
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

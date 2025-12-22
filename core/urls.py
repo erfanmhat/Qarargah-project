@@ -6,8 +6,7 @@ from .views import (
     panel_soldier_detail, panel_soldier_delete, panel_leave_delete,
     health_check, export_soldiers_excel, export_leaves_excel,
     panel_reports, seed_data, panel_backup_restore, panel_settings,
-    export_database, import_database, soldier_profile_pdf,
-    soldier_leaves_pdf, import_excel, import_excel_confirm
+    export_database, import_database, import_excel, import_excel_confirm, soldier_profile_excel, soldier_leaves_excel
 )
 
 urlpatterns = [
@@ -16,8 +15,8 @@ urlpatterns = [
     path('', panel_dashboard, name='panel_dashboard'),
     path('soldiers/', panel_soldiers, name='panel_soldiers'),
     path('soldier/<int:soldier_id>/', panel_soldier_detail, name='panel_soldier_detail'),
-    path('soldier/<int:soldier_id>/pdf/profile/', soldier_profile_pdf, name='soldier_profile_pdf'),
-    path('soldier/<int:soldier_id>/pdf/leaves/', soldier_leaves_pdf, name='soldier_leaves_pdf'),
+    path("dashboard/soldier/<int:soldier_id>/excel/profile/", soldier_profile_excel, name="soldier_profile_excel"),
+    path("dashboard/soldier/<int:soldier_id>/excel/leaves/", soldier_leaves_excel, name="soldier_leaves_excel"),
     path('soldier/<int:soldier_id>/delete/', panel_soldier_delete, name='panel_soldier_delete'),
     path('soldiers/export/', export_soldiers_excel, name='export_soldiers_excel'),
     path('leaves/', panel_leaves, name='panel_leaves'),

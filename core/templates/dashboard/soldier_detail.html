@@ -201,11 +201,11 @@
                 <i class="fas fa-tools"></i> عملیات
             </div>
             <div class="card-body d-grid gap-2">
-                <a href="{% url 'soldier_profile_pdf' soldier.id %}" class="btn btn-outline-primary">
-                    <i class="fas fa-file-pdf"></i> پروفایل PDF (A5)
+                <a href="{% url 'soldier_profile_excel' soldier.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-file-excel"></i> پروفایل به صورت اکسل
                 </a>
-                <a href="{% url 'soldier_leaves_pdf' soldier.id %}" class="btn btn-outline-success">
-                    <i class="fas fa-file-pdf"></i> گزارش مرخصی PDF (A4)
+                <a href="{% url 'soldier_leaves_excel' soldier.id %}" class="btn btn-outline-success">
+                    <i class="fas fa-file-excel"></i> گزارش مرخصی به صورت اکسل
                 </a>
             </div>
         </div>
