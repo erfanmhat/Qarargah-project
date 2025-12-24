@@ -1,17 +1,6 @@
 .\\venv\\Scripts\\activate
-pyinstaller --noconfirm --onedir --name SoldierServer run_server.py
-cd dist
-cd SoldierServer
-cd _internal
-mkdir logs
-cd logs
-type nul > soldier_management.log
-cd ../../../..
 
 pyinstaller SoldierServer.spec --clean
 
-
-pyinstaller run_server.py --clean ^
-  --hidden-import=reportlab.graphics.barcode.code128 ^
-  --hidden-import=reportlab.graphics.barcode ^
-  --hidden-import=reportlab.graphics
+username: root
+password: 123321

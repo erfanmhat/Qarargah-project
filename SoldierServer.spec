@@ -24,6 +24,10 @@ if not ENTRY_SCRIPT.exists():
 # Datas (MUST be list of (src, dest))
 # ------------------------------------------------------------
 datas = []
+datas += collect_data_files('django.contrib.admin')
+datas += collect_data_files('django_jalali')
+datas += collect_data_files('jalali_date')
+datas += collect_data_files('import_export')
 
 # Add templates directory if present
 templates_root = PROJECT_ROOT / "templates"

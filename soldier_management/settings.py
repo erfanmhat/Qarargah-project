@@ -17,36 +17,21 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def _runtime_base_dir() -> Path:
-    # وقتی exe هستیم (PyInstaller)
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        # مسیر پوشه‌ای که exe از آن اجرا شده (کنار SoldierServer.exe)
+def runtime_dir() -> Path:
+    if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
     return BASE_DIR
 
+RUNTIME_DIR = runtime_dir()
 
-RUNTIME_DIR = _runtime_base_dir()
+
 LOG_DIR = RUNTIME_DIR / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 LOG_FILE = str(LOG_DIR / "soldier_management.log")
 
-def runtime_dir() -> Path:
-    # اگر exe هستیم:
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable).resolve().parent  # کنار SoldierServer.exe
-    return BASE_DIR
-
-RUNTIME_DIR = runtime_dir()
 DB_DIR = RUNTIME_DIR / "data"
 DB_DIR.mkdir(parents=True, exist_ok=True)
-
-def runtime_dir() -> Path:
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable).resolve().parent  # کنار exe
-    return BASE_DIR
-
-RUNTIME_DIR = runtime_dir()
 
 STATIC_URL = "/static/"
 STATIC_ROOT = str(RUNTIME_DIR / "static")  # مهم: کنار exe
@@ -93,7 +78,10 @@ ROOT_URLCONF = 'soldier_management.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'core' / 'templates'],
+        'DIRS': [
+            RUNTIME_DIR / "templates",
+            BASE_DIR / 'core' / 'templates'
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
