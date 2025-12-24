@@ -1,13 +1,11 @@
-# core/urls_panel.py
 from django.urls import path
-from .views import (
-    panel_login, panel_logout, panel_dashboard,
-    panel_soldiers, panel_leaves, panel_search,
-    panel_soldier_detail, panel_soldier_delete, panel_leave_delete,
-    health_check, export_soldiers_excel, export_leaves_excel,
-    panel_reports, seed_data, panel_backup_restore, panel_settings,
-    export_database, import_database, import_excel, import_excel_confirm, soldier_profile_excel, soldier_leaves_excel
-)
+
+from core.views_core import panel_settings, panel_reports, panel_soldier_detail, panel_dashboard, \
+    panel_logout, panel_login
+from core.views_import_export_excel import import_excel_confirm, import_excel, export_leaves_excel, \
+    export_soldiers_excel, soldier_leaves_excel, soldier_profile_excel
+from core.views_soldier_leave import panel_search, panel_leave_delete, panel_leaves, panel_soldier_delete, \
+    panel_soldiers
 
 urlpatterns = [
     path('login/', panel_login, name='panel_login'),
@@ -25,11 +23,6 @@ urlpatterns = [
     path('search/', panel_search, name='panel_search'),
     path('reports/', panel_reports, name='panel_reports'),
     path('settings/', panel_settings, name='panel_settings'),
-    path('backup-restore/', panel_backup_restore, name='panel_backup_restore'),
-    path('backup-restore/export/', export_database, name='export_database'),
-    path('backup-restore/import/', import_database, name='import_database'),
-    path('seed/', seed_data, name='seed_data'),
     path("import/excel/", import_excel, name="import_excel"),
-    path("import/excel/confirm/", import_excel_confirm, name="import_excel_confirm"),
-    path('health/', health_check, name='health_check'),
+    path("import/excel/confirm/", import_excel_confirm, name="import_excel_confirm")
 ]

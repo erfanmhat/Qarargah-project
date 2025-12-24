@@ -1,5 +1,6 @@
 from django import forms
 from jalali_date.widgets import AdminJalaliDateWidget
+
 from .models import Soldier, Leave
 
 
@@ -8,7 +9,6 @@ class SoldierForm(forms.ModelForm):
         model = Soldier
         fields = '__all__'
         widgets = {
-            # Update usage here as well
             'service_start_date': AdminJalaliDateWidget(),
             'arrival_date': AdminJalaliDateWidget(),
             'birth_date': AdminJalaliDateWidget(),
@@ -16,6 +16,17 @@ class SoldierForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        has_dl = cleaned_data.get('has_driving_license')
+        dl_type = cleaned_data.get('driving_license_type')
+        if has_dl is False and dl_type:
+            self.add_error('driving_license_type', 'وقتی گواهینامه ندارد، نوع گواهینامه نباید انتخاب شود.')
+
+        mr_ref = cleaned_data.get('military_rank_ref')
+        mr_code = cleaned_data.get('military_rank')
+        if mr_ref and (mr_code is None or mr_code == ''):
+            cleaned_data['military_rank'] = mr_ref.code
+
         return cleaned_data
 
 
@@ -24,7 +35,6 @@ class LeaveForm(forms.ModelForm):
         model = Leave
         fields = '__all__'
         widgets = {
-            # Update usage here as well
             'start_date': AdminJalaliDateWidget(),
             'end_date': AdminJalaliDateWidget(),
         }
@@ -46,4 +56,4 @@ class ExcelImportForm(forms.Form):
 
 
 class ExcelImportConfirmForm(forms.Form):
-    token = forms.CharField(widget=forms.HiddenInput)  # برای نگه داشتن نتیجه parse در session/cache
+    token = forms.CharField(widget=forms.HiddenInput)

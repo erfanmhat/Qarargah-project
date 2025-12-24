@@ -4,7 +4,6 @@ from django.utils import timezone
 from django.core.validators import MinLengthValidator
 from django.core.exceptions import ValidationError
 from dateutil.relativedelta import relativedelta
-from django.db.models import Sum
 
 
 class TimeStampedModel(models.Model):
@@ -84,6 +83,32 @@ class ServiceReductionType(TimeStampedModel):
         return f"{self.title} ({self.default_days} روز)"
 
 
+class ExtraServiceType(TimeStampedModel):
+    title = models.CharField("نوع اضافه خدمت", max_length=150, unique=True)
+    default_days = models.PositiveIntegerField("تعداد روز پیش‌فرض", default=0)
+
+    class Meta:
+        verbose_name = "نوع اضافه خدمت"
+        verbose_name_plural = "انواع اضافه خدمت"
+
+    def __str__(self):
+        return f"{self.title} ({self.default_days} روز)"
+
+
+class MilitaryRankRef(TimeStampedModel):
+    """درجه نظامی برای نمایش و سرچ در UI (کد عددی + نام)"""
+    code = models.PositiveIntegerField("کد درجه", unique=True, db_index=True)
+    title = models.CharField("نام درجه", max_length=50, unique=True)
+
+    class Meta:
+        verbose_name = "درجه نظامی"
+        verbose_name_plural = "درجه‌های نظامی"
+        ordering = ["code"]
+
+    def __str__(self):
+        return f"{self.title} ({self.code})"
+
+
 # ==================== تنظیمات سیستم ====================
 class SystemSetting(models.Model):
     key = models.CharField("کلید تنظیم", max_length=100, unique=True)
@@ -134,49 +159,161 @@ class SoldierManager(models.Manager):
         return code
 
 
-class Soldier(TimeStampedModel):
-    full_name = models.CharField("نام و نام خانوادگی", max_length=100)
-    national_code = models.CharField("کد ملی", null=True, blank=True, max_length=10, unique=True,
-                                     validators=[MinLengthValidator(10)])
-    dossier_code = models.IntegerField("کد پرونده", default=0, db_index=True, blank=True)
-    dispatch_type = models.CharField("نوع اعزامی", null=True, blank=True, max_length=20, choices=DispatchType.choices)
-    health_status = models.ForeignKey(HealthStatus, null=True, blank=True, on_delete=models.SET_NULL,
-                                      verbose_name="وضعیت سلامت")
-    service_status = models.ForeignKey(ServiceStatus, null=True, blank=True, on_delete=models.SET_NULL,
-                                       verbose_name="وضعیت خدمت")
-    current_location = models.ForeignKey(ServiceLocation, null=True, blank=True, on_delete=models.SET_NULL,
-                                         verbose_name="محل خدمت فعلی")
-    expertises = models.ManyToManyField(Expertise, blank=True, verbose_name="تخصص‌ها")
-    extra_service_days = models.IntegerField("روزهای اضافه خدمت", default=0)
+class MaritalStatus(models.TextChoices):
+    SINGLE = 'single', 'مجرد'
+    MARRIED = 'married', 'متاهل'
 
-    service_start_date = models.DateField("تاریخ شروع خدمت", db_index=True)
-    arrival_date = models.DateField("تاریخ ورود به ناحیه", null=True, blank=True)
+
+class BloodGroup(models.TextChoices):
+    A_POS = 'A+', 'A+'
+    A_NEG = 'A-', 'A-'
+    B_POS = 'B+', 'B+'
+    B_NEG = 'B-', 'B-'
+    AB_POS = 'AB+', 'AB+'
+    AB_NEG = 'AB-', 'AB-'
+    O_POS = 'O+', 'O+'
+    O_NEG = 'O-', 'O-'
+
+
+class DrivingLicenseType(models.TextChoices):
+    BASE_1 = '1', 'پایه ۱'
+    BASE_2 = '2', 'پایه ۲'
+    BASE_3 = '3', 'پایه ۳'
+
+
+class Soldier(TimeStampedModel):
+    # ===== اطلاعات هویتی =====
+    full_name = models.CharField("نام و نام خانوادگی", max_length=100, blank=True, null=True, db_index=True)
+    father_name = models.CharField("نام پدر", max_length=100, blank=True, null=True)
+
+    national_code = models.CharField(
+        "کد ملی",
+        null=True, blank=True,
+        max_length=10,
+        unique=False,
+        db_index=True,
+        validators=[MinLengthValidator(10)]
+    )
+
+    issue_place = models.CharField("محل صدور", max_length=100, blank=True, null=True)
+    birth_place = models.CharField("محل تولد", max_length=100, blank=True, null=True)
+
     birth_date = models.DateField("تاریخ تولد", null=True, blank=True)
 
-    phone_personal = models.CharField("شماره همراه سرباز", max_length=11, blank=True)
-    phone_parent = models.CharField("شماره والدین/همسر", max_length=11, blank=True)
-    phone_home = models.CharField("تلفن منزل", max_length=11, blank=True)
-    phone_work = models.CharField("تلفن محل کار", max_length=11, blank=True)
-    home_address = models.TextField("آدرس منزل", blank=True)
-    guard_code = models.CharField("کد پاسداری", max_length=50, blank=True)
+    # ===== درجه نظامی =====
+    military_rank = models.PositiveIntegerField("درجه نظامی (عدد)", blank=True, null=True)
+    military_rank_ref = models.ForeignKey(
+        MilitaryRankRef,
+        on_delete=models.SET_NULL,
+        blank=True, null=True,
+        verbose_name="درجه نظامی (انتخابی)"
+    )
+
+    # ===== وضعیت خانوادگی =====
+    marital_status = models.CharField("وضعیت تاهل", max_length=10, blank=True, null=True, choices=MaritalStatus.choices)
+    children_count = models.PositiveIntegerField("تعداد فرزندان", blank=True, null=True)
+
+    # ===== ویژگی‌های ظاهری/پزشکی =====
+    height_cm = models.PositiveIntegerField("قد (سانتی‌متر)", blank=True, null=True)
+    weight_kg = models.PositiveIntegerField("وزن (کیلوگرم)", blank=True, null=True)
+    eye_color = models.CharField("رنگ چشم", max_length=30, blank=True, null=True)
+    blood_group = models.CharField("گروه خونی", max_length=3, blank=True, null=True, choices=BloodGroup.choices)
+
+    underlying_disease = models.TextField("بیماری زمینه‌ای", blank=True, null=True)
+    drug_allergy = models.TextField("حساسیت دارویی", blank=True, null=True)
+    used_medications = models.TextField("داروهای مصرفی", blank=True, null=True)
+
+    # ===== اطلاعات تماس =====
+    father_home_phone = models.CharField("شماره تلفن منزل پدری", max_length=11, blank=True, null=True)
+    personal_home_phone = models.CharField("شماره تلفن منزل شخصی", max_length=11, blank=True, null=True)
+    personal_mobile_phone = models.CharField("شماره تلفن همراه شخصی", max_length=11, blank=True, null=True)
+    military_mobile_phone = models.CharField("شماره تلفن نظامی", max_length=11, blank=True, null=True)
+
+    phone_personal = models.CharField("شماره همراه سرباز", max_length=11, blank=True, null=True)
+    phone_parent = models.CharField("شماره والدین/همسر", max_length=11, blank=True, null=True)
+    phone_home = models.CharField("تلفن منزل", max_length=11, blank=True, null=True)
+    phone_work = models.CharField("تلفن محل کار", max_length=11, blank=True, null=True)
+
+    # ===== آدرس‌ها =====
+    father_home_address = models.TextField("آدرس منزل پدری", blank=True, null=True)
+    personal_home_address = models.TextField("آدرس منزل شخصی", blank=True, null=True)
+    home_address = models.TextField("آدرس منزل", blank=True, null=True)  # فیلد قبلی حفظ شد
+    postal_code = models.CharField("کد پستی", max_length=10, blank=True, null=True)
+
+    # ===== تحصیلات =====
+    education_level = models.CharField("میزان تحصیلات", max_length=50, blank=True, null=True)
+    education_field = models.CharField("رشته تحصیلات", max_length=100, blank=True, null=True)
+
+    # ===== رانندگی =====
+    has_driving_license = models.BooleanField("دارای گواهی‌نامه رانندگی", blank=True, null=True)
+    driving_license_type = models.CharField("نوع گواهی نامه", max_length=10, blank=True, null=True, choices=DrivingLicenseType.choices)
+
+    # ===== تصویر پرسنلی =====
+    personal_photo = models.ImageField("عکس پرسنلی", upload_to="soldiers/photos/", blank=True, null=True)
+
+    # ===== فرمانده مستقیم =====
+    direct_commander_name = models.CharField("نام فرمانده مستقیم", max_length=100, blank=True, null=True)
+    direct_commander_phone = models.CharField("شماره تماس فرمانده مستقیم", max_length=11, blank=True, null=True)
+
+    # ===== اطلاعات سیستمی/خدمتی فعلی =====
+    dossier_code = models.IntegerField("کد پرونده", default=0, db_index=True, blank=True)
+    dispatch_type = models.CharField("نوع اعزامی", null=True, blank=True, max_length=20, choices=DispatchType.choices)
+
+    health_status = models.ForeignKey(
+        HealthStatus, null=True, blank=True, on_delete=models.SET_NULL,
+        verbose_name="وضعیت سلامت"
+    )
+    service_status = models.ForeignKey(
+        ServiceStatus, null=True, blank=True, on_delete=models.SET_NULL,
+        verbose_name="وضعیت خدمت"
+    )
+    current_location = models.ForeignKey(
+        ServiceLocation, null=True, blank=True, on_delete=models.SET_NULL,
+        verbose_name="محل خدمت فعلی"
+    )
+
+    expertises = models.ManyToManyField(Expertise, blank=True, verbose_name="تخصص‌ها")
+
+    # ===== اضافه خدمت =====
+    extra_service_days = models.IntegerField("روزهای اضافه خدمت", default=0)
+    extra_service_type = models.ForeignKey(
+        ExtraServiceType,
+        on_delete=models.SET_NULL,
+        blank=True, null=True,
+        verbose_name="نوع اضافه خدمت"
+    )
+
+
+    service_start_date = models.DateField("تاریخ شروع خدمت", db_index=True, null=True, blank=True)
+    arrival_date = models.DateField("تاریخ ورود به ناحیه", null=True, blank=True)
+
+    guard_code = models.CharField("کد پاسداری", max_length=50, blank=True, null=True)
+
+    # ===== دوره‌ها =====
+    completed_courses = models.TextField("دوره‌های گذرانده شده (آموزشی/میدانی)", blank=True, null=True)
 
     objects = SoldierManager()
 
     class Meta:
         verbose_name = "سرباز"
         verbose_name_plural = "سربازان"
-        ordering = ['-service_start_date']
+        ordering = ['dossier_code']
 
     def total_reduction_days(self):
         return sum(r.days for r in self.reductions.all())
 
+    def total_extra_days(self):
+        """اگر جدول ExtraServiceLog استفاده شود، مجموع اضافه خدمت را هم حساب می‌کند."""
+        log_total = self.extra_logs.aggregate(total=Sum('days'))['total'] or 0
+        base = self.extra_service_days or 0
+        return base + log_total
+
     def service_metrics(self):
-        """
-        Calculate effective service metrics based on configurable base months,
-        total reductions, and extra service days.
-        """
+        """Calculate effective service metrics based on configurable base months,
+        total reductions, and extra service days."""
         if not self.service_start_date:
             return None
+
         try:
             base_months = int(SystemSetting.get_value('BASE_SERVICE_MONTHS', '21') or 21)
         except Exception:
@@ -184,7 +321,7 @@ class Soldier(TimeStampedModel):
 
         base_days = base_months * 30
         reduction_days = self.total_reduction_days()
-        extra_days = max(self.extra_service_days or 0, 0)
+        extra_days = max(self.total_extra_days(), 0)
 
         effective_days = max(base_days - reduction_days + extra_days, 0)
         full_months = effective_days // 30
@@ -220,7 +357,6 @@ class Soldier(TimeStampedModel):
         full_months = metrics['full_months']
         remaining_days = metrics['remaining_days']
 
-        # No entitlement for Ansar scheme
         if self.dispatch_type == DispatchType.ANSAR_PLAN:
             return 0
 
@@ -271,10 +407,11 @@ class Soldier(TimeStampedModel):
         }
 
     def save(self, *args, **kwargs):
-        # Handle dossier code assignment and release on completion
+        if self.military_rank_ref and self.military_rank is None:
+            self.military_rank = self.military_rank_ref.code
+
         if self.dispatch_type:
             if self.service_status and self.service_status.is_active_service is False:
-                # Mark completed service
                 self.dossier_code = -1
             else:
                 if self.dossier_code is None or self.dossier_code <= 0 or self.dossier_code == -1:
@@ -284,19 +421,17 @@ class Soldier(TimeStampedModel):
 
     def clean(self):
         super().clean()
-        # Validate birth date is before service start date
+
         if self.birth_date and self.service_start_date:
             if self.birth_date >= self.service_start_date:
-                raise ValidationError({
-                    'birth_date': 'تاریخ تولد باید قبل از تاریخ شروع خدمت باشد.'
-                })
+                raise ValidationError({'birth_date': 'تاریخ تولد باید قبل از تاریخ شروع خدمت باشد.'})
 
-        # Validate arrival date is after service start date
         if self.arrival_date and self.service_start_date:
             if self.arrival_date < self.service_start_date:
-                raise ValidationError({
-                    'arrival_date': 'تاریخ ورود به ناحیه باید بعد از تاریخ شروع خدمت باشد.'
-                })
+                raise ValidationError({'arrival_date': 'تاریخ ورود به ناحیه باید بعد از تاریخ شروع خدمت باشد.'})
+
+        if self.has_driving_license is False and self.driving_license_type:
+            raise ValidationError({'driving_license_type': 'وقتی گواهینامه ندارد، نوع گواهینامه نباید انتخاب شود.'})
 
     def __str__(self):
         return f"{self.full_name} - {self.national_code}"
@@ -313,6 +448,20 @@ class SoldierServiceReduction(TimeStampedModel):
 
     def __str__(self):
         return f"{self.soldier} - {self.reduction_type} ({self.days} روز)"
+
+
+class SoldierExtraServiceLog(TimeStampedModel):
+    soldier = models.ForeignKey(Soldier, related_name='extra_logs', on_delete=models.CASCADE, verbose_name="سرباز")
+    extra_type = models.ForeignKey(ExtraServiceType, on_delete=models.CASCADE, verbose_name="نوع اضافه خدمت")
+    days = models.PositiveIntegerField("تعداد روز")
+    notes = models.TextField("توضیحات", blank=True, null=True)
+
+    class Meta:
+        verbose_name = "اضافه خدمت سرباز"
+        verbose_name_plural = "اضافه خدمت‌های سربازان"
+
+    def __str__(self):
+        return f"{self.soldier} - {self.extra_type} ({self.days} روز)"
 
 
 # ==================== مرخصی ====================
@@ -338,22 +487,15 @@ class Leave(TimeStampedModel):
 
     def clean(self):
         super().clean()
-        # Validate end_date is after start_date
         if self.end_date and self.start_date:
             if self.end_date < self.start_date:
-                raise ValidationError({
-                    'end_date': 'تاریخ برگشت باید بعد از تاریخ رفت باشد.'
-                })
+                raise ValidationError({'end_date': 'تاریخ برگشت باید بعد از تاریخ رفت باشد.'})
 
-            # Validate leave doesn't exceed reasonable duration (e.g., 30 days)
             days_diff = (self.end_date - self.start_date).days + 1
             if days_diff > 30:
-                raise ValidationError({
-                    'end_date': 'مدت مرخصی نمی‌تواند بیشتر از ۳۰ روز باشد.'
-                })
+                raise ValidationError({'end_date': 'مدت مرخصی نمی‌تواند بیشتر از ۳۰ روز باشد.'})
             self.days = days_diff
 
-        # Leave type enable/disable settings
         leave_enable_map = {
             LeaveType.ENTITLEMENT: SystemSetting.get_value('ENABLE_LEAVE_ENTITLEMENT', 'true'),
             LeaveType.MEDICAL: SystemSetting.get_value('ENABLE_LEAVE_MEDICAL', 'true'),
@@ -363,16 +505,12 @@ class Leave(TimeStampedModel):
         if str(enabled_value).lower() == 'false':
             raise ValidationError({'leave_type': 'این نوع مرخصی در تنظیمات غیرفعال است.'})
 
-        # Enforce leave type specific rules
         if self.soldier and self.leave_type:
-            # Prevent entitlement leave for Ansar Scheme
             if self.leave_type == LeaveType.ENTITLEMENT and self.soldier.dispatch_type == DispatchType.ANSAR_PLAN:
                 raise ValidationError({'leave_type': 'ثبت مرخصی استحقاقی برای سربازان طرح انصار مجاز نیست.'})
 
-            # Caps for medical and reward leaves
             if self.pk:
-                other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type).exclude(
-                    pk=self.pk)
+                other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type).exclude(pk=self.pk)
             else:
                 other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type)
 
@@ -385,14 +523,13 @@ class Leave(TimeStampedModel):
             if self.leave_type == LeaveType.REWARD and total_with_current > 30:
                 raise ValidationError({'leave_type': 'مجموع مرخصی تشویقی نمی‌تواند بیش از ۳۰ روز باشد.'})
 
-            # Entitlement allowance check
             if self.leave_type == LeaveType.ENTITLEMENT:
                 allowed = self.soldier.entitlement_allowance_days()
                 if total_with_current > allowed:
                     raise ValidationError({'leave_type': f'سقف مرخصی استحقاقی ({allowed} روز) رعایت نشده است.'})
 
     def save(self, *args, **kwargs):
-        self.full_clean()  # Call clean validation
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
