@@ -3,17 +3,22 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+import logging
+
 from core.models import Soldier, Leave, ServiceLocation, HealthStatus, ServiceStatus
 from core.utils.utils import parse_date_input
-import logging
 
 logger = logging.getLogger('core')
 
 
 @login_required
 def panel_soldiers(request):
+    """لیست سربازها با امکان نمایش سربازهای پایان خدمت، مرتب‌سازی و صفحه‌بندی."""
+
     show_completed = request.GET.get('show_completed') == '1'
-    sort_key = request.GET.get('sort', '-start_date')
+
+    sort_key = request.GET.get('sort', 'dossier')
+
     page_size_raw = request.GET.get('page_size')
 
     try:
@@ -38,14 +43,20 @@ def panel_soldiers(request):
         'created': '-created_at',
         '-created': '-created_at',
     }
-    order_fields = sort_map.get(sort_key, ('-service_start_date',))
+
+    order_fields = sort_map.get(sort_key, ('dossier_code',))
     if isinstance(order_fields, str):
         order_fields = (order_fields,)
 
     soldiers = Soldier.objects.select_related('service_status', 'current_location')
+
     if not show_completed:
-        soldiers = soldiers.filter(Q(service_status__isnull=True) | Q(service_status__is_active_service=True) | Q(
-            service_status__is_active_service__isnull=True))
+        soldiers = soldiers.filter(
+            Q(service_status__isnull=True) |
+            Q(service_status__is_active_service=True) |
+            Q(service_status__is_active_service__isnull=True)
+        )
+
     soldiers = soldiers.order_by(*order_fields)
 
     paginator = Paginator(soldiers, page_size)
@@ -58,6 +69,7 @@ def panel_soldiers(request):
             query_params.pop(key)
     if 'page_size' not in query_params:
         query_params['page_size'] = page_size
+
     base_querystring = query_params.urlencode()
 
     return render(request, 'dashboard/soldiers_list.html', {
@@ -65,7 +77,7 @@ def panel_soldiers(request):
         'page_obj': page_obj,
         'show_completed': show_completed,
         'page_size': page_size,
-        'sort': sort_key if sort_key in sort_map else '-start_date',
+        'sort': sort_key if sort_key in sort_map else 'dossier',
         'base_querystring': base_querystring,
     })
 
@@ -93,8 +105,10 @@ def panel_search(request):
     service_status_id = request.GET.get('service_status', '')
     location_id = request.GET.get('location', '')
     health_status_id = request.GET.get('health_status', '')
+
     start_from_raw = request.GET.get('start_from', '')
     start_to_raw = request.GET.get('start_to', '')
+
     show_completed = request.GET.get('show_completed') == '1'
     page_size_raw = request.GET.get('page_size')
 
@@ -108,19 +122,31 @@ def panel_search(request):
     start_to_date, start_to_display = parse_date_input(start_to_raw)
 
     if not show_completed:
-        soldiers = soldiers.filter(Q(service_status__isnull=True) | Q(service_status__is_active_service=True) | Q(
-            service_status__is_active_service__isnull=True))
+        soldiers = soldiers.filter(
+            Q(service_status__isnull=True) |
+            Q(service_status__is_active_service=True) |
+            Q(service_status__is_active_service__isnull=True)
+        )
 
     if query:
         soldiers = soldiers.filter(
             Q(full_name__icontains=query) |
             Q(national_code__icontains=query) |
             Q(dossier_code__icontains=query) |
+            Q(father_name__icontains=query) |
+            Q(birth_place__icontains=query) |
+            Q(issue_place__icontains=query) |
             Q(phone_personal__icontains=query) |
+            Q(personal_mobile_phone__icontains=query) |
+            Q(military_mobile_phone__icontains=query) |
             Q(phone_parent__icontains=query) |
             Q(phone_home__icontains=query) |
             Q(phone_work__icontains=query) |
-            Q(home_address__icontains=query)
+            Q(home_address__icontains=query) |
+            Q(father_home_address__icontains=query) |
+            Q(personal_home_address__icontains=query) |
+            Q(direct_commander_name__icontains=query) |
+            Q(direct_commander_phone__icontains=query)
         )
 
     if dispatch_type:
@@ -149,6 +175,7 @@ def panel_search(request):
         query_params.pop('page')
     if 'page_size' not in query_params:
         query_params['page_size'] = page_size
+
     base_querystring = query_params.urlencode()
 
     from core.models import DispatchType
@@ -183,9 +210,9 @@ def panel_soldier_delete(request, soldier_id):
 
     if request.method == 'POST':
         soldier_name = soldier.full_name
-        soldier_id = soldier.id
+        soldier_pk = soldier.id
         soldier.delete()
-        logger.info(f'Soldier {soldier_id} ({soldier_name}) deleted by user {request.user.username}')
+        logger.info(f'Soldier {soldier_pk} ({soldier_name}) deleted by user {request.user.username}')
         messages.success(request, f'سرباز "{soldier_name}" با موفقیت حذف شد.')
         return redirect('panel_soldiers')
 
@@ -198,9 +225,9 @@ def panel_leave_delete(request, leave_id):
 
     if request.method == 'POST':
         soldier_name = leave.soldier.full_name
-        leave_id = leave.id
+        leave_pk = leave.id
         leave.delete()
-        logger.info(f'Leave {leave_id} for soldier {soldier_name} deleted by user {request.user.username}')
+        logger.info(f'Leave {leave_pk} for soldier {soldier_name} deleted by user {request.user.username}')
         messages.success(request, f'مرخصی سرباز "{soldier_name}" با موفقیت حذف شد.')
         return redirect('panel_leaves')
 

@@ -1,4 +1,5 @@
 {% extends "dashboard/base.html" %}
+{% load jalali %}
 
 {% block page_title %}
 <i class="fas fa-chart-bar"></i> گزارش‌ها و آمار
@@ -6,7 +7,18 @@
 
 {% block content %}
 <div class="container-fluid px-4 py-4">
-    <!-- Monthly Leave Statistics -->
+
+    <div class="d-flex justify-content-end mb-3">
+        <a href="?show_completed={% if show_completed %}0{% else %}1{% endif %}"
+           class="btn btn-sm btn-outline-secondary">
+            {% if show_completed %}
+            <i class="fas fa-eye-slash"></i> مخفی‌کردن پایان خدمت‌ها
+            {% else %}
+            <i class="fas fa-user-check"></i> نمایش پایان خدمت‌ها
+            {% endif %}
+        </a>
+    </div>
+
     <div class="card border-0 shadow-lg mb-4">
         <div class="card-header bg-gradient text-white fw-bold"
              style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
@@ -25,7 +37,7 @@
                     <tbody>
                     {% for month in monthly_leaves %}
                     <tr>
-                        <td>{{ month.month }}</td>
+                        <td>{{ month.month|to_jalali_ym }}</td>
                         <td>{{ month.total }}</td>
                         <td>{{ month.total_days }} روز</td>
                     </tr>
@@ -40,7 +52,6 @@
         </div>
     </div>
 
-    <!-- Service Completion Forecast -->
     <div class="card border-0 shadow-lg mb-4">
         <div class="card-header bg-gradient text-white fw-bold"
              style="background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;">
@@ -58,7 +69,7 @@
                     <tbody>
                     {% for forecast in ending_forecast %}
                     <tr>
-                        <td>{{ forecast.month }}</td>
+                        <td>{{ forecast.month|to_jalali_ym }}</td>
                         <td>
                             <span class="badge bg-warning text-dark">{{ forecast.count }} سرباز</span>
                         </td>
@@ -74,7 +85,81 @@
         </div>
     </div>
 
-    <!-- Location Distribution -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-gradient text-white fw-bold"
+                     style="background: linear-gradient(90deg, #0f766e, #14b8a6) !important;">
+                    <i class="fas fa-exclamation-triangle"></i> توزیع سربازان بر اساس نوع اضافه خدمت
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover theme-table">
+                            <thead>
+                            <tr>
+                                <th>نوع اضافه خدمت</th>
+                                <th>تعداد</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in extra_type_dist %}
+                            <tr>
+                                <td>{{ item.extra_service_type__title }}</td>
+                                <td>
+                                    <span class="badge bg-danger">{{ item.count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-gradient text-white fw-bold"
+                     style="background: linear-gradient(90deg, #7c3aed, #a855f7) !important;">
+                    <i class="fas fa-medal"></i> توزیع سربازان بر اساس درجه نظامی
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover theme-table">
+                            <thead>
+                            <tr>
+                                <th>درجه</th>
+                                <th>تعداد</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in rank_dist %}
+                            <tr>
+                                <td>
+                                    {{ item.military_rank_ref__title }}
+                                    <small class="text-muted">({{ item.military_rank_ref__code }})</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark">{{ item.count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-6">
             <div class="card border-0 shadow-lg mb-4">
@@ -111,7 +196,6 @@
             </div>
         </div>
 
-        <!-- Status Distribution -->
         <div class="col-md-6">
             <div class="card border-0 shadow-lg mb-4">
                 <div class="card-header bg-gradient text-white fw-bold"
@@ -149,4 +233,3 @@
     </div>
 </div>
 {% endblock %}
-

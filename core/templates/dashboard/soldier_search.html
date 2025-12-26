@@ -10,16 +10,24 @@
     <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
          style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
         <span><i class="fas fa-filter"></i> جستجوی پیشرفته</span>
+        <div class="d-flex gap-2">
+            <a href="{% url 'panel_soldiers' %}" class="btn btn-sm btn-outline-light">
+                <i class="fas fa-list"></i> لیست سربازان
+            </a>
+        </div>
     </div>
+
     <div class="card-body p-4">
         <form method="get" action="{% url 'panel_search' %}" class="mb-4">
             <input type="hidden" name="show_completed" value="{% if show_completed %}1{% else %}0{% endif %}">
+
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">جستجو در نام، کد ملی، کد پرونده</label>
-                    <input type="text" name="q" class="form-control" value="{{ query }}" 
-                           placeholder="نام، کد ملی، کد پرونده...">
+                    <label class="form-label">جستجو در نام، کد ملی، کد پرونده، درجه، فرمانده، محل تولد/صدور</label>
+                    <input type="text" name="q" class="form-control" value="{{ query }}"
+                           placeholder="نام، کد ملی، کد پرونده، درجه، فرمانده، محل تولد/صدور...">
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">نوع اعزام</label>
                     <select name="dispatch_type" class="form-select">
@@ -31,6 +39,7 @@
                         {% endfor %}
                     </select>
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">وضعیت خدمت</label>
                     <select name="service_status" class="form-select">
@@ -43,6 +52,7 @@
                     </select>
                 </div>
             </div>
+
             <div class="row g-3 mt-2">
                 <div class="col-md-3">
                     <label class="form-label">محل خدمت</label>
@@ -53,6 +63,7 @@
                         {% endfor %}
                     </select>
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">وضعیت سلامت</label>
                     <select name="health_status" class="form-select">
@@ -62,6 +73,47 @@
                         {% endfor %}
                     </select>
                 </div>
+
+                <!-- ✅ فیلتر جدید: درجه نظامی (انتخاب از رفرنس) -->
+                <div class="col-md-3">
+                    <label class="form-label">درجه نظامی</label>
+                    <select name="rank_ref" class="form-select">
+                        <option value="">همه</option>
+                        {% for rank in rank_refs %}
+                            <option value="{{ rank.id }}" {% if selected_rank_ref == rank.id|stringformat:"s" %}selected{% endif %}>
+                                {{ rank.title }} ({{ rank.code }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">در صورتی که درجه سرباز از جدول درجه‌ها انتخاب شده باشد.</div>
+                </div>
+
+                <!-- ✅ فیلتر جدید: نوع اضافه خدمت -->
+                <div class="col-md-3">
+                    <label class="form-label">نوع اضافه خدمت</label>
+                    <select name="extra_type" class="form-select">
+                        <option value="">همه</option>
+                        {% for et in extra_types %}
+                            <option value="{{ et.id }}" {% if selected_extra_type == et.id|stringformat:"s" %}selected{% endif %}>
+                                {{ et.title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <!-- ✅ فیلتر جدید: بازه اضافه خدمت -->
+                <div class="col-md-3">
+                    <label class="form-label">اضافه خدمت از (روز)</label>
+                    <input type="number" name="extra_from" class="form-control" min="0" value="{{ extra_from|default:'' }}" placeholder="مثال: 5">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">تا (روز)</label>
+                    <input type="number" name="extra_to" class="form-control" min="0" value="{{ extra_to|default:'' }}" placeholder="مثال: 30">
+                </div>
+
                 <div class="col-md-3">
                     <label class="form-label">شروع خدمت از</label>
                     <input type="text"
@@ -72,6 +124,7 @@
                            placeholder="مثال: 1402/01/15">
                     <input type="hidden" id="start_from" name="start_from" class="jalali-date-alt" value="{{ start_from_value }}">
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">تا تاریخ</label>
                     <input type="text"
@@ -83,6 +136,7 @@
                     <input type="hidden" id="start_to" name="start_to" class="jalali-date-alt" value="{{ start_to_value }}">
                 </div>
             </div>
+
             <div class="row mt-3 align-items-end g-3">
                 <div class="col-md-3">
                     <label class="form-label">تعداد در هر صفحه</label>
@@ -93,10 +147,12 @@
                         <option value="1000" {% if page_size == 1000 %}selected{% endif %}>1000</option>
                     </select>
                 </div>
+
                 <div class="col-md-9 d-flex flex-wrap gap-2">
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-search"></i> جستجو
                     </button>
+
                     <button type="submit" name="show_completed" value="{% if show_completed %}0{% else %}1{% endif %}" class="btn btn-outline-secondary">
                         {% if show_completed %}
                         <i class="fas fa-user-check"></i> نمایش همه (شامل پایان خدمت)
@@ -104,6 +160,7 @@
                         <i class="fas fa-user-slash"></i> نمایش پایان خدمت
                         {% endif %}
                     </button>
+
                     <a href="{% url 'panel_search' %}" class="btn btn-secondary">
                         <i class="fas fa-redo"></i> پاک کردن
                     </a>
@@ -119,7 +176,8 @@
                     <th>نام و نام خانوادگی</th>
                     <th>کد ملی</th>
                     <th>کد پرونده</th>
-                    <th>نوع اعزام</th>
+                    <th>نوع اعزام / درجه</th>
+                    <th>اضافه خدمت</th>
                     <th>وضعیت خدمت</th>
                     <th class="text-center">عملیات</th>
                 </tr>
@@ -127,18 +185,61 @@
                 <tbody>
                 {% for soldier in soldiers %}
                 <tr>
-                    <td><strong style="color: var(--text-primary);">{{ soldier.full_name }}</strong></td>
-                    <td><code style="color: var(--info);">{{ soldier.national_code }}</code></td>
                     <td>
-                        {% if soldier.dossier_code %}
-                        <span class="badge bg-primary">{{ soldier.dossier_code }}</span>
-                        {% else %}
-                        <span class="text-muted">—</span>
+                        <strong style="color: var(--text-primary);">{{ soldier.full_name|default:"—" }}</strong>
+                        {% if soldier.father_name %}
+                            <div class="small text-muted">پدر: {{ soldier.father_name }}</div>
                         {% endif %}
                     </td>
+
                     <td>
-                        <span class="badge bg-secondary">{{ soldier.get_dispatch_type_display }}</span>
+                        {% if soldier.national_code %}
+                            <code style="color: var(--info);">{{ soldier.national_code }}</code>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
                     </td>
+
+                    <td>
+                        {% if soldier.dossier_code and soldier.dossier_code > 0 %}
+                            <span class="badge bg-primary">{{ soldier.dossier_code }}</span>
+                        {% elif soldier.dossier_code == -1 %}
+                            <span class="badge bg-secondary">پایان خدمت</span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if soldier.dispatch_type %}
+                            <span class="badge bg-secondary">{{ soldier.get_dispatch_type_display }}</span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+
+                        {% if soldier.military_rank_ref %}
+                            <div class="mt-1">
+                                <span class="badge bg-dark">{{ soldier.military_rank_ref.title }}</span>
+                                <small class="text-muted">({{ soldier.military_rank_ref.code }})</small>
+                            </div>
+                        {% elif soldier.military_rank %}
+                            <div class="mt-1">
+                                <span class="badge bg-dark">کد درجه: {{ soldier.military_rank }}</span>
+                            </div>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if soldier.extra_service_days and soldier.extra_service_days > 0 %}
+                            <span class="badge bg-danger">{{ soldier.extra_service_days }} روز</span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                        {% if soldier.extra_service_type %}
+                            <div class="small text-muted mt-1">{{ soldier.extra_service_type.title }}</div>
+                        {% endif %}
+                    </td>
+
                     <td>
                         {% if soldier.service_status %}
                             {% if soldier.service_status.is_active_service %}
@@ -150,10 +251,15 @@
                         <span class="text-muted">—</span>
                         {% endif %}
                     </td>
+
                     <td class="text-center">
-                        <a href="{% url 'panel_soldier_detail' soldier.id %}" 
+                        <a href="{% url 'panel_soldier_detail' soldier.id %}"
                            class="btn btn-sm btn-outline-info" title="جزئیات">
                             <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'admin:core_soldier_change' soldier.id %}"
+                           class="btn btn-sm btn-outline-primary" title="ویرایش">
+                            <i class="fas fa-edit"></i>
                         </a>
                     </td>
                 </tr>
@@ -171,7 +277,7 @@
                     <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if base_querystring %}&{{ base_querystring }}{% endif %}">قبلی</a>
                 </li>
                 {% endif %}
-                
+
                 {% for num in page_obj.paginator.page_range %}
                     {% if page_obj.number == num %}
                     <li class="page-item active">
@@ -183,7 +289,7 @@
                     </li>
                     {% endif %}
                 {% endfor %}
-                
+
                 {% if page_obj.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if base_querystring %}&{{ base_querystring }}{% endif %}">بعدی</a>
@@ -192,7 +298,8 @@
             </ul>
         </nav>
         {% endif %}
-        {% elif query or selected_dispatch_type or selected_service_status %}
+
+        {% elif query or selected_dispatch_type or selected_service_status or selected_location or selected_health_status or selected_rank_ref or selected_extra_type or extra_from or extra_to %}
         <div class="text-center py-5">
             <i class="fas fa-search fa-3x opacity-50 mb-3" style="color: var(--text-muted);"></i>
             <p class="fs-5" style="color: var(--text-primary); opacity: 0.85;">نتیجه‌ای یافت نشد.</p>
@@ -222,5 +329,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-
-

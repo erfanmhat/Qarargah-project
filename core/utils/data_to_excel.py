@@ -45,9 +45,36 @@ def _set_col_widths(ws, widths: dict):
         ws.column_dimensions[get_column_letter(col_idx)].width = w
 
 
+def _rank_display(soldier) -> str:
+    """نمایش درجه نظامی با اولویت نام از جدول رفرنس."""
+    if getattr(soldier, 'military_rank_ref', None):
+        try:
+            ref = soldier.military_rank_ref
+            return f"{getattr(ref, 'title', '-') or '-'} ({getattr(ref, 'code', '-') or '-'})"
+        except Exception:
+            pass
+    code = getattr(soldier, 'military_rank', None)
+    return str(code) if code is not None else "-"
+
+
+def _extra_service_display(soldier) -> str:
+    """نمایش اضافه خدمت (روز + نوع)"""
+    days = getattr(soldier, 'extra_service_days', None) or 0
+    t = getattr(soldier, 'extra_service_type', None)
+    type_title = getattr(t, 'title', None) if t else None
+
+    if not days and not type_title:
+        return "-"
+
+    if type_title and days:
+        return f"{days} روز - {type_title}"
+    if days:
+        return f"{days} روز"
+    return type_title or "-"
+
+
 def build_soldier_profile_excel(request, soldier, balances, now) -> bytes:
-    """
-    Kept name for backward compatibility with existing views.
+    """Kept name for backward compatibility with existing views.
     Returns XLSX bytes.
     """
     wb = Workbook()
@@ -67,17 +94,47 @@ def build_soldier_profile_excel(request, soldier, balances, now) -> bytes:
     c.font = st["base_font"]
     c.alignment = st["align_c"]
 
-    # Info rows
+    # Info rows (✅ آپدیت با فیلدهای جدید)
     fields = [
-        ("کد سیستم", getattr(soldier, "id", "-")),
+        ("کد سیستم", getattr(soldier, "id", "-") or "-"),
         ("نام و نام خانوادگی", getattr(soldier, "full_name", "-") or "-"),
+        ("نام پدر", getattr(soldier, "father_name", "-") or "-"),
         ("کد ملی", getattr(soldier, "national_code", "-") or "-"),
         ("کد پرونده", getattr(soldier, "dossier_code", "-") or "-"),
         ("نوع اعزامی", getattr(soldier, "get_dispatch_type_display", lambda: "-")() or "-"),
-        ("تاریخ شروع خدمت", fmt_jdate(getattr(soldier, "service_start_date", None))),
-        ("تاریخ پایان خدمت", fmt_jdate(getattr(soldier, "service_end_date", lambda: None)())),
+        ("درجه نظامی", _rank_display(soldier)),
+        ("وضعیت تاهل", getattr(soldier, "get_marital_status_display", lambda: "-")() if getattr(soldier, 'marital_status', None) else "-"),
+        ("تعداد فرزندان", getattr(soldier, "children_count", "-") or "-"),
+        ("تاریخ تولد", fmt_jdate(getattr(soldier, "birth_date", None))),
+        ("محل تولد", getattr(soldier, "birth_place", "-") or "-"),
+        ("محل صدور", getattr(soldier, "issue_place", "-") or "-"),
+        ("قد (cm)", getattr(soldier, "height_cm", "-") or "-"),
+        ("وزن (kg)", getattr(soldier, "weight_kg", "-") or "-"),
+        ("رنگ چشم", getattr(soldier, "eye_color", "-") or "-"),
+        ("گروه خونی", getattr(soldier, "get_blood_group_display", lambda: "-")() if getattr(soldier, 'blood_group', None) else "-"),
+        ("بیماری زمینه‌ای", getattr(soldier, "underlying_disease", "-") or "-"),
+        ("حساسیت دارویی", getattr(soldier, "drug_allergy", "-") or "-"),
+        ("داروهای مصرفی", getattr(soldier, "used_medications", "-") or "-"),
+        ("تحصیلات", getattr(soldier, "education_level", "-") or "-"),
+        ("رشته تحصیلی", getattr(soldier, "education_field", "-") or "-"),
+        ("گواهینامه رانندگی", "دارد" if getattr(soldier, 'has_driving_license', None) is True else ("ندارد" if getattr(soldier, 'has_driving_license', None) is False else "-")),
+        ("نوع گواهینامه", getattr(soldier, "get_driving_license_type_display", lambda: "-")() if getattr(soldier, 'driving_license_type', None) else "-"),
+        ("آدرس منزل پدری", getattr(soldier, "father_home_address", "-") or "-"),
+        ("آدرس منزل شخصی", getattr(soldier, "personal_home_address", "-") or "-"),
+        ("کد پستی", getattr(soldier, "postal_code", "-") or "-"),
+        ("شماره تلفن منزل پدری", getattr(soldier, "father_home_phone", "-") or "-"),
+        ("شماره تلفن منزل شخصی", getattr(soldier, "personal_home_phone", "-") or "-"),
+        ("شماره تلفن همراه شخصی", getattr(soldier, "personal_mobile_phone", "-") or "-"),
+        ("شماره تلفن نظامی", getattr(soldier, "military_mobile_phone", "-") or "-"),
         ("شماره همراه", getattr(soldier, "phone_personal", "-") or "-"),
+        ("شماره والدین/همسر", getattr(soldier, "phone_parent", "-") or "-"),
+        ("تاریخ شروع خدمت", fmt_jdate(getattr(soldier, "service_start_date", None))),
+        ("تاریخ ورود به ناحیه", fmt_jdate(getattr(soldier, "arrival_date", None))),
+        ("تاریخ پایان خدمت", fmt_jdate(getattr(soldier, "service_end_date", lambda: None)())),
+        ("اضافه خدمت", _extra_service_display(soldier)),
         ("کد پاسداری", getattr(soldier, "guard_code", "-") or "-"),
+        ("فرمانده مستقیم", f"{getattr(soldier, 'direct_commander_name', '-') or '-'} - {getattr(soldier, 'direct_commander_phone', '-') or '-'}"),
+        ("دوره‌های گذرانده شده", getattr(soldier, "completed_courses", "-") or "-"),
     ]
 
     start_row = 4
@@ -134,15 +191,14 @@ def build_soldier_profile_excel(request, soldier, balances, now) -> bytes:
             cell.border = st["border"]
         r += 1
 
-    _set_col_widths(ws, {1: 22, 2: 12, 3: 12, 4: 12})
+    _set_col_widths(ws, {1: 26, 2: 14, 3: 18, 4: 18})
     ws.freeze_panes = "A4"
 
     return _bytes_of_wb(wb)
 
 
 def build_soldier_leaves_excel(request, soldier, leaves, balances, now) -> bytes:
-    """
-    Kept name for backward compatibility with existing views.
+    """Kept name for backward compatibility with existing views.
     Returns XLSX bytes.
     """
     wb = Workbook()

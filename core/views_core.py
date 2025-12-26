@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
@@ -170,11 +170,25 @@ def panel_soldier_detail(request, soldier_id):
 
 @login_required
 def panel_reports(request):
-    """Reports page"""
+    """Reports page
+
+    ✅ Updates:
+    - Uses SELECT/Prefetch efficiently (no unnecessary reductions prefetch because service_end_date
+      is computed from soldier fields; reductions are only used if your service_end_date depends on it.
+      If it does, keep reductions prefetch.
+    - Adds extra-service-aware forecast by using soldier.service_end_date() which already includes
+      extra days (extra_service_days + logs).
+    - Adds optional breakdown for extra service type distribution and rank distribution.
+    - Ensures counts only consider active/unknown service_status by default (like panel_soldiers),
+      but can be toggled with ?show_completed=1.
+    """
 
     today = timezone.localdate()
     current_month_start = today.replace(day=1)
 
+    show_completed = request.GET.get('show_completed') == '1'
+
+    # ==================== Monthly leaves (last 6 months) ====================
     monthly_leaves = []
 
     cursor = current_month_start
@@ -197,17 +211,27 @@ def panel_reports(request):
 
     monthly_leaves.reverse()
 
+    # ==================== Service ending forecast (next 6 months) ====================
     six_months_later = today + timedelta(days=180)
     ending_forecast = []
     current_month = today.replace(day=1)
 
-    soldiers = list(
-        Soldier.objects.select_related("service_status").prefetch_related("reductions").all()
-    )
+    soldiers_qs = Soldier.objects.select_related("service_status")
+
+    # اگر اتمام خدمت‌ها مخفی باشند، فقط فعال/نامشخص‌ها را در پیش‌بینی حساب کن
+    if not show_completed:
+        soldiers_qs = soldiers_qs.filter(
+            Q(service_status__isnull=True) |
+            Q(service_status__is_active_service=True) |
+            Q(service_status__is_active_service__isnull=True)
+        )
+
+    # ✅ این prefetch فقط اگر service_end_date شما reductions را استفاده می‌کند لازم است.
+    # اگر reductions دخیل نیست، می‌توانید حذفش کنید.
+    soldiers = list(soldiers_qs.prefetch_related("reductions", "extra_logs").all())
 
     for i in range(6):
         next_month = (current_month.replace(day=28) + timedelta(days=4)).replace(day=1)
-
         month_end = six_months_later if i == 5 else next_month
 
         count = 0
@@ -227,19 +251,43 @@ def panel_reports(request):
 
         current_month = next_month
 
+    # ==================== Distributions ====================
+
+    # Location distribution
     location_dist = ServiceLocation.objects.annotate(
         soldier_count=Count("soldier")
     ).filter(soldier_count__gt=0).order_by("-soldier_count")[:10]
 
+    # Status distribution
     status_dist = ServiceStatus.objects.annotate(
         soldier_count=Count("soldier")
     ).order_by("-soldier_count")
+
+    # ✅ جدید: توزیع نوع اضافه خدمت (بر اساس extra_service_type ساده)
+    # فقط مواردی که نوع دارند.
+    extra_type_dist = (
+        Soldier.objects.filter(extra_service_type__isnull=False)
+        .values('extra_service_type__title')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    # ✅ جدید: توزیع درجه (بر اساس military_rank_ref)
+    rank_dist = (
+        Soldier.objects.filter(military_rank_ref__isnull=False)
+        .values('military_rank_ref__title', 'military_rank_ref__code')
+        .annotate(count=Count('id'))
+        .order_by('military_rank_ref__code')
+    )
 
     context = {
         "monthly_leaves": monthly_leaves,
         "ending_forecast": ending_forecast,
         "location_dist": location_dist,
         "status_dist": status_dist,
+        "extra_type_dist": extra_type_dist,
+        "rank_dist": rank_dist,
+        "show_completed": show_completed,
     }
     return render(request, "dashboard/reports.html", context)
 

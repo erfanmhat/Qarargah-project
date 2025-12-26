@@ -17,6 +17,8 @@
 <div class="row g-4">
     <!-- اطلاعات اصلی -->
     <div class="col-lg-8">
+
+        <!-- اطلاعات هویتی -->
         <div class="card border-0 shadow-lg mb-4">
             <div class="card-header bg-gradient text-white fw-bold"
                  style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
@@ -26,40 +28,119 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong style="color: var(--success);">نام و نام خانوادگی:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.full_name }}</p>
+                        <p style="color: var(--text-primary);">{{ soldier.full_name|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong style="color: var(--success);">نام پدر:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.father_name|default:"—" }}</p>
                     </div>
                 </div>
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong style="color: var(--success);">کد ملی:</strong>
-                        <p style="color: var(--text-primary);"><code>{{ soldier.national_code }}</code></p>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.national_code %}
+                                <code>{{ soldier.national_code }}</code>
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </p>
                     </div>
                     <div class="col-md-6">
                         <strong style="color: var(--success);">کد پرونده:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.dossier_code %}
-                            <span class="badge bg-primary">{{ soldier.dossier_code }}</span>
+                                <span class="badge bg-primary">{{ soldier.dossier_code }}</span>
                             {% else %}
-                            <span style="color: var(--text-muted);">—</span>
+                                <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                 </div>
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong style="color: var(--success);">تاریخ تولد:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.birth_date|to_jalali:"%Y/%m/%d" }}</p>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.birth_date %}
+                                {{ soldier.birth_date|to_jalali:"%Y/%m/%d" }}
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </p>
                     </div>
                     <div class="col-md-6">
-                        <strong class="text-success">نوع اعزام:</strong>
+                        <strong style="color: var(--success);">محل تولد:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.birth_place|default:"—" }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong style="color: var(--success);">محل صدور:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.issue_place|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong style="color: var(--success);">نوع اعزام:</strong>
                         <p style="color: var(--text-primary);">
-                            <span class="badge bg-secondary">{{ soldier.get_dispatch_type_display }}</span>
+                            {% if soldier.dispatch_type %}
+                                <span class="badge bg-secondary">{{ soldier.get_dispatch_type_display }}</span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong style="color: var(--success);">درجه نظامی:</strong>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.military_rank_ref %}
+                                <span class="badge bg-dark">{{ soldier.military_rank_ref.title }}</span>
+                                <small class="text-muted">({{ soldier.military_rank_ref.code }})</small>
+                            {% elif soldier.military_rank %}
+                                <span class="badge bg-dark">کد: {{ soldier.military_rank }}</span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong style="color: var(--success);">وضعیت تاهل:</strong>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.marital_status %}
+                                <span class="badge bg-info">{{ soldier.get_marital_status_display }}</span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <strong style="color: var(--success);">تعداد فرزندان:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.children_count|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong style="color: var(--success);">عکس پرسنلی:</strong>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.personal_photo %}
+                                <a href="{{ soldier.personal_photo.url }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-image"></i> مشاهده
+                                </a>
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- اطلاعات خدمت -->
         <div class="card border-0 shadow-lg mb-4">
             <div class="card-header bg-gradient text-white fw-bold"
                  style="background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;">
@@ -69,29 +150,36 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong style="color: var(--info);">تاریخ شروع خدمت:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}</p>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.service_start_date %}
+                                {{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </p>
                     </div>
                     <div class="col-md-6">
                         <strong style="color: var(--info);">تاریخ ورود به ناحیه:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.arrival_date %}
-                            {{ soldier.arrival_date|to_jalali:"%Y/%m/%d" }}
+                                {{ soldier.arrival_date|to_jalali:"%Y/%m/%d" }}
                             {% else %}
-                            <span style="color: var(--text-muted);">—</span>
+                                <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                 </div>
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong style="color: var(--info);">تاریخ پایان خدمت:</strong>
                         <p style="color: var(--text-primary);">
                             {% with end=soldier.service_end_date %}
-                            {% if end %}
-                            <span class="badge bg-warning">{{ end|to_jalali:"%Y/%m/%d" }}</span>
-                            {% else %}
-                            <span style="color: var(--text-muted);">—</span>
-                            {% endif %}
+                                {% if end %}
+                                    <span class="badge bg-warning">{{ end|to_jalali:"%Y/%m/%d" }}</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted);">—</span>
+                                {% endif %}
                             {% endwith %}
                         </p>
                     </div>
@@ -100,24 +188,25 @@
                         <p style="color: var(--text-primary);">
                             {% if soldier.service_status %}
                                 {% if soldier.service_status.is_active_service %}
-                                <span class="badge bg-success">در حال خدمت</span>
+                                    <span class="badge bg-success">در حال خدمت</span>
                                 {% else %}
-                                <span class="badge bg-danger">پایان خدمت</span>
+                                    <span class="badge bg-danger">پایان خدمت</span>
                                 {% endif %}
                             {% else %}
-                            <span style="color: var(--text-muted);">—</span>
+                                <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                 </div>
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong style="color: var(--info);">محل خدمت فعلی:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.current_location %}
-                            {{ soldier.current_location.name }}
+                                {{ soldier.current_location.name }}
                             {% else %}
-                            <span style="color: var(--text-muted);">—</span>
+                                <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -125,31 +214,142 @@
                         <strong style="color: var(--info);">وضعیت سلامت:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.health_status %}
-                            {{ soldier.health_status.title }}
+                                {{ soldier.health_status.title }}
                             {% else %}
-                            <span style="color: var(--text-muted);">—</span>
+                                <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-12">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong style="color: var(--info);">اضافه خدمت:</strong>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.extra_service_days %}
+                                <span class="badge bg-danger">{{ soldier.extra_service_days }} روز</span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+
+                            {% if soldier.extra_service_type %}
+                                <span class="badge bg-secondary ms-1">{{ soldier.extra_service_type.title }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
                         <strong style="color: var(--info);">تخصص‌ها:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.expertises.all %}
-                            {% for expertise in soldier.expertises.all %}
-                            <span class="badge bg-info me-1">{{ expertise.title }}</span>
-                            {% endfor %}
+                                {% for expertise in soldier.expertises.all %}
+                                    <span class="badge bg-info me-1">{{ expertise.title }}</span>
+                                {% endfor %}
                             {% else %}
-                            <span style="color: var(--text-muted);">—</span>
+                                <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- اطلاعات پزشکی -->
+        <div class="card border-0 shadow-lg mb-4">
+            <div class="card-header bg-gradient text-white fw-bold"
+                 style="background: linear-gradient(90deg, #0f766e, #14b8a6) !important;">
+                <i class="fas fa-notes-medical"></i> اطلاعات پزشکی
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>قد:</strong>
+                        <p>{{ soldier.height_cm|default:"—" }} {% if soldier.height_cm %}cm{% endif %}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>وزن:</strong>
+                        <p>{{ soldier.weight_kg|default:"—" }} {% if soldier.weight_kg %}kg{% endif %}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>رنگ چشم:</strong>
+                        <p>{{ soldier.eye_color|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>گروه خونی:</strong>
+                        <p>
+                            {% if soldier.blood_group %}
+                                <span class="badge bg-danger">{{ soldier.get_blood_group_display }}</span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>بیماری زمینه‌ای:</strong>
+                        <p>{{ soldier.underlying_disease|default:"—" }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>حساسیت دارویی:</strong>
+                        <p>{{ soldier.drug_allergy|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>داروهای مصرفی:</strong>
+                        <p>{{ soldier.used_medications|default:"—" }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- تحصیلات و دوره‌ها -->
         <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient text-white fw-bold"
+                 style="background: linear-gradient(90deg, #7c3aed, #a855f7) !important;">
+                <i class="fas fa-graduation-cap"></i> تحصیلات و دوره‌ها
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>میزان تحصیلات:</strong>
+                        <p>{{ soldier.education_level|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>رشته تحصیلات:</strong>
+                        <p>{{ soldier.education_field|default:"—" }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>گواهینامه:</strong>
+                        <p>
+                            {% if soldier.has_driving_license is None %}
+                                —
+                            {% elif soldier.has_driving_license %}
+                                <span class="badge bg-success">دارد</span>
+                                {% if soldier.driving_license_type %}
+                                    <span class="badge bg-secondary">{{ soldier.get_driving_license_type_display }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-danger">ندارد</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>دوره‌های گذرانده شده:</strong>
+                        <p>{{ soldier.completed_courses|default:"—" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- اطلاعات تماس -->
+        <div class="card border-0 shadow-lg mt-4">
             <div class="card-header bg-gradient text-white fw-bold"
                  style="background: linear-gradient(90deg, #dc2626, #ef4444) !important;">
                 <i class="fas fa-phone"></i> اطلاعات تماس
@@ -175,12 +375,50 @@
                         <p style="color: var(--text-primary);">{{ soldier.phone_work|default:"—" }}</p>
                     </div>
                 </div>
-                <div class="row">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong style="color: var(--danger);">تلفن منزل پدری:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.father_home_phone|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong style="color: var(--danger);">تلفن منزل شخصی:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.personal_home_phone|default:"—" }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong style="color: var(--danger);">همراه شخصی:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.personal_mobile_phone|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong style="color: var(--danger);">همراه نظامی:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.military_mobile_phone|default:"—" }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
                     <div class="col-12">
                         <strong style="color: var(--danger);">آدرس منزل:</strong>
                         <p style="color: var(--text-primary);">{{ soldier.home_address|default:"—" }}</p>
                     </div>
                 </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong style="color: var(--danger);">آدرس منزل پدری:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.father_home_address|default:"—" }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong style="color: var(--danger);">آدرس منزل شخصی:</strong>
+                        <p style="color: var(--text-primary);">{{ soldier.personal_home_address|default:"—" }}</p>
+                    </div>
+                </div>
+
                 {% if soldier.guard_code %}
                 <div class="row mt-3">
                     <div class="col-12">
@@ -189,12 +427,30 @@
                     </div>
                 </div>
                 {% endif %}
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <strong style="color: var(--danger);">فرمانده مستقیم:</strong>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.direct_commander_name %}
+                                {{ soldier.direct_commander_name }}
+                                {% if soldier.direct_commander_phone %}
+                                    - <code>{{ soldier.direct_commander_phone }}</code>
+                                {% endif %}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
+
     </div>
 
     <!-- سایدبار -->
     <div class="col-lg-4">
+
         <div class="card border-0 shadow-lg mb-4">
             <div class="card-header bg-gradient text-white fw-bold"
                  style="background: linear-gradient(90deg, #0ea5e9, #22d3ee) !important;">
@@ -290,7 +546,7 @@
                 {% endif %}
             </div>
         </div>
+
     </div>
 </div>
 {% endblock %}
-

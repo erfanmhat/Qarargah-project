@@ -30,6 +30,53 @@ def to_jalali(value, fmt='%Y/%m/%d'):
 
 
 @register.filter
+def to_jalali_ym(value, fmt="%Y/%m"):
+    """
+    Converts a Gregorian date/datetime OR year-month string to Jalali year-month only.
+
+    Accepts:
+      - date / datetime
+      - "YYYY-MM-DD"
+      - "YYYY-MM"
+      - "YYYY/MM"
+      - "YYYY/MM/DD"
+    """
+
+    if not value:
+        return "-"
+
+    try:
+        # ✅ If it's already date/datetime
+        if isinstance(value, (date, datetime)):
+            g_date = value if isinstance(value, date) else value.date()
+
+        # ✅ If it's a string
+        elif isinstance(value, str):
+            s = value.strip()
+
+            # normalize slash to dash
+            s = s.replace("/", "-")
+
+            # "YYYY-MM"  -> add day=1
+            if len(s) == 7 and s.count("-") == 1:
+                s = s + "-01"
+
+            # now should be "YYYY-MM-DD"
+            g_date = datetime.strptime(s, "%Y-%m-%d").date()
+
+        else:
+            return "-"
+
+        jd = jdatetime.fromgregorian(date=g_date)
+
+        # ✅ return only year-month
+        return jd.strftime(fmt)
+
+    except Exception:
+        return "-"
+
+
+@register.filter
 def to_jalali_full(date):
     if not date:
         return '-'

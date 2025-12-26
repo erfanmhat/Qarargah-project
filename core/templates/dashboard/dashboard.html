@@ -12,13 +12,6 @@
             <div class="text-white fs-5">
                 <i class="fas fa-calendar-alt"></i> {% jalali_now "%d %B %Y" %}
             </div>
-            <!-- Development Seed Button - Remove or comment in production -->
-            <button type="button" 
-                    class="btn btn-warning btn-sm" 
-                    id="seedDataBtn"
-                    title="تولید داده‌های تستی (فقط برای توسعه)">
-                <i class="fas fa-database"></i> تولید داده تستی
-            </button>
         </div>
     </div>
     
@@ -110,60 +103,8 @@
 <script>
 // Seed Data Button Handler
 document.addEventListener('DOMContentLoaded', function() {
-    const seedBtn = document.getElementById('seedDataBtn');
     const resultAlert = document.getElementById('seedResultAlert');
     const resultMessage = document.getElementById('seedResultMessage');
-    
-    if (seedBtn) {
-        seedBtn.addEventListener('click', function() {
-            if (confirm('⚠️ هشدار!\n\nآیا از تولید داده‌های تستی اطمینان دارید؟\nاین عمل حدود ۵۰ سرباز و داده‌های مرتبط ایجاد می‌کند.\n\nاین دکمه فقط برای محیط توسعه است و باید در تولید حذف یا کامنت شود.')) {
-                // Disable button and show loading
-                seedBtn.disabled = true;
-                seedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال تولید...';
-                
-                // Get CSRF token from hidden input
-                const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-                const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
-                
-                // Make POST request
-                fetch('{% url "seed_data" %}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken,
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'same-origin',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        resultAlert.className = 'alert alert-success alert-dismissible fade show';
-                        resultMessage.textContent = `✅ موفقیت! ${data.soldiers_created} سرباز با موفقیت ایجاد شد. صفحه را رفرش کنید تا تغییرات را ببینید.`;
-                        resultAlert.style.display = 'block';
-                        
-                        // Reload page after 2 seconds
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                    } else {
-                        resultAlert.className = 'alert alert-danger alert-dismissible fade show';
-                        resultMessage.textContent = `❌ خطا: ${data.error || 'خطای نامشخص'}`;
-                        resultAlert.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    resultAlert.className = 'alert alert-danger alert-dismissible fade show';
-                    resultMessage.textContent = `❌ خطا در ارتباط با سرور: ${error.message}`;
-                    resultAlert.style.display = 'block';
-                })
-                .finally(() => {
-                    // Re-enable button
-                    seedBtn.disabled = false;
-                    seedBtn.innerHTML = '<i class="fas fa-database"></i> تولید داده تستی';
-                });
-            }
-        });
-    }
     
     // Helper function to get CSRF token
     function getCookie(name) {
