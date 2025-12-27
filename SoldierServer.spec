@@ -1,75 +1,86 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
-from pathlib import Path
-
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
-# ------------------------------------------------------------
-# Resolve project root safely (avoid __file__)
-# ------------------------------------------------------------
-_spec_dir = globals().get("SPECPATH", None)
-if _spec_dir:
-    PROJECT_ROOT = Path(_spec_dir).resolve()
-else:
-    PROJECT_ROOT = Path(os.getcwd()).resolve()
 
-# ------------------------------------------------------------
-# Entry script (CHANGE THIS if needed)
-# ------------------------------------------------------------
-ENTRY_SCRIPT = PROJECT_ROOT / "run_server.py"
-if not ENTRY_SCRIPT.exists():
-    raise SystemExit(f"ENTRY_SCRIPT not found: {ENTRY_SCRIPT}")
-# ------------------------------------------------------------
-# Datas (MUST be list of (src, dest))
-# ------------------------------------------------------------
+# ---------------------------------------------------------
+# Paths
+# ---------------------------------------------------------
+project_root = os.path.abspath(os.path.dirname(__file__))
+
+# ✅ Folder that contains your fixed .docx templates
+DOC_TEMPLATES_DIR = os.path.join(project_root, 'doc_templates')
+
+# ✅ Django templates/static (keep your existing paths if different)
+DJANGO_TEMPLATES_DIR = os.path.join(project_root, 'templates')
+STATIC_DIR = os.path.join(project_root, 'static')
+MEDIA_DIR = os.path.join(project_root, 'media')
+
+# ---------------------------------------------------------
+# Hidden imports (important for Django + docxtpl + jinja2)
+# ---------------------------------------------------------
+hiddenimports = []
+
+# Django dynamic imports
+hiddenimports += collect_submodules('django')
+
+# docxtpl / jinja2
+hiddenimports += collect_submodules('docxtpl')
+hiddenimports += collect_submodules('jinja2')
+hiddenimports += collect_submodules('docx')
+
+# jalali-date packages (if you use them)
+hiddenimports += collect_submodules('jdatetime')
+hiddenimports += collect_submodules('jalali_date')
+
+# ---------------------------------------------------------
+# Data files
+# ---------------------------------------------------------
+
 datas = []
-datas += collect_data_files('django.contrib.admin')
-datas += collect_data_files('django_jalali')
-datas += collect_data_files('jalali_date')
-datas += collect_data_files('import_export')
 
-# Add templates directory if present
-templates_root = PROJECT_ROOT / "templates"
-if templates_root.exists():
-    datas.append((str(templates_root), "templates"))
+# ✅ Include your fixed docx templates folder
+if os.path.isdir(DOC_TEMPLATES_DIR):
+    datas.append((DOC_TEMPLATES_DIR, 'doc_templates'))
 
-core_templates = PROJECT_ROOT / "core" / "templates"
-if core_templates.exists():
-    datas.append((str(core_templates), "core/templates"))
+# ✅ Include Django templates folder
+if os.path.isdir(DJANGO_TEMPLATES_DIR):
+    datas.append((DJANGO_TEMPLATES_DIR, 'templates'))
 
-admin_templates = PROJECT_ROOT / "admin" / "templates"
-if admin_templates.exists():
-    datas.append((str(admin_templates), "admin/templates"))
+# ✅ Include static folder
+if os.path.isdir(STATIC_DIR):
+    datas.append((STATIC_DIR, 'static'))
 
-# Add fonts directory (Persian)
-fonts_dir = PROJECT_ROOT / "core" / "static" / "fonts"
-if fonts_dir.exists():
-    datas.append((str(fonts_dir), "core/static/fonts"))
+# ✅ Include media folder (optional, only if you ship sample media)
+if os.path.isdir(MEDIA_DIR):
+    datas.append((MEDIA_DIR, 'media'))
 
+# ✅ Include docxtpl's internal templates, if any
+try:
+    datas += collect_data_files('docxtpl')
+except Exception:
+    pass
 
-static_dir = PROJECT_ROOT / "staticfiles"
-if static_dir.exists():
-    datas.append((str(static_dir), "staticfiles"))
-# ------------------------------------------------------------
-# Excludes to avoid pkg_resources rthook issues
-# ------------------------------------------------------------
-excludes = [
-    "pkg_resources",
-    "setuptools",
-    "setuptools._vendor",
-]
+# ✅ Include jinja2 package data
+try:
+    datas += collect_data_files('jinja2')
+except Exception:
+    pass
 
+# ---------------------------------------------------------
+# Build
+# ---------------------------------------------------------
 a = Analysis(
-    [str(ENTRY_SCRIPT)],
-    pathex=[str(PROJECT_ROOT)],
+    ['manage.py'],
+    pathex=[project_root],
     binaries=[],
     datas=datas,
-    hiddenimports=[],
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=excludes,
+    excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=None,
@@ -85,22 +96,17 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name="SoldierServer",
+    name='SoldierServer',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="SoldierServer",
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
 )

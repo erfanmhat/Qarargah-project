@@ -1,0 +1,419 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block page_title %}
+<i class="fas fa-book"></i> راهنمای فرم‌ساز (Word .docx)
+{% endblock %}
+
+{% block content %}
+<style>
+    .help-wrap{
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .help-card{
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.08);
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+    .help-header{
+        color: #fff;
+        padding: 14px 18px;
+        font-weight: 800;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        background: linear-gradient(90deg,#7c3aed,#a855f7);
+    }
+    .help-body{
+        padding: 18px;
+        background: var(--card-bg, #fff);
+    }
+    .help-body p{
+        margin-bottom: .8rem;
+        line-height: 2;
+        color: var(--text-primary, #222);
+    }
+    .note{
+        background: rgba(59,130,246,.08);
+        border: 1px solid rgba(59,130,246,.22);
+        padding: 12px 14px;
+        border-radius: 14px;
+        margin: 10px 0 16px;
+    }
+    .warn{
+        background: rgba(239,68,68,.08);
+        border: 1px solid rgba(239,68,68,.22);
+        padding: 12px 14px;
+        border-radius: 14px;
+        margin: 10px 0 16px;
+    }
+    code, .code{
+        background: #111827;
+        color: #E5E7EB;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: .95rem;
+        direction: ltr;
+        display: inline-block;
+        unicode-bidi: plaintext;
+    }
+    pre{
+        background: #0b1220;
+        color: #E5E7EB;
+        padding: 14px 16px;
+        border-radius: 16px;
+        overflow: auto;
+        direction: ltr;
+        text-align: left;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+        white-space: pre-wrap;
+    }
+    .grid{
+        display:grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 12px;
+    }
+    @media(max-width: 768px){
+        .grid{ grid-template-columns: 1fr; }
+    }
+    .pill{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(124,58,237,.12);
+        border: 1px solid rgba(124,58,237,.25);
+        font-weight: 700;
+        margin: 3px 0;
+    }
+    .tbl{
+        width:100%;
+        border-collapse: collapse;
+        overflow:hidden;
+        border-radius:14px;
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+    }
+    .tbl th, .tbl td{
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(0,0,0,.06);
+        vertical-align: top;
+    }
+    .tbl th{
+        background: rgba(124,58,237,.10);
+        font-weight: 800;
+    }
+    .tbl tr:last-child td{ border-bottom: 0; }
+    .muted{ color: #6B7280; font-size: .95rem; }
+
+    /* ✅ برای مثال‌های دو ستونه (RTL) */
+    .example-wrap{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-top: 14px;
+    }
+    @media(max-width: 992px){
+        .example-wrap{ grid-template-columns: 1fr; }
+    }
+    .example-box{
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,.07);
+        box-shadow: 0 8px 24px rgba(0,0,0,.06);
+    }
+    .example-head{
+        padding: 10px 14px;
+        font-weight: 800;
+        background: rgba(124,58,237,.12);
+        border-bottom: 1px solid rgba(0,0,0,.07);
+    }
+    .example-content{
+        padding: 12px 14px;
+    }
+    .rtl-box{
+        direction: rtl;
+        text-align: right;
+        font-family: inherit;
+        background: #0b1220;
+        color: #E5E7EB;
+        padding: 14px 16px;
+        border-radius: 14px;
+        white-space: pre-wrap;
+        line-height: 2;
+        unicode-bidi: plaintext;
+    }
+</style>
+
+<div class="help-wrap">
+
+    <!-- 1) معرفی -->
+    <div class="help-card">
+        <div class="help-header">
+            <span><i class="fas fa-info-circle"></i> این سیستم چیست؟</span>
+            <span class="pill"><i class="fas fa-file-word"></i> خروجی: docx</span>
+        </div>
+        <div class="help-body">
+            <p>
+                این بخش برای ساخت و چاپ سریع فرم‌های Word طراحی شده است.
+                شما یک فایل <b>.docx</b> آماده می‌سازید و داخل آن از متغیرها (Placeholder) استفاده می‌کنید.
+                برنامه هنگام خروجی گرفتن، این متغیرها را با اطلاعات سرباز و ورودی‌های دستی جایگزین می‌کند
+                و در نهایت یک فایل Word قابل دانلود تولید می‌شود.
+            </p>
+
+            <div class="note">
+                <b>نکته:</b>
+                قالب‌های Word در پوشه ثابت پروژه قرار دارند:
+                <span class="code">doc_templates/</span>
+                و فقط نام فایل در دیتابیس ثبت می‌شود.
+            </div>
+        </div>
+    </div>
+
+    <!-- 2) ساخت قالب جدید -->
+    <div class="help-card">
+        <div class="help-header">
+            <span><i class="fas fa-plus-circle"></i> ساخت فرم جدید (مراحل کامل)</span>
+        </div>
+        <div class="help-body">
+            <ol style="line-height:2;">
+                <li>یک فایل Word با پسوند <b>.docx</b> بسازید.</li>
+                <li>داخل فایل Word، متن و جایگاه متغیرها را قرار دهید.</li>
+                <li>فایل را در پوشه <span class="code">doc_templates/</span> کپی کنید.</li>
+                <li>در پنل مدیریت، از بخش <b>قالب فرم</b> یک فرم جدید بسازید و نام فایل را وارد کنید.</li>
+                <li>اگر فرم نیاز به ورودی دستی دارد، در همان فرم قسمت <b>فیلدهای ورودی فرم</b> را اضافه کنید.</li>
+                <li>اکنون در صفحه پروفایل سرباز، فرم به صورت دکمه نمایش داده می‌شود و قابل دانلود است.</li>
+            </ol>
+
+            <div class="warn">
+                <b>خطای رایج:</b>
+                در تعریف «فیلدهای ورودی فرم»، مقدار <b>key</b> فقط باید <b>Slug</b> باشد؛ یعنی فقط شامل
+                <b>حروف انگلیسی</b>، <b>عدد</b>، <b>خط زیر (_)</b> یا <b>خط فاصله (-)</b>.
+                <hr class="my-2" style="opacity:.25;">
+                <b>مثال درست (Key):</b> <span class="code">letter_number</span>
+                <br>
+                <b>مثال غلط (Key):</b> <span class="code">{% verbatim %}{{ soldier.full_name }}{% endverbatim %}</span>
+                <br>
+                <span class="muted">
+                    (غلط است چون شامل <b>{}</b> و <b>.</b> است و Slug نیست؛ این عبارت را باید داخل Word بنویسی نه داخل key!)
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3) انواع متغیرها -->
+    <div class="help-card">
+        <div class="help-header">
+            <span><i class="fas fa-code"></i> متغیرها (Placeholder) چه هستند؟</span>
+        </div>
+        <div class="help-body">
+            <p>
+                داخل قالب docx می‌توانید از چهار نوع متغیر استفاده کنید:
+            </p>
+
+            <div class="grid">
+                <div class="note">
+                    <b>1) اطلاعات سرباز</b><br>
+                    مثال: <span class="code">{% verbatim %}{{ soldier.full_name }}{% endverbatim %}</span>
+                </div>
+
+                <div class="note">
+                    <b>2) ورودی دستی (input)</b><br>
+                    مثال: <span class="code">{% verbatim %}{{ input.letter_number }}{% endverbatim %}</span>
+                </div>
+
+                <div class="note">
+                    <b>3) متغیرهای زمان/سیستم</b><br>
+                    مثال: <span class="code">{% verbatim %}{{ now|jalali }}{% endverbatim %}</span>
+                </div>
+
+                <div class="note">
+                    <b>4) اطلاعات فرم (template)</b><br>
+                    مثال: <span class="code">{% verbatim %}{{ template.title }}{% endverbatim %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4) فیلدهای سرباز -->
+    <div class="help-card">
+        <div class="help-header">
+            <span><i class="fas fa-user-shield"></i> فیلدهای قابل استفاده از سرباز (کامل)</span>
+        </div>
+        <div class="help-body">
+            <p>
+                هر فیلدی که در مدل Soldier وجود دارد قابل استفاده است.
+                کافیست قبل از نام فیلد، <span class="code">soldier.</span> قرار دهید.
+            </p>
+
+            <table class="tbl">
+                <thead>
+                <tr>
+                    <th style="width:50%;">عنوان فیلد</th>
+                    <th style="width:50%;">کد قابل استفاده در فایل Word</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td>نام و نام خانوادگی</td><td><span class="code">{% verbatim %}{{ soldier.full_name }}{% endverbatim %}</span></td></tr>
+                <tr><td>نام پدر</td><td><span class="code">{% verbatim %}{{ soldier.father_name }}{% endverbatim %}</span></td></tr>
+                <tr><td>کد ملی</td><td><span class="code">{% verbatim %}{{ soldier.national_code }}{% endverbatim %}</span></td></tr>
+                <tr><td>محل صدور</td><td><span class="code">{% verbatim %}{{ soldier.issue_place }}{% endverbatim %}</span></td></tr>
+                <tr><td>محل تولد</td><td><span class="code">{% verbatim %}{{ soldier.birth_place }}{% endverbatim %}</span></td></tr>
+                <tr><td>تاریخ تولد</td><td><span class="code">{% verbatim %}{{ soldier.birth_date|jalali }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>درجه نظامی (عدد)</td><td><span class="code">{% verbatim %}{{ soldier.military_rank }}{% endverbatim %}</span></td></tr>
+                <tr><td>درجه نظامی (انتخابی)</td><td><span class="code">{% verbatim %}{{ soldier.military_rank_ref.title }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>وضعیت تاهل</td><td><span class="code">{% verbatim %}{{ soldier.marital_status }}{% endverbatim %}</span></td></tr>
+                <tr><td>تعداد فرزندان</td><td><span class="code">{% verbatim %}{{ soldier.children_count }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>قد (سانتی‌متر)</td><td><span class="code">{% verbatim %}{{ soldier.height_cm }}{% endverbatim %}</span></td></tr>
+                <tr><td>وزن (کیلوگرم)</td><td><span class="code">{% verbatim %}{{ soldier.weight_kg }}{% endverbatim %}</span></td></tr>
+                <tr><td>رنگ چشم</td><td><span class="code">{% verbatim %}{{ soldier.eye_color }}{% endverbatim %}</span></td></tr>
+                <tr><td>گروه خونی</td><td><span class="code">{% verbatim %}{{ soldier.blood_group }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>بیماری زمینه‌ای</td><td><span class="code">{% verbatim %}{{ soldier.underlying_disease }}{% endverbatim %}</span></td></tr>
+                <tr><td>حساسیت دارویی</td><td><span class="code">{% verbatim %}{{ soldier.drug_allergy }}{% endverbatim %}</span></td></tr>
+                <tr><td>داروهای مصرفی</td><td><span class="code">{% verbatim %}{{ soldier.used_medications }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>شماره تلفن منزل پدری</td><td><span class="code">{% verbatim %}{{ soldier.father_home_phone }}{% endverbatim %}</span></td></tr>
+                <tr><td>شماره تلفن منزل شخصی</td><td><span class="code">{% verbatim %}{{ soldier.personal_home_phone }}{% endverbatim %}</span></td></tr>
+                <tr><td>شماره تلفن همراه شخصی</td><td><span class="code">{% verbatim %}{{ soldier.personal_mobile_phone }}{% endverbatim %}</span></td></tr>
+                <tr><td>شماره تلفن نظامی</td><td><span class="code">{% verbatim %}{{ soldier.military_mobile_phone }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>شماره همراه سرباز</td><td><span class="code">{% verbatim %}{{ soldier.phone_personal }}{% endverbatim %}</span></td></tr>
+                <tr><td>شماره والدین/همسر</td><td><span class="code">{% verbatim %}{{ soldier.phone_parent }}{% endverbatim %}</span></td></tr>
+                <tr><td>تلفن منزل</td><td><span class="code">{% verbatim %}{{ soldier.phone_home }}{% endverbatim %}</span></td></tr>
+                <tr><td>تلفن محل کار</td><td><span class="code">{% verbatim %}{{ soldier.phone_work }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>آدرس منزل پدری</td><td><span class="code">{% verbatim %}{{ soldier.father_home_address }}{% endverbatim %}</span></td></tr>
+                <tr><td>آدرس منزل شخصی</td><td><span class="code">{% verbatim %}{{ soldier.personal_home_address }}{% endverbatim %}</span></td></tr>
+                <tr><td>آدرس منزل</td><td><span class="code">{% verbatim %}{{ soldier.home_address }}{% endverbatim %}</span></td></tr>
+                <tr><td>کد پستی</td><td><span class="code">{% verbatim %}{{ soldier.postal_code }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>میزان تحصیلات</td><td><span class="code">{% verbatim %}{{ soldier.education_level }}{% endverbatim %}</span></td></tr>
+                <tr><td>رشته تحصیلات</td><td><span class="code">{% verbatim %}{{ soldier.education_field }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>دارای گواهی نامه رانندگی</td><td><span class="code">{% verbatim %}{{ soldier.has_driving_license }}{% endverbatim %}</span></td></tr>
+                <tr><td>نوع گواهی نامه</td><td><span class="code">{% verbatim %}{{ soldier.driving_license_type }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>عکس پرسنلی</td><td><span class="code">{% verbatim %}{{ soldier.personal_photo }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>نام فرمانده مستقیم</td><td><span class="code">{% verbatim %}{{ soldier.direct_commander_name }}{% endverbatim %}</span></td></tr>
+                <tr><td>شماره تماس فرمانده مستقیم</td><td><span class="code">{% verbatim %}{{ soldier.direct_commander_phone }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>کد پرونده</td><td><span class="code">{% verbatim %}{{ soldier.dossier_code }}{% endverbatim %}</span></td></tr>
+                <tr><td>نوع اعزامی</td><td><span class="code">{% verbatim %}{{ soldier.dispatch_type }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>وضعیت سلامت</td><td><span class="code">{% verbatim %}{{ soldier.health_status }}{% endverbatim %}</span></td></tr>
+                <tr><td>وضعیت خدمت</td><td><span class="code">{% verbatim %}{{ soldier.service_status }}{% endverbatim %}</span></td></tr>
+                <tr><td>محل خدمت فعلی</td><td><span class="code">{% verbatim %}{{ soldier.current_location }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>تخصص‌ها (لیست)</td><td><span class="code">{% verbatim %}{{ soldier.expertises.all }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>روزهای اضافه خدمت</td><td><span class="code">{% verbatim %}{{ soldier.extra_service_days }}{% endverbatim %}</span></td></tr>
+                <tr><td>نوع اضافه خدمت</td><td><span class="code">{% verbatim %}{{ soldier.extra_service_type.title }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>تاریخ شروع خدمت</td><td><span class="code">{% verbatim %}{{ soldier.service_start_date|jalali }}{% endverbatim %}</span></td></tr>
+                <tr><td>تاریخ ورود به ناحیه</td><td><span class="code">{% verbatim %}{{ soldier.arrival_date|jalali }}{% endverbatim %}</span></td></tr>
+                <tr><td>کد پاسداری</td><td><span class="code">{% verbatim %}{{ soldier.guard_code }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>دوره‌های گذرانده شده</td><td><span class="code">{% verbatim %}{{ soldier.completed_courses }}{% endverbatim %}</span></td></tr>
+
+                <tr><td>تاریخ پایان خدمت (محاسبه‌شده)</td><td><span class="code">{% verbatim %}{{ soldier.service_end_date|jalali }}{% endverbatim %}</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 5) مثال کامل گواهی عضویت -->
+    <div class="help-card">
+        <div class="help-header">
+            <span><i class="fas fa-lightbulb"></i> مثال کامل یک فرم (گواهی عضویت)</span>
+        </div>
+
+        <div class="help-body">
+            <p class="muted">
+                در این مثال، سمت راست قالب Word را می‌بینید (چیزی که داخل docx می‌نویسید) و سمت چپ نمونه خروجی را.
+            </p>
+
+            <div class="example-wrap">
+                <!-- Template -->
+                <div class="example-box">
+                    <div class="example-head">📄 قالب Word (Template)</div>
+                    <div class="example-content">
+                        <div class="rtl-box">
+{% verbatim %}
+گواهی عضویت
+
+گواهی می‌گردد سرباز: {{ soldier.full_name }}
+فرزند {{ soldier.father_name }}
+به شماره ملی {{ soldier.national_code }}
+متولد {{ soldier.birth_place }} - {{ soldier.birth_date|jalali }}
+
+از تاریخ {{ soldier.service_start_date|jalali }}
+در محل خدمت {{ soldier.current_location }}
+مشغول انجام خدمت وظیفه می‌باشد.
+
+درجه: {{ soldier.military_rank_ref.title }}
+کد پرونده: {{ soldier.dossier_code }}
+
+شماره نامه: {{ input.letter_number }}
+تاریخ صدور: {{ now|jalali }}
+
+نام فرمانده مستقیم: {{ soldier.direct_commander_name }}
+شماره تماس فرمانده: {{ soldier.direct_commander_phone }}
+
+امضا و مهر یگان
+{% endverbatim %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output -->
+                <div class="example-box">
+                    <div class="example-head">✅ نمونه خروجی (Output نمونه)</div>
+                    <div class="example-content">
+                        <div class="rtl-box">
+گواهی عضویت
+
+بدین وسیله گواهی می‌گردد سرباز:
+علی احمدی
+فرزند محمد
+به شماره ملی 1234567890
+متولد تهران - 1382/02/14
+
+از تاریخ 1404/07/01
+در محل خدمت ناحیه ۳
+مشغول انجام خدمت وظیفه می‌باشد.
+
+درجه: سرباز یکم
+کد پرونده: 102
+
+شماره نامه: 25/الف/1404
+تاریخ صدور: 1404/10/06
+
+نام فرمانده مستقیم: سروان حسینی
+شماره تماس فرمانده: 09123456789
+
+امضا و مهر یگان
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="note mt-3">
+                <b>ورودی‌های دستی این فرم:</b>
+                <span class="code">letter_number</span>
+                (یعنی در پنل مدیریت باید برای این قالب، یک فیلد ورودی با key برابر letter_number ایجاد کنید)
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

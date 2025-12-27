@@ -246,7 +246,8 @@ class Soldier(TimeStampedModel):
 
     # ===== رانندگی =====
     has_driving_license = models.BooleanField("دارای گواهی‌نامه رانندگی", blank=True, null=True)
-    driving_license_type = models.CharField("نوع گواهی نامه", max_length=10, blank=True, null=True, choices=DrivingLicenseType.choices)
+    driving_license_type = models.CharField("نوع گواهی نامه", max_length=10, blank=True, null=True,
+                                            choices=DrivingLicenseType.choices)
 
     # ===== تصویر پرسنلی =====
     personal_photo = models.ImageField("عکس پرسنلی", upload_to="soldiers/photos/", blank=True, null=True)
@@ -282,7 +283,6 @@ class Soldier(TimeStampedModel):
         blank=True, null=True,
         verbose_name="نوع اضافه خدمت"
     )
-
 
     service_start_date = models.DateField("تاریخ شروع خدمت", db_index=True, null=True, blank=True)
     arrival_date = models.DateField("تاریخ ورود به ناحیه", null=True, blank=True)
@@ -510,7 +510,8 @@ class Leave(TimeStampedModel):
                 raise ValidationError({'leave_type': 'ثبت مرخصی استحقاقی برای سربازان طرح انصار مجاز نیست.'})
 
             if self.pk:
-                other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type).exclude(pk=self.pk)
+                other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type).exclude(
+                    pk=self.pk)
             else:
                 other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type)
 
@@ -534,3 +535,85 @@ class Leave(TimeStampedModel):
 
     def __str__(self):
         return f"{self.soldier} - {self.get_leave_type_display()} ({self.days} روز)"
+
+
+class DocumentTemplate(models.Model):
+    """
+    قالب/فرم داینامیک برای تولید docx
+    فایل docx داخل پوشه ثابت پروژه قرار دارد و اینجا فقط filename ذخیره می‌شود.
+    """
+    title = models.CharField("عنوان فرم", max_length=200)
+    filename = models.CharField("نام فایل قالب", max_length=255, help_text="مثال: membership_certificate.docx")
+    description = models.TextField("توضیحات", blank=True, null=True)
+
+    is_active = models.BooleanField("فعال باشد؟", default=True)
+    order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+
+    # نام فایل خروجی (قابل قالب گذاری با Jinja2)
+    # مثال: certificate_{{ soldier.national_code }}_{{ now|date('Y-m-d') }}.docx
+    output_filename_pattern = models.CharField(
+        "الگوی نام فایل خروجی",
+        max_length=255,
+        default="{{ template.title }}_{{ soldier.national_code }}.docx",
+        help_text="الگوی نام فایل خروجی (jinja2)"
+    )
+
+    created_at = models.DateTimeField("تاریخ ایجاد", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "قالب فرم"
+        verbose_name_plural = "قالب‌های فرم"
+        ordering = ("order", "id")
+
+    def __str__(self):
+        return self.title
+
+
+class DocumentTemplateInput(models.Model):
+    """
+    فیلدهایی که هنگام تولید فرم باید از کاربر گرفته شوند
+    """
+    TEXT = "text"
+    NUMBER = "number"
+    DATE = "date"
+    CHOICE = "choice"
+
+    INPUT_TYPES = (
+        (TEXT, "متن"),
+        (NUMBER, "عدد"),
+        (DATE, "تاریخ"),
+        (CHOICE, "لیست انتخابی"),
+    )
+
+    template = models.ForeignKey(
+        DocumentTemplate,
+        verbose_name="قالب فرم",
+        related_name="inputs",
+        on_delete=models.CASCADE
+    )
+
+    key = models.SlugField("کلید", max_length=100, help_text="مثال: letter_number")
+    label = models.CharField("عنوان فیلد", max_length=200, help_text="مثال: شماره نامه")
+    input_type = models.CharField("نوع ورودی", max_length=20, choices=INPUT_TYPES, default=TEXT)
+
+    required = models.BooleanField("اجباری باشد؟", default=True)
+    placeholder = models.CharField("راهنما (placeholder)", max_length=255, blank=True, null=True)
+    default_value = models.CharField("مقدار پیش‌فرض", max_length=255, blank=True, null=True)
+
+    choices_text = models.TextField(
+        "گزینه‌ها (برای لیست انتخابی)",
+        blank=True,
+        null=True,
+        help_text="هر گزینه در یک خط. مثال:\nگزینه 1\nگزینه 2\nگزینه 3"
+    )
+
+    order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+
+    class Meta:
+        verbose_name = "فیلد ورودی فرم"
+        verbose_name_plural = "فیلدهای ورودی فرم"
+        ordering = ("order", "id")
+        unique_together = ("template", "key")
+
+    def __str__(self):
+        return f"{self.template.title} - {self.label}"

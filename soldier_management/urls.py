@@ -20,8 +20,8 @@ urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url='/static/favicon.ico')),
 ]
 
-handler404 = 'core.views.page_not_found'
-handler500 = 'core.views.server_error'
+handler404 = 'core.views_core.page_not_found'
+handler500 = 'core.views_core.server_error'
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

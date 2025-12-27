@@ -1,13 +1,13 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Sum, Q
-from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 import json
 import logging
+
 from core.models import Soldier, Leave, LeaveType, ServiceLocation, ServiceStatus, SystemSetting
 from core.forms import SettingsForm
 from jdatetime import datetime as jdatetime
@@ -149,23 +149,6 @@ def page_not_found(request, exception):
 
 def server_error(request):
     return render(request, '500.html', status=500)
-
-
-@login_required
-def panel_soldier_detail(request, soldier_id):
-    soldier = get_object_or_404(Soldier, id=soldier_id)
-    leaves = soldier.leaves.all().order_by('-start_date')
-    reductions = soldier.reductions.all()
-    balances = soldier.leave_balances()
-
-    context = {
-        'soldier': soldier,
-        'leaves': leaves,
-        'reductions': reductions,
-        'leave_balances': balances,
-    }
-
-    return render(request, 'dashboard/soldier_detail.html', context)
 
 
 @login_required

@@ -1,0 +1,47 @@
+{% extends "dashboard/base.html" %}
+
+{% block page_title %}
+<i class="fas fa-file-word"></i> تولید فرم: {{ template_obj.title }}
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-lg border-0">
+    <div class="card-header bg-gradient text-white fw-bold"
+         style="background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;">
+        اطلاعات لازم برای تولید فرم
+    </div>
+
+    <div class="card-body p-4">
+        <p class="text-muted mb-4">
+            سرباز: <strong>{{ soldier.full_name }}</strong>
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                {% for field in form %}
+                <div class="col-md-6">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button class="btn btn-success">
+                    <i class="fas fa-download"></i> تولید و دانلود
+                </button>
+                <a href="{% url 'panel_soldier_detail' soldier.id %}" class="btn btn-secondary">
+                    بازگشت
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

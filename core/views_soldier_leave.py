@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 import logging
 
-from core.models import Soldier, Leave, ServiceLocation, HealthStatus, ServiceStatus
+from core.forms_document import build_document_input_form
+from core.models import Soldier, Leave, ServiceLocation, HealthStatus, ServiceStatus, DocumentTemplate
+from core.utils.doc_generator import build_docx
 from core.utils.utils import parse_date_input
 
 logger = logging.getLogger('core')
@@ -232,3 +235,75 @@ def panel_leave_delete(request, leave_id):
         return redirect('panel_leaves')
 
     return render(request, 'dashboard/leave_confirm_delete.html', {'leave': leave})
+
+
+@login_required
+def panel_soldier_detail(request, soldier_id):
+    soldier = get_object_or_404(Soldier, id=soldier_id)
+    leaves = soldier.leaves.all().order_by('-start_date')
+    reductions = soldier.reductions.all()
+    balances = soldier.leave_balances()
+    document_templates = DocumentTemplate.objects.filter(is_active=True).order_by("order", "id")
+
+    context = {
+        'soldier': soldier,
+        'leaves': leaves,
+        'reductions': reductions,
+        'leave_balances': balances,
+        'document_templates': document_templates,
+    }
+
+    return render(request, 'dashboard/soldier_detail.html', context)
+
+
+@login_required
+def soldier_documents_list(request, soldier_id):
+    soldier = get_object_or_404(Soldier, id=soldier_id)
+    templates = DocumentTemplate.objects.filter(is_active=True).order_by("order", "id")
+    return render(request, "dashboard/soldier_documents_list.html", {
+        "soldier": soldier,
+        "templates": templates
+    })
+
+
+@login_required
+def generate_document(request, soldier_id, template_id):
+    soldier = get_object_or_404(Soldier, id=soldier_id)
+    template_obj = get_object_or_404(DocumentTemplate, id=template_id, is_active=True)
+
+    # اگر این فرم ورودی دستی ندارد:
+    if template_obj.inputs.count() == 0:
+        input_data = {}
+        content = build_docx(template_obj, soldier, input_data)
+
+        filename = f"{template_obj.title}_{soldier.national_code}.docx"
+        response = HttpResponse(content,
+                                content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+    # اگر ورودی دستی دارد:
+    if request.method == "POST":
+        form = build_document_input_form(template_obj, request.POST)
+        if form.is_valid():
+            input_data = form.cleaned_data
+            content = build_docx(template_obj, soldier, input_data)
+
+            filename = f"{template_obj.title}_{soldier.national_code}.docx"
+            response = HttpResponse(content,
+                                    content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+    else:
+        form = build_document_input_form(template_obj)
+
+    return render(request, "dashboard/document_fill_form.html", {
+        "soldier": soldier,
+        "template_obj": template_obj,
+        "form": form
+    })
+
+
+@login_required
+def document_templates_help(request):
+    return render(request, "dashboard/document_templates_help.html")

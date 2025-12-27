@@ -6,7 +6,7 @@ from core.models import (
     Soldier, Leave,
     ServiceLocation, HealthStatus, ServiceStatus, Expertise,
     ServiceReductionType, SystemSetting, SoldierServiceReduction,
-    MilitaryRankRef, ExtraServiceType, SoldierExtraServiceLog
+    MilitaryRankRef, ExtraServiceType, SoldierExtraServiceLog, DocumentTemplateInput, DocumentTemplate
 )
 from core.forms import SoldierForm, LeaveForm
 from core.templatetags.jalali import to_jalali
@@ -41,9 +41,15 @@ class SoldierAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
     )
 
     search_fields = (
-        'full_name', 'national_code', 'dossier_code',
-        'phone_personal', 'personal_mobile_phone', 'military_mobile_phone',
-        'direct_commander_name', 'direct_commander_phone',
+        'full_name',
+        'national_code',
+        'dossier_code',
+        'father_name',
+        'birth_place',
+        'issue_place',
+        'phone_personal',
+        'personal_mobile_phone',
+        'military_mobile_phone',
     )
 
     list_filter = (
@@ -185,7 +191,6 @@ class MilitaryRankRefAdmin(admin.ModelAdmin):
         return super().response_add(request, obj, post_url_continue)
 
 
-
 @admin.register(ExtraServiceType)
 class ExtraServiceTypeAdmin(admin.ModelAdmin):
     list_display = ('title', 'default_days')
@@ -196,7 +201,6 @@ class ExtraServiceTypeAdmin(admin.ModelAdmin):
         return super().response_add(request, obj, post_url_continue)
 
 
-
 @admin.register(SoldierExtraServiceLog)
 class SoldierExtraServiceLogAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
     list_display = ('soldier', 'extra_type', 'days', 'created_at')
@@ -204,11 +208,47 @@ class SoldierExtraServiceLogAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin)
     list_filter = ('extra_type',)
 
 
-admin.site.register(ServiceLocation)
-admin.site.register(HealthStatus)
-admin.site.register(ServiceStatus)
+@admin.register(ServiceLocation)
+class ServiceLocationAdmin(admin.ModelAdmin):
+    search_fields = ('name',)
+    list_display = ('name',)
+
+
+@admin.register(ServiceStatus)
+class ServiceStatusAdmin(admin.ModelAdmin):
+    search_fields = ('title',)
+    list_display = ('title', 'is_active_service')
+
+
+@admin.register(HealthStatus)
+class HealthStatusAdmin(admin.ModelAdmin):
+    search_fields = ('title',)
+    list_display = ('title',)
+
+
+@admin.register(ServiceReductionType)
+class ServiceReductionTypeAdmin(admin.ModelAdmin):
+    search_fields = ('title',)
+    list_display = ('title',)
+
+
+class DocumentTemplateInputInline(admin.TabularInline):
+    model = DocumentTemplateInput
+    extra = 0
+    fields = ("order", "key", "label", "input_type", "required", "default_value", "placeholder", "choices_text")
+    ordering = ("order",)
+
+
+@admin.register(DocumentTemplate)
+class DocumentTemplateAdmin(admin.ModelAdmin):
+    list_display = ("title", "filename", "is_active", "order")
+    list_filter = ("is_active",)
+    search_fields = ("title", "filename")
+    ordering = ("order",)
+    inlines = (DocumentTemplateInputInline,)
+
+
 admin.site.register(Expertise)
-admin.site.register(ServiceReductionType)
 admin.site.register(SystemSetting)
 admin.site.register(SoldierServiceReduction)
 

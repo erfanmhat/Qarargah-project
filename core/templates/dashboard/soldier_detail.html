@@ -41,9 +41,9 @@
                         <strong style="color: var(--success);">کد ملی:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.national_code %}
-                                <code>{{ soldier.national_code }}</code>
+                            <code>{{ soldier.national_code }}</code>
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -51,9 +51,9 @@
                         <strong style="color: var(--success);">کد پرونده:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.dossier_code %}
-                                <span class="badge bg-primary">{{ soldier.dossier_code }}</span>
+                            <span class="badge bg-primary">{{ soldier.dossier_code }}</span>
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -64,9 +64,9 @@
                         <strong style="color: var(--success);">تاریخ تولد:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.birth_date %}
-                                {{ soldier.birth_date|to_jalali:"%Y/%m/%d" }}
+                            {{ soldier.birth_date|to_jalali:"%Y/%m/%d" }}
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -85,9 +85,9 @@
                         <strong style="color: var(--success);">نوع اعزام:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.dispatch_type %}
-                                <span class="badge bg-secondary">{{ soldier.get_dispatch_type_display }}</span>
+                            <span class="badge bg-secondary">{{ soldier.get_dispatch_type_display }}</span>
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -98,12 +98,12 @@
                         <strong style="color: var(--success);">درجه نظامی:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.military_rank_ref %}
-                                <span class="badge bg-dark">{{ soldier.military_rank_ref.title }}</span>
-                                <small class="text-muted">({{ soldier.military_rank_ref.code }})</small>
+                            <span class="badge bg-dark">{{ soldier.military_rank_ref.title }}</span>
+                            <small class="text-muted">({{ soldier.military_rank_ref.code }})</small>
                             {% elif soldier.military_rank %}
-                                <span class="badge bg-dark">کد: {{ soldier.military_rank }}</span>
+                            <span class="badge bg-dark">کد: {{ soldier.military_rank }}</span>
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -111,9 +111,9 @@
                         <strong style="color: var(--success);">وضعیت تاهل:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.marital_status %}
-                                <span class="badge bg-info">{{ soldier.get_marital_status_display }}</span>
+                            <span class="badge bg-info">{{ soldier.get_marital_status_display }}</span>
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -128,11 +128,12 @@
                         <strong style="color: var(--success);">عکس پرسنلی:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.personal_photo %}
-                                <a href="{{ soldier.personal_photo.url }}" target="_blank" class="btn btn-sm btn-outline-success">
-                                    <i class="fas fa-image"></i> مشاهده
-                                </a>
+                            <a href="{{ soldier.personal_photo.url }}" target="_blank"
+                               class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-image"></i> مشاهده
+                            </a>
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -152,9 +153,9 @@
                         <strong style="color: var(--info);">تاریخ شروع خدمت:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.service_start_date %}
-                                {{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}
+                            {{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -162,9 +163,9 @@
                         <strong style="color: var(--info);">تاریخ ورود به ناحیه:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.arrival_date %}
-                                {{ soldier.arrival_date|to_jalali:"%Y/%m/%d" }}
+                            {{ soldier.arrival_date|to_jalali:"%Y/%m/%d" }}
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -175,11 +176,11 @@
                         <strong style="color: var(--info);">تاریخ پایان خدمت:</strong>
                         <p style="color: var(--text-primary);">
                             {% with end=soldier.service_end_date %}
-                                {% if end %}
-                                    <span class="badge bg-warning">{{ end|to_jalali:"%Y/%m/%d" }}</span>
-                                {% else %}
-                                    <span style="color: var(--text-muted);">—</span>
-                                {% endif %}
+                            {% if end %}
+                            <span class="badge bg-warning">{{ end|to_jalali:"%Y/%m/%d" }}</span>
+                            {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
                             {% endwith %}
                         </p>
                     </div>
@@ -187,13 +188,13 @@
                         <strong style="color: var(--info);">وضعیت خدمت:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.service_status %}
-                                {% if soldier.service_status.is_active_service %}
-                                    <span class="badge bg-success">در حال خدمت</span>
-                                {% else %}
-                                    <span class="badge bg-danger">پایان خدمت</span>
-                                {% endif %}
+                            {% if soldier.service_status.is_active_service %}
+                            <span class="badge bg-success">در حال خدمت</span>
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span class="badge bg-danger">پایان خدمت</span>
+                            {% endif %}
+                            {% else %}
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -204,9 +205,9 @@
                         <strong style="color: var(--info);">محل خدمت فعلی:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.current_location %}
-                                {{ soldier.current_location.name }}
+                            {{ soldier.current_location.name }}
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -214,9 +215,9 @@
                         <strong style="color: var(--info);">وضعیت سلامت:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.health_status %}
-                                {{ soldier.health_status.title }}
+                            {{ soldier.health_status.title }}
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -227,13 +228,13 @@
                         <strong style="color: var(--info);">اضافه خدمت:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.extra_service_days %}
-                                <span class="badge bg-danger">{{ soldier.extra_service_days }} روز</span>
+                            <span class="badge bg-danger">{{ soldier.extra_service_days }} روز</span>
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
 
                             {% if soldier.extra_service_type %}
-                                <span class="badge bg-secondary ms-1">{{ soldier.extra_service_type.title }}</span>
+                            <span class="badge bg-secondary ms-1">{{ soldier.extra_service_type.title }}</span>
                             {% endif %}
                         </p>
                     </div>
@@ -241,11 +242,11 @@
                         <strong style="color: var(--info);">تخصص‌ها:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.expertises.all %}
-                                {% for expertise in soldier.expertises.all %}
-                                    <span class="badge bg-info me-1">{{ expertise.title }}</span>
-                                {% endfor %}
+                            {% for expertise in soldier.expertises.all %}
+                            <span class="badge bg-info me-1">{{ expertise.title }}</span>
+                            {% endfor %}
                             {% else %}
-                                <span style="color: var(--text-muted);">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                             {% endif %}
                         </p>
                     </div>
@@ -280,9 +281,9 @@
                         <strong>گروه خونی:</strong>
                         <p>
                             {% if soldier.blood_group %}
-                                <span class="badge bg-danger">{{ soldier.get_blood_group_display }}</span>
+                            <span class="badge bg-danger">{{ soldier.get_blood_group_display }}</span>
                             {% else %}
-                                —
+                            —
                             {% endif %}
                         </p>
                     </div>
@@ -329,14 +330,14 @@
                         <strong>گواهینامه:</strong>
                         <p>
                             {% if soldier.has_driving_license is None %}
-                                —
+                            —
                             {% elif soldier.has_driving_license %}
-                                <span class="badge bg-success">دارد</span>
-                                {% if soldier.driving_license_type %}
-                                    <span class="badge bg-secondary">{{ soldier.get_driving_license_type_display }}</span>
-                                {% endif %}
+                            <span class="badge bg-success">دارد</span>
+                            {% if soldier.driving_license_type %}
+                            <span class="badge bg-secondary">{{ soldier.get_driving_license_type_display }}</span>
+                            {% endif %}
                             {% else %}
-                                <span class="badge bg-danger">ندارد</span>
+                            <span class="badge bg-danger">ندارد</span>
                             {% endif %}
                         </p>
                     </div>
@@ -433,12 +434,12 @@
                         <strong style="color: var(--danger);">فرمانده مستقیم:</strong>
                         <p style="color: var(--text-primary);">
                             {% if soldier.direct_commander_name %}
-                                {{ soldier.direct_commander_name }}
-                                {% if soldier.direct_commander_phone %}
-                                    - <code>{{ soldier.direct_commander_phone }}</code>
-                                {% endif %}
+                            {{ soldier.direct_commander_name }}
+                            {% if soldier.direct_commander_phone %}
+                            - <code>{{ soldier.direct_commander_phone }}</code>
+                            {% endif %}
                             {% else %}
-                                —
+                            —
                             {% endif %}
                         </p>
                     </div>
@@ -463,6 +464,94 @@
                 <a href="{% url 'soldier_leaves_excel' soldier.id %}" class="btn btn-outline-success">
                     <i class="fas fa-file-excel"></i> گزارش مرخصی به صورت اکسل
                 </a>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-lg mb-4">
+            <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
+                 style="background: linear-gradient(90deg, #7c3aed, #a855f7) !important;">
+            <span>
+                <i class="fas fa-file-word"></i> فرم‌های آماده
+            </span>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-dark opacity-90">
+                        {{ document_templates|length }}
+                    </span>
+
+                    <a href="{% url 'admin:core_documenttemplate_add' %}"
+                       class="btn btn-sm btn-light fw-bold"
+                       title="افزودن فرم جدید">
+                        <i class="fas fa-plus"></i>
+                    </a>
+
+                    <a href="{% url 'admin:core_documenttemplate_changelist' %}"
+                       class="btn btn-sm btn-outline-light"
+                       title="مدیریت فرم‌ها">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                    <a href="{% url 'document_templates_help' %}"
+                       target="_blank"
+                       class="btn btn-sm btn-outline-light"
+                       title="راهنمای ساخت فرم‌ها">
+                        <i class="fas fa-book"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-3">
+                {% if document_templates %}
+                <div class="d-grid gap-2">
+
+                    {% for form in document_templates %}
+                    <a href="{% url 'generate_document' soldier.id form.id %}"
+                       class="btn btn-outline-dark w-100 text-start d-flex justify-content-between align-items-center">
+
+                        <span>
+                            <i class="fas fa-file-word me-2"></i>
+                            {{ form.title }}
+                        </span>
+
+                        <span class="d-flex align-items-center gap-2">
+
+                            {% if form.inputs.count > 0 %}
+                                <span class="badge bg-warning text-dark">ورودی دستی</span>
+                            {% else %}
+                                <span class="badge bg-success">آماده</span>
+                            {% endif %}
+
+                            <a href="{% url 'admin:core_documenttemplate_change' form.id %}"
+                               class="btn btn-sm btn-outline-secondary"
+                               title="ویرایش فرم"
+                               onclick="event.stopPropagation(); event.preventDefault(); window.location=this.href;">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                        </span>
+                    </a>
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+                <div class="text-center py-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        هیچ فرمی تعریف نشده
+                    </small>
+
+                    <div class="mt-3 d-flex justify-content-center gap-2">
+                        <a href="{% url 'admin:core_documenttemplate_add' %}"
+                           class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> افزودن فرم
+                        </a>
+                        <a href="{% url 'admin:core_documenttemplate_changelist' %}"
+                           class="btn btn-sm btn-outline-secondary">
+                            مدیریت فرم‌ها
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -510,7 +599,8 @@
                     {% endfor %}
                 </div>
                 {% if leaves.count > 10 %}
-                <a href="{% url 'panel_leaves' %}?soldier={{ soldier.id }}" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                <a href="{% url 'panel_leaves' %}?soldier={{ soldier.id }}"
+                   class="btn btn-sm btn-outline-primary w-100 mt-2">
                     مشاهده همه ({{ leaves.count }})
                 </a>
                 {% endif %}
