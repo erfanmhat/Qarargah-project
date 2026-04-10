@@ -57,11 +57,6 @@ def panel_dashboard(request):
     soldiers = list(Soldier.objects.select_related('service_status').prefetch_related('reductions').all())
     total_soldiers = len(soldiers)
 
-    on_leave_today = Leave.objects.filter(
-        start_date__lte=today,
-        end_date__gte=today
-    ).count()
-
     ending_soon = 0
     for soldier in soldiers:
         try:
@@ -130,7 +125,6 @@ def panel_dashboard(request):
 
     stats = {
         'total_soldiers': total_soldiers,
-        'on_leave_today': on_leave_today,
         'ending_soon': ending_soon,
     }
 

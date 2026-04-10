@@ -177,7 +177,8 @@
                         <p style="color: var(--text-primary);">
                             {% with end=soldier.service_end_date %}
                             {% if end %}
-                            <span class="badge bg-warning">{{ end|to_jalali:"%Y/%m/%d" }}</span>
+                            <span>{{ end|to_jalali:"%Y/%m/%d" }}</span>
+
                             {% else %}
                             <span style="color: var(--text-muted);">—</span>
                             {% endif %}
@@ -265,11 +266,11 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong>قد:</strong>
-                        <p>{{ soldier.height_cm|default:"—" }} {% if soldier.height_cm %}cm{% endif %}</p>
+                        <p>{{ soldier.height_cm|default:"—" }} {% if soldier.height_cm %}سانتیمتر{% endif %}</p>
                     </div>
                     <div class="col-md-6">
                         <strong>وزن:</strong>
-                        <p>{{ soldier.weight_kg|default:"—" }} {% if soldier.weight_kg %}kg{% endif %}</p>
+                        <p>{{ soldier.weight_kg|default:"—" }} {% if soldier.weight_kg %}کیلوگرم{% endif %}</p>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -462,7 +463,7 @@
                     <i class="fas fa-file-excel"></i> پروفایل به صورت اکسل
                 </a>
                 <a href="{% url 'soldier_leaves_excel' soldier.id %}" class="btn btn-outline-success">
-                    <i class="fas fa-file-excel"></i> گزارش مرخصی به صورت اکسل
+                    <i class="fas fa-file-excel"></i> گزارش جامع مرخصی و خدمت
                 </a>
             </div>
         </div>

@@ -10,13 +10,6 @@
     <a href="{% url 'admin:core_soldier_add' %}" class="btn btn-success rounded-pill shadow-sm">
         <i class="fas fa-plus"></i> افزودن سرباز جدید
     </a>
-    <a href="?show_completed={% if show_completed %}0{% else %}1{% endif %}&page_size={{ page_size }}&sort={{ sort }}" class="btn btn-outline-secondary rounded-pill shadow-sm">
-        {% if show_completed %}
-            <i class="fas fa-eye-slash"></i> مخفی‌کردن پایان‌خدمت
-        {% else %}
-            <i class="fas fa-clipboard-check"></i> نمایش پایان‌خدمت
-        {% endif %}
-    </a>
 </div>
 {% endblock %}
 

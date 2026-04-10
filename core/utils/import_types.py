@@ -16,7 +16,7 @@ class FieldError:
 class ParsedLeave:
     leave_type: str
     start_date: str
-    end_date: str
+    days: str
     notes: str = ""
 
 

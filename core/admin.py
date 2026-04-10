@@ -153,14 +153,14 @@ class SoldierAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
 @admin.register(Leave)
 class LeaveAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
     form = LeaveForm
-    list_display = ('soldier', 'get_leave_type_display', 'jalali_start', 'jalali_end', 'days')
+    list_display = ('soldier', 'get_leave_type_display', 'jalali_start', 'days')
     list_filter = ('leave_type', 'start_date')
     search_fields = ('soldier__full_name', 'soldier__national_code')
     date_hierarchy = 'start_date'
 
     fieldsets = (
         ("اطلاعات اصلی مرخصی", {
-            'fields': ('soldier', 'leave_type', 'start_date', 'end_date')
+            'fields': ('soldier', 'leave_type', 'start_date', 'days')
         }),
         ("توضیحات", {
             'fields': ('notes',),
@@ -172,11 +172,6 @@ class LeaveAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
         return to_jalali(obj.start_date, "%Y/%m/%d")
 
     jalali_start.short_description = "تاریخ رفت"
-
-    def jalali_end(self, obj):
-        return to_jalali(obj.end_date, "%Y/%m/%d")
-
-    jalali_end.short_description = "تاریخ برگشت"
 
 
 # ==================== ثبت بقیه مدل‌ها ====================

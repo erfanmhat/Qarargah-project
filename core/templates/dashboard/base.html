@@ -56,13 +56,6 @@
         <a href="{{ url_settings }}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
             <i class="fas fa-cogs"></i><span>تنظیمات سیستم</span>
         </a>
-        <a href="{{ url_backup }}" class="nav-link {% if 'backup-restore' in request.path %}active{% endif %}">
-            <i class="fas fa-database"></i><span>پشتیبان‌گیری</span>
-        </a>
-        <a href="{{ import_excel }}" class="nav-link {% if 'import_excel' in request.path %}active{% endif %}">
-            <i class="fas fa-file-excel"></i><span>ورود اطلاعات از اکسل</span>
-        </a>
-
         <hr class="border-secondary mx-4 my-4">
         <a href="{{ url_logout }}" class="nav-link text-danger">
             <i class="fas fa-sign-out-alt"></i><span>خروج از حساب</span>

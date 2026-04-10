@@ -1,6 +1,4 @@
 Django==3.2.25
-djangorestframework==3.14.0
-django-extensions==3.2.3
 django-import-export==3.3.8
 jdatetime~=5.0.0
 django_jalali
@@ -8,7 +6,5 @@ django-jalali-date==1.0.1
 python-dateutil==2.9.0
 openpyxl==3.1.2
 waitress==2.1.2
-pyinstaller==6.3.0
-openpyxl
 docxtpl~=0.20.2
 jinja2~=3.1.6

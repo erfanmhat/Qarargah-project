@@ -152,15 +152,6 @@
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-search"></i> جستجو
                     </button>
-
-                    <button type="submit" name="show_completed" value="{% if show_completed %}0{% else %}1{% endif %}" class="btn btn-outline-secondary">
-                        {% if show_completed %}
-                        <i class="fas fa-user-check"></i> نمایش همه (شامل پایان خدمت)
-                        {% else %}
-                        <i class="fas fa-user-slash"></i> نمایش پایان خدمت
-                        {% endif %}
-                    </button>
-
                     <a href="{% url 'panel_search' %}" class="btn btn-secondary">
                         <i class="fas fa-redo"></i> پاک کردن
                     </a>

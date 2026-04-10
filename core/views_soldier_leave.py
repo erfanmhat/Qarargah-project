@@ -18,8 +18,6 @@ logger = logging.getLogger('core')
 def panel_soldiers(request):
     """لیست سربازها با امکان نمایش سربازهای پایان خدمت، مرتب‌سازی و صفحه‌بندی."""
 
-    show_completed = request.GET.get('show_completed') == '1'
-
     sort_key = request.GET.get('sort', 'dossier')
 
     page_size_raw = request.GET.get('page_size')
@@ -53,13 +51,6 @@ def panel_soldiers(request):
 
     soldiers = Soldier.objects.select_related('service_status', 'current_location')
 
-    if not show_completed:
-        soldiers = soldiers.filter(
-            Q(service_status__isnull=True) |
-            Q(service_status__is_active_service=True) |
-            Q(service_status__is_active_service__isnull=True)
-        )
-
     soldiers = soldiers.order_by(*order_fields)
 
     paginator = Paginator(soldiers, page_size)
@@ -78,7 +69,6 @@ def panel_soldiers(request):
     return render(request, 'dashboard/soldiers_list.html', {
         'soldiers': page_obj,
         'page_obj': page_obj,
-        'show_completed': show_completed,
         'page_size': page_size,
         'sort': sort_key if sort_key in sort_map else 'dossier',
         'base_querystring': base_querystring,

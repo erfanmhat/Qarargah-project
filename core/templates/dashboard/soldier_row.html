@@ -110,6 +110,11 @@
 
     <td class="text-center py-3">
         <div class="d-flex justify-content-center gap-2">
+            <a href="/admin/core/leave/add/?soldier={{ soldier.id }}"
+               class="btn btn-sm btn-outline-warning"
+               title="مرخصی">
+                <i class="fas fa-bed"></i>
+            </a>
             <a href="{% url 'admin:core_soldier_change' soldier.id %}"
                class="btn btn-sm btn-outline-primary"
                title="ویرایش">

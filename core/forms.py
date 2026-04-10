@@ -35,8 +35,7 @@ class LeaveForm(forms.ModelForm):
         model = Leave
         fields = '__all__'
         widgets = {
-            'start_date': AdminJalaliDateWidget(),
-            'end_date': AdminJalaliDateWidget(),
+            'start_date': AdminJalaliDateWidget()
         }
 
     def clean(self):
@@ -46,9 +45,6 @@ class LeaveForm(forms.ModelForm):
 
 class SettingsForm(forms.Form):
     base_service_months = forms.IntegerField(label="مدت پایه خدمت (ماه)", min_value=1, initial=21)
-    enable_leave_entitlement = forms.BooleanField(label="فعال بودن مرخصی استحقاقی", required=False, initial=True)
-    enable_leave_medical = forms.BooleanField(label="فعال بودن مرخصی استعلاجی", required=False, initial=True)
-    enable_leave_reward = forms.BooleanField(label="فعال بودن مرخصی تشویقی", required=False, initial=True)
 
 
 class ExcelImportForm(forms.Form):

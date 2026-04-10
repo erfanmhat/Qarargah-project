@@ -16,7 +16,6 @@ urlpatterns = [
     path('dashboard/', include('core.urls')),
 
     path('admin/', admin.site.urls),
-    path('api/', include('core.api.urls')),
     path('favicon.ico', RedirectView.as_view(url='/static/favicon.ico')),
 ]
 

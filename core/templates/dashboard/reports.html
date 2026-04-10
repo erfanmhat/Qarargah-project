@@ -8,17 +8,6 @@
 {% block content %}
 <div class="container-fluid px-4 py-4">
 
-    <div class="d-flex justify-content-end mb-3">
-        <a href="?show_completed={% if show_completed %}0{% else %}1{% endif %}"
-           class="btn btn-sm btn-outline-secondary">
-            {% if show_completed %}
-            <i class="fas fa-eye-slash"></i> مخفی‌کردن پایان خدمت‌ها
-            {% else %}
-            <i class="fas fa-user-check"></i> نمایش پایان خدمت‌ها
-            {% endif %}
-        </a>
-    </div>
-
     <div class="card border-0 shadow-lg mb-4">
         <div class="card-header bg-gradient text-white fw-bold"
              style="background: linear-gradient(90deg, #00c853, #00e676) !important;">

@@ -1,9 +1,9 @@
+from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator
 from django.db import models
 from django.db.models import Sum, Q
 from django.utils import timezone
-from django.core.validators import MinLengthValidator
-from django.core.exceptions import ValidationError
-from dateutil.relativedelta import relativedelta
 
 
 class TimeStampedModel(models.Model):
@@ -44,7 +44,6 @@ class HealthStatus(TimeStampedModel):
 class DispatchType(models.TextChoices):
     TRAINING = 'training', 'آموزشی'
     GREEN_CARD = 'green_card', 'برگه سبز'
-    ANSAR_PLAN = 'ansar_plan', 'طرح انصار'
     GUARD_DUTY = 'guard_duty', 'پاسدار وظیفه'
 
 
@@ -135,7 +134,6 @@ class SoldierManager(models.Manager):
     GROUP_MAP = {
         DispatchType.TRAINING: (DispatchType.TRAINING, DispatchType.GREEN_CARD),
         DispatchType.GREEN_CARD: (DispatchType.TRAINING, DispatchType.GREEN_CARD),
-        DispatchType.ANSAR_PLAN: (DispatchType.ANSAR_PLAN,),
         DispatchType.GUARD_DUTY: (DispatchType.GUARD_DUTY,),
     }
 
@@ -249,9 +247,6 @@ class Soldier(TimeStampedModel):
     driving_license_type = models.CharField("نوع گواهی نامه", max_length=10, blank=True, null=True,
                                             choices=DrivingLicenseType.choices)
 
-    # ===== تصویر پرسنلی =====
-    personal_photo = models.ImageField("عکس پرسنلی", upload_to="soldiers/photos/", blank=True, null=True)
-
     # ===== فرمانده مستقیم =====
     direct_commander_name = models.CharField("نام فرمانده مستقیم", max_length=100, blank=True, null=True)
     direct_commander_phone = models.CharField("شماره تماس فرمانده مستقیم", max_length=11, blank=True, null=True)
@@ -356,9 +351,6 @@ class Soldier(TimeStampedModel):
 
         full_months = metrics['full_months']
         remaining_days = metrics['remaining_days']
-
-        if self.dispatch_type == DispatchType.ANSAR_PLAN:
-            return 0
 
         base_factor = 2.5
         if self.dispatch_type in (DispatchType.TRAINING, DispatchType.GREEN_CARD):
@@ -476,8 +468,9 @@ class Leave(TimeStampedModel):
                                 verbose_name="سرباز")
     leave_type = models.CharField("نوع مرخصی", max_length=20, choices=LeaveType.choices)
     start_date = models.DateField("تاریخ رفت", db_index=True)
-    end_date = models.DateField("تاریخ برگشت", db_index=True)
-    days = models.PositiveIntegerField("مدت (روز)", editable=False)
+
+    days = models.PositiveIntegerField("مدت (روز)")
+
     notes = models.TextField("توضیحات", blank=True)
 
     class Meta:
@@ -487,28 +480,11 @@ class Leave(TimeStampedModel):
 
     def clean(self):
         super().clean()
-        if self.end_date and self.start_date:
-            if self.end_date < self.start_date:
-                raise ValidationError({'end_date': 'تاریخ برگشت باید بعد از تاریخ رفت باشد.'})
 
-            days_diff = (self.end_date - self.start_date).days + 1
-            if days_diff > 30:
-                raise ValidationError({'end_date': 'مدت مرخصی نمی‌تواند بیشتر از ۳۰ روز باشد.'})
-            self.days = days_diff
+        if self.days and self.days > 30:
+            raise ValidationError({'days': 'مدت مرخصی نمی‌تواند بیشتر از ۳۰ روز باشد.'})
 
-        leave_enable_map = {
-            LeaveType.ENTITLEMENT: SystemSetting.get_value('ENABLE_LEAVE_ENTITLEMENT', 'true'),
-            LeaveType.MEDICAL: SystemSetting.get_value('ENABLE_LEAVE_MEDICAL', 'true'),
-            LeaveType.REWARD: SystemSetting.get_value('ENABLE_LEAVE_REWARD', 'true'),
-        }
-        enabled_value = leave_enable_map.get(self.leave_type, 'true')
-        if str(enabled_value).lower() == 'false':
-            raise ValidationError({'leave_type': 'این نوع مرخصی در تنظیمات غیرفعال است.'})
-
-        if self.soldier and self.leave_type:
-            if self.leave_type == LeaveType.ENTITLEMENT and self.soldier.dispatch_type == DispatchType.ANSAR_PLAN:
-                raise ValidationError({'leave_type': 'ثبت مرخصی استحقاقی برای سربازان طرح انصار مجاز نیست.'})
-
+        if self.soldier and self.leave_type and self.days:
             if self.pk:
                 other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type).exclude(
                     pk=self.pk)
@@ -516,7 +492,8 @@ class Leave(TimeStampedModel):
                 other_leaves = Leave.objects.filter(soldier=self.soldier, leave_type=self.leave_type)
 
             used_days = other_leaves.aggregate(total=Sum('days'))['total'] or 0
-            total_with_current = used_days + (self.days or 0)
+
+            total_with_current = used_days + self.days
 
             if self.leave_type == LeaveType.MEDICAL and total_with_current > 30:
                 raise ValidationError({'leave_type': 'مجموع مرخصی استعلاجی نمی‌تواند بیش از ۳۰ روز باشد.'})
