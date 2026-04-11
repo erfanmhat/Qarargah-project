@@ -1,6 +1,7 @@
 from django.urls import path
 
-from core.views_core import panel_settings, panel_reports, panel_dashboard, panel_logout, panel_login
+from core.views_core import panel_settings, panel_reports, panel_dashboard, panel_logout, panel_login, \
+    calculate_jalali_diff
 from core.views_import_export_excel import export_leaves_excel, \
     export_soldiers_excel, soldier_leaves_excel, soldier_profile_excel
 from core.views_soldier_leave import panel_search, panel_leave_delete, panel_leaves, panel_soldier_delete, \
@@ -22,6 +23,7 @@ urlpatterns = [
     path('search/', panel_search, name='panel_search'),
     path('reports/', panel_reports, name='panel_reports'),
     path('settings/', panel_settings, name='panel_settings'),
+    path('calculate_jalali_diff/', calculate_jalali_diff, name='calculate_jalali_diff'),
     path("soldiers/<int:soldier_id>/documents/<int:template_id>/", generate_document, name="generate_document"),
     path("documents/help/", document_templates_help, name="document_templates_help"),
 ]

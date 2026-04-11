@@ -1,17 +1,17 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.db.models import Count, Sum, Q
-from django.utils import timezone
-from datetime import timedelta
 import json
 import logging
+from datetime import timedelta
 
-from core.models import Soldier, Leave, LeaveType, ServiceLocation, ServiceStatus, SystemSetting
-from core.forms import SettingsForm
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Sum, Q
+from django.shortcuts import render, redirect
+from django.utils import timezone
 from jdatetime import datetime as jdatetime
 
+from core.forms import SettingsForm
+from core.models import Soldier, Leave, LeaveType, ServiceLocation, ServiceStatus, SystemSetting
 from core.utils.utils import jalali_ym, prev_month_start
 
 logger = logging.getLogger('core')
@@ -135,14 +135,6 @@ def panel_dashboard(request):
     }
 
     return render(request, 'dashboard/dashboard.html', context)
-
-
-def page_not_found(request, exception):
-    return render(request, '404.html', status=404)
-
-
-def server_error(request):
-    return render(request, '500.html', status=500)
 
 
 @login_required
@@ -301,3 +293,9 @@ def panel_settings(request):
         form = SettingsForm(initial=initial)
 
     return render(request, 'dashboard/settings.html', {'form': form})
+
+
+@login_required
+def calculate_jalali_diff(request):
+    """calculate_jalali_diff page"""
+    return render(request, 'dashboard/calculate_jalali_diff.html')

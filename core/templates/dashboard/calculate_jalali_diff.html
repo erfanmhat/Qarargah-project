@@ -1,0 +1,226 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}داشبورد مدیریت{% endblock %}
+
+{% block content %}
+<style>
+    /* استفاده از متغیرهای خود فایل base.css پروژه برای هماهنگی ۱۰۰٪ با تم */
+    .calc-card {
+        background-color: var(--card-bg); /* رنگ از base.css */
+        border: 1px solid var(--border);  /* رنگ از base.css */
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 450px;
+        margin: 20px auto;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        font-family: 'IRANSans', Tahoma, sans-serif;
+        direction: rtl;
+        transition: all 0.3s ease;
+    }
+
+    .calc-card h3 {
+        text-align: center;
+        color: var(--text-primary);
+        font-size: 1.4rem;
+        margin-bottom: 25px;
+        font-weight: bold;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        opacity: 0.9;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 1.2rem;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        text-align: left;
+        direction: ltr;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 5px var(--primary-light, rgba(13, 110, 253, 0.25));
+    }
+
+    .btn-calc {
+        width: 100%;
+        background-color: var(--primary);
+        color: #ffffff;
+        border: none;
+        padding: 15px;
+        font-size: 1.2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .btn-calc:hover {
+        background-color: var(--primary-dark);
+    }
+
+    .btn-calc:active {
+        transform: scale(0.98);
+    }
+
+    .result-box {
+        margin-top: 25px;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        text-align: center;
+        display: none;
+        transition: all 0.3s ease;
+    }
+
+    /* کلاس‌های وضعیت برای نتیجه (مدیریت یکپارچه لایت/دارک با CSS خالص) */
+    .result-success {
+        background-color: rgba(25, 135, 84, 0.15);
+        color: #198754;
+        border: 1px solid #198754;
+    }
+    html:not([data-theme="light"]) .result-success {
+        background-color: rgba(25, 135, 84, 0.2);
+        color: #75b798;
+        border-color: #75b798;
+    }
+
+    .result-error {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+    html:not([data-theme="light"]) .result-error {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #ea868f;
+        border-color: #ea868f;
+    }
+</style>
+
+<div class="calc-card">
+    <h3>محاسبه‌گر مدت خدمت و مرخصی</h3>
+
+    <div class="form-group">
+        <label for="start_date">تاریخ شروع:</label>
+        <input type="text" id="start_date" class="form-control p-datepicker" placeholder="1404/04/10" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+        <label for="end_date">تاریخ پایان:</label>
+        <input type="text" id="end_date" class="form-control p-datepicker" placeholder="1404/10/20" autocomplete="off">
+    </div>
+
+    <button class="btn-calc" onclick="calculateDifference()">محاسبه اختلاف</button>
+
+    <div id="result" class="result-box"></div>
+</div>
+
+<script>
+    // استفاده از رویداد load برای انتظار تا لود شدن کامل اسکریپت‌های دارای defer در base.html
+    window.addEventListener('load', function() {
+
+        // 1. فعال‌سازی Datepicker با اطمینان از لود بودن توابع
+        if (typeof jQuery !== 'undefined' && $.fn.persianDatepicker) {
+            $('.p-datepicker').persianDatepicker({
+                format: 'YYYY/MM/DD',
+                autoClose: true,
+                initialValue: false
+            });
+        } else {
+            console.warn("افزونه دیت‌پیکر هنوز لود نشده است.");
+        }
+
+        // 2. خواندن پارامترها از URL و مقداردهی اولیه
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlStartDate = urlParams.get('start_date');
+        const urlEndDate = urlParams.get('end_date');
+
+        if (urlStartDate) document.getElementById('start_date').value = urlStartDate;
+        if (urlEndDate) document.getElementById('end_date').value = urlEndDate;
+
+        // محاسبه خودکار در صورت وجود هر دو تاریخ در آدرس
+        if (urlStartDate && urlEndDate) {
+            calculateDifference();
+        }
+    });
+
+    function getJalaliDaysInMonth(month) {
+        if (month >= 1 && month <= 6) return 31;
+        if (month >= 7 && month <= 11) return 30;
+        return 29;
+    }
+
+    function calculateDifference() {
+        const startDateStr = document.getElementById('start_date').value;
+        const endDateStr = document.getElementById('end_date').value;
+        const resultBox = document.getElementById('result');
+
+        // تابع کمکی برای نمایش پیام (بدون نیاز به تغییر استایل دستی با JS)
+        const showMessage = (msg, isError = false) => {
+            resultBox.innerText = msg;
+            // کلاس مناسب بر اساس خطا یا موفقیت اعمال می‌شود
+            resultBox.className = "result-box " + (isError ? "result-error" : "result-success");
+            resultBox.style.display = "block";
+        };
+
+        if (!startDateStr || !endDateStr) {
+            return showMessage("لطفا هر دو تاریخ را وارد کنید.", true);
+        }
+
+        const startParts = startDateStr.split('/').map(Number);
+        const endParts = endDateStr.split('/').map(Number);
+
+        if (startParts.length !== 3 || endParts.length !== 3 || startParts.includes(NaN) || endParts.includes(NaN)) {
+            return showMessage("فرمت تاریخ نامعتبر است.", true);
+        }
+
+        let y1 = startParts[0], m1 = startParts[1], d1 = startParts[2];
+        let y2 = endParts[0], m2 = endParts[1], d2 = endParts[2];
+
+        let yearsDiff = y2 - y1;
+        let monthsDiff = m2 - m1;
+        let daysDiff = d2 - d1;
+
+        if (daysDiff < 0) {
+            monthsDiff--;
+            let prevMonth = m2 - 1;
+            if (prevMonth === 0) prevMonth = 12;
+            daysDiff += getJalaliDaysInMonth(prevMonth);
+        }
+
+        if (monthsDiff < 0) {
+            yearsDiff--;
+            monthsDiff += 12;
+        }
+
+        let totalMonths = (yearsDiff * 12) + monthsDiff;
+
+        if (totalMonths < 0 || (totalMonths === 0 && daysDiff < 0)) {
+            return showMessage("تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.", true);
+        }
+
+        // نمایش موفقیت آمیز نتیجه
+        showMessage(`اختلاف: ${totalMonths} ماه و ${daysDiff} روز`);
+    }
+</script>
+{% endblock %}

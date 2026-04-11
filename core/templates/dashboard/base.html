@@ -34,6 +34,7 @@
         {% url 'panel_search' as url_search %}
         {% url 'panel_reports' as url_reports %}
         {% url 'panel_settings' as url_settings %}
+        {% url 'calculate_jalali_diff' as url_calculate_jalali_diff %}
         {% url 'panel_backup_restore' as url_backup %}
         {% url 'import_excel' as import_excel %}
         {% url 'panel_logout' as url_logout %}
@@ -56,7 +57,9 @@
         <a href="{{ url_settings }}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
             <i class="fas fa-cogs"></i><span>تنظیمات سیستم</span>
         </a>
-        <hr class="border-secondary mx-4 my-4">
+        <a href="{{ url_calculate_jalali_diff }}" class="nav-link {% if 'calculate_jalali_diff' in request.path %}active{% endif %}">
+            <i class="fas fa-calculator"></i><span>ماشین حساب تاریخ</span>
+        </a>
         <a href="{{ url_logout }}" class="nav-link text-danger">
             <i class="fas fa-sign-out-alt"></i><span>خروج از حساب</span>
         </a>
