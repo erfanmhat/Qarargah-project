@@ -1,6 +1,12 @@
+# download libs (for new system for change libs list):
 pip download -r requirements.txt -d wheels/
 
+# install libs (for new system or change libs list):
 python -m pip install --no-index --find-links=./wheels -r requirements.txt
 
+# run server(allways):
+python run_server.py
+
+#user:
 username: root
 password: 123321

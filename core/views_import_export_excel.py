@@ -1,12 +1,14 @@
+import logging
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, get_object_or_404
+from django.utils import timezone
 
 from core.models import Soldier, Leave
 from core.utils.data_to_excel import build_soldier_profile_excel, build_soldier_leaves_excel
-from django.contrib import messages
-from django.utils import timezone
-import logging
+from core.utils.doc_generator import to_jalali
 
 logger = logging.getLogger('core')
 
@@ -109,8 +111,7 @@ def export_leaves_excel(request):
         ws = wb.active
         ws.title = "مرخصی‌ها"
 
-        headers = ['نام سرباز', 'کد ملی', 'نوع مرخصی', 'تاریخ رفت',
-                   'تاریخ برگشت', 'مدت (روز)']
+        headers = ['نام سرباز', 'کد ملی', 'نوع مرخصی', 'تاریخ رفت', 'مدت (روز)']
         ws.append(headers)
 
         for cell in ws[1]:
@@ -122,7 +123,7 @@ def export_leaves_excel(request):
                 leave.soldier.full_name,
                 leave.soldier.national_code,
                 leave.get_leave_type_display(),
-                leave.start_date.strftime('%Y/%m/%d'),
+                to_jalali(leave.start_date.strftime('%Y/%m/%d')),
                 leave.days
             ])
 
