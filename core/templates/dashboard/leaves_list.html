@@ -1,5 +1,5 @@
 {% extends "dashboard/base.html" %}
-{% load jalali %}
+{% load jalali_tags %} {# از تگ اصلاح شده خودتان استفاده کنید #}
 
 {% block page_title %}
 <i class="fas fa-calendar-check"></i> مدیریت مرخصی‌ها
@@ -14,23 +14,49 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- بنر اطلاع رسانی فیلتر سرباز خاص -->
+{% if selected_soldier %}
+<div class="alert alert-warning shadow-sm border-0 d-flex justify-content-between align-items-center mb-4 rounded-3" style="background-color: var(--card-bg); border-right: 4px solid var(--warning) !important;">
+    <div>
+        <i class="fas fa-filter text-warning me-2"></i>
+        <span style="color: var(--text-primary);">
+            در حال نمایش مرخصی‌های مربوط به: <strong>{{ selected_soldier.full_name|default:"سرباز انتخابی" }}</strong>
+        </span>
+    </div>
+    <!-- لینک به همان صفحه بدون Query URL -->
+    <a href="{% url 'panel_leaves' %}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+        <i class="fas fa-times"></i> حذف فیلتر
+    </a>
+</div>
+{% endif %}
+
 <div class="card border-0 shadow-lg">
     <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
          style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
         <span><i class="fas fa-calendar-alt"></i> فهرست مرخصی‌های ثبت‌شده</span>
-        <small class="badge bg-dark opacity-90">{{ page_obj.paginator.count }} مرخصی</small>
+        <small class="badge bg-dark opacity-90"><span id="visibleCount">{{ total_leaves }}</span> مرخصی</small>
     </div>
 
     <div class="card-body p-4">
 
-        <!-- جستجوی زنده -->
-        <div class="position-relative mb-4">
-            <i class="fas fa-search position-absolute top-50 end-4 translate-middle-y opacity-75"
-               style="left: 16px; z-index: 5; color: var(--text-secondary);"></i>
-            <input type="text" id="searchInput" class="form-control form-control-lg search-box shadow-sm"
-                   placeholder="جستجو در نام سرباز، کد ملی، نوع مرخصی، تاریخ..."
-                   style="background: var(--card-bg) !important; border: 2px solid var(--primary); color: var(--text-primary) !important;"
-                   autocomplete="off">
+        <!-- باکس جستجو و فیلترهای سریع -->
+        <div class="mb-4">
+            <div class="position-relative">
+                <i class="fas fa-search position-absolute top-50 end-4 translate-middle-y opacity-75"
+                   style="left: 16px; z-index: 5; color: var(--text-secondary);"></i>
+                <input type="text" id="searchInput" class="form-control form-control-lg search-box shadow-sm"
+                       placeholder="جستجو در نام سرباز، کد ملی، نوع مرخصی، تاریخ..."
+                       style="background: var(--card-bg) !important; border: 2px solid var(--primary); color: var(--text-primary) !important;"
+                       autocomplete="off">
+            </div>
+
+            <!-- کانتینر تولید خودکار تگ‌های فیلتر نوع مرخصی (توسط جاوااسکریپت پر می‌شود) -->
+            <div id="quickFilters" class="mt-3 d-flex gap-2 flex-wrap">
+                <span class="text-muted small mt-1 me-2"><i class="fas fa-tags"></i> فیلتر سریع:</span>
+                <button class="btn btn-sm btn-primary rounded-pill quick-filter-btn active" data-filter="all">همه</button>
+                <!-- دکمه‌های دیگر اینجا به صورت خودکار تولید می‌شوند -->
+            </div>
         </div>
 
         <!-- جدول مرخصی‌ها -->
@@ -47,86 +73,125 @@
                 </tr>
                 </thead>
                 <tbody id="tableBody">
-                {% for leave in page_obj %}
-                {% include "dashboard/leave_row.html" %}
+                <!-- استفاده از leaves به جای page_obj -->
+                {% for leave in leaves %}
+                    <!-- فرض بر این است که نوع مرخصی در ستون دوم td رندر می‌شود تا اسکریپت ما آن را پیدا کند -->
+                    {% include "dashboard/leave_row.html" %}
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            هیچ مرخصی‌ای ثبت نشده است.
+                        </td>
+                    </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <!-- پیام عدم وجود نتیجه -->
+        <!-- پیام عدم وجود نتیجه در هنگام جستجو -->
         <div id="noResults" class="text-center py-5 d-none">
             <i class="fas fa-search fa-3x mb-3" style="color: var(--text-muted);"></i>
             <p class="fs-5" style="color: var(--text-secondary);">مرخصی‌ای با این مشخصات یافت نشد.</p>
         </div>
 
-        <!-- Pagination -->
-        {% if page_obj.has_other_pages %}
-        <nav aria-label="صفحه‌بندی">
-            <ul class="pagination justify-content-center mt-4">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">قبلی</a>
-                </li>
-                {% endif %}
-                
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-                
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">بعدی</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // جستجوی زنده
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        const filter = this.value.toLowerCase();
+    document.addEventListener("DOMContentLoaded", function() {
         const rows = document.querySelectorAll('.leave-row');
-        let visibleCount = 0;
+        const searchInput = document.getElementById('searchInput');
+        const noResults = document.getElementById('noResults');
+        const visibleCountEl = document.getElementById('visibleCount');
+        const quickFiltersContainer = document.getElementById('quickFilters');
 
+        let currentQuickFilter = "all";
+
+        // ---- 1. تولید خودکار دکمه‌های فیلتر سریع (Smart Tags) ----
+        // فرض می‌کنیم در leave_row.html دومین td (ایندکس 1) مربوط به "نوع مرخصی" است.
+        // اگر کلاس خاصی به تگ نوع مرخصی داده‌اید (مثلا .leave-type) می‌توانید خط زیر را دقیق‌تر کنید.
+        const leaveTypes = new Set();
         rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            if (text.includes(filter)) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
+            // پیدا کردن محتوای ستون دوم (نوع مرخصی)
+            const typeCell = row.querySelectorAll('td')[1];
+            if(typeCell) {
+                const typeText = typeCell.textContent.trim();
+                if(typeText && typeText !== '—' && typeText !== '-') {
+                    leaveTypes.add(typeText);
+                }
             }
         });
 
-        document.getElementById('noResults').classList.toggle('d-none', visibleCount > 0);
+        // ساخت دکمه برای هر نوع مرخصی پیدا شده
+        leaveTypes.forEach(type => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-outline-secondary rounded-pill quick-filter-btn';
+            btn.setAttribute('data-filter', type);
+            btn.textContent = type;
+            quickFiltersContainer.appendChild(btn);
+        });
+
+        // ---- 2. سیستم فیلتر ترکیبی (جستجو + فیلتر سریع) ----
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase();
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const typeCell = row.querySelectorAll('td')[1];
+                const rowType = typeCell ? typeCell.textContent.trim() : "";
+
+                // بررسی تطابق با سرچ باکس
+                const matchesSearch = rowText.includes(searchTerm);
+                // بررسی تطابق با دکمه‌های فیلتر سریع
+                const matchesType = (currentQuickFilter === "all" || rowType === currentQuickFilter);
+
+                if (matchesSearch && matchesType) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // آپدیت ظاهر
+            noResults.classList.toggle('d-none', visibleCount > 0);
+            visibleCountEl.textContent = visibleCount;
+        }
+
+        // رویداد تایپ در نوار جستجو
+        searchInput.addEventListener('keyup', applyFilters);
+
+        // رویداد کلیک روی دکمه‌های فیلتر سریع
+        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // آپدیت استایل دکمه‌ها
+                document.querySelectorAll('.quick-filter-btn').forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-outline-secondary');
+                });
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-primary');
+
+                // اعمال فیلتر
+                currentQuickFilter = this.getAttribute('data-filter');
+                applyFilters();
+            });
+        });
+
+        // ---- 3. انیمیشن ورود ردیف‌ها ----
+        rows.forEach((row, i) => {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(15px)';
+            setTimeout(() => {
+                row.style.transition = 'all 0.5s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, i * 30);
+        });
     });
-
-
-    // انیمیشن ورود ردیف‌ها
-    document.querySelectorAll('.leave-row').forEach((row, i) => {
-        row.style.opacity = '0';
-        row.style.transform = 'translateY(15px)';
-        setTimeout(() => {
-            row.style.transition = 'all 0.5s ease';
-            row.style.opacity = '1';
-            row.style.transform = 'translateY(0)';
-        }, i * 40);
-    });
-
 </script>
 
 <style>
@@ -146,6 +211,12 @@
         font-size: 0.9rem !important;
         padding: 0.5em 0.8em;
     }
-
+    /* استایل دکمه‌های فیلتر سریع */
+    .quick-filter-btn {
+        transition: all 0.2s;
+    }
+    .quick-filter-btn:hover {
+        transform: translateY(-2px);
+    }
 </style>
 {% endblock %}

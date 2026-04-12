@@ -65,17 +65,35 @@ def panel_soldiers(request):
     })
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+
+# فراموش نکنید مدل Leave فراخوانی شده باشد
+
 @login_required
 def panel_leaves(request):
+    # دریافت کوئری پایه با select_related برای سرعت بیشتر
     leaves = Leave.objects.select_related('soldier').order_by('-created_at')
 
-    paginator = Paginator(leaves, 250)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # --- امکان فیلتر با سرباز خاص از طریق پارامتر URL ---
+    # مثال: /panel/leaves/?soldier=15
+    soldier_id = request.GET.get('soldier')
+    selected_soldier = None
+
+    if soldier_id and soldier_id.isdigit():
+        leaves = leaves.filter(soldier__id=soldier_id)
+        # برای نمایش نام سرباز فیلتر شده در بالای صفحه
+        if leaves.exists():
+            selected_soldier = leaves.first().soldier
+
+    # گرفتن آمار تعداد کل مرخصی‌های لیست فعلی
+    total_leaves = leaves.count()
 
     return render(request, 'dashboard/leaves_list.html', {
-        'leaves': page_obj,
-        'page_obj': page_obj,
+        'leaves': leaves,
+        'total_leaves': total_leaves,
+        'selected_soldier': selected_soldier,
     })
 
 
