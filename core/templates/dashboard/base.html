@@ -57,9 +57,18 @@
         <a href="{{ url_settings }}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
             <i class="fas fa-cogs"></i><span>تنظیمات سیستم</span>
         </a>
-        <a href="{{ url_calculate_jalali_diff }}" class="nav-link {% if 'calculate_jalali_diff' in request.path %}active{% endif %}">
+        <a href="{{ url_calculate_jalali_diff }}"
+           class="nav-link {% if 'calculate_jalali_diff' in request.path %}active{% endif %}">
             <i class="fas fa-calculator"></i><span>ماشین حساب تاریخ</span>
         </a>
+
+        <!-- لینک پنل ادمین جنگو (فقط برای مدیران) -->
+        {% if user.is_staff %}
+        <a href="{% url 'admin:index' %}" class="nav-link" target="_blank" title="ورود به پنل مدیریت پایگاه داده">
+            <i class="fas fa-user-cog"></i><span>پنل ادمین (پایگاه داده)</span>
+        </a>
+        {% endif %}
+
         <a href="{{ url_logout }}" class="nav-link text-danger">
             <i class="fas fa-sign-out-alt"></i><span>خروج از حساب</span>
         </a>

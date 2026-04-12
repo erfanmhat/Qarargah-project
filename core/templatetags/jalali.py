@@ -1,6 +1,8 @@
-from django import template
-from jdatetime import datetime as jdatetime
 from datetime import datetime, date
+
+import jdatetime
+from django.utils import timezone
+from django import template
 
 register = template.Library()
 
@@ -89,11 +91,34 @@ def to_jalali_full(date):
 
 @register.simple_tag
 def jalali_now(format='%Y/%m/%d'):
-    """Get current date in Jalali format"""
+    """Get current date in Jalali format with manual Persian mapping"""
     try:
-        from django.utils import timezone
         now = timezone.now()
-        jd = jdatetime.fromgregorian(datetime=now)
-        return jd.strftime(format)
-    except:
+        jd = jdatetime.datetime.fromgregorian(datetime=now)
+
+        # ۱. مپر نام ماه‌های شمسی
+        persian_months = {
+            1: 'فروردین', 2: 'اردیبهشت', 3: 'خرداد',
+            4: 'تیر', 5: 'مرداد', 6: 'شهریور',
+            7: 'مهر', 8: 'آبان', 9: 'آذر',
+            10: 'دی', 11: 'بهمن', 12: 'اسفند'
+        }
+
+        # اگر فرمت شامل %B (نام کامل) یا %b (نام اختصاری) بود، آن را با معادل فارسی جایگزین می‌کنیم
+        if '%B' in format or '%b' in format:
+            fa_month_name = persian_months[jd.month]
+            format = format.replace('%B', fa_month_name).replace('%b', fa_month_name)
+
+        # ساختن تاریخ (که الان ماه‌ها در آن فارسی شده‌اند، اما اعداد ممکن است انگلیسی باشند)
+        formatted_date = jd.strftime(format)
+
+        # ۲. مپر تبدیل اعداد انگلیسی به فارسی
+        en_to_fa_digits = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
+
+        # اعمال تبدیل اعداد و برگرداندن خروجی نهایی
+        final_date = formatted_date.translate(en_to_fa_digits)
+
+        return final_date
+
+    except Exception as e:
         return ''

@@ -246,5 +246,3 @@ class DocumentTemplateAdmin(admin.ModelAdmin):
 admin.site.register(Expertise)
 admin.site.register(SystemSetting)
 admin.site.register(SoldierServiceReduction)
-
-admin.site.index_template = 'dashboard/index.html'
