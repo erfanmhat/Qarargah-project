@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import defaultdict
 from datetime import timedelta
 
 from django.contrib import messages
@@ -139,115 +140,88 @@ def panel_dashboard(request):
 
 @login_required
 def panel_reports(request):
-    """Reports page
-
-    ✅ Updates:
-    - Uses SELECT/Prefetch efficiently (no unnecessary reductions prefetch because service_end_date
-      is computed from soldier fields; reductions are only used if your service_end_date depends on it.
-      If it does, keep reductions prefetch.
-    - Adds extra-service-aware forecast by using soldier.service_end_date() which already includes
-      extra days (extra_service_days + logs).
-    - Adds optional breakdown for extra service type distribution and rank distribution.
-    - Ensures counts only consider active/unknown service_status by default (like panel_soldiers),
-      but can be toggled with ?show_completed=1.
-    """
-
     today = timezone.localdate()
-    current_month_start = today.replace(day=1)
-
     show_completed = request.GET.get('show_completed') == '1'
+    # پارامتر جدید برای کنترل حالت نمایش همه سربازان
+    show_all_soldiers_forecast = request.GET.get('all_soldiers') == '1'
 
-    # ==================== Monthly leaves (last 6 months) ====================
+    # ==================== Monthly leaves (last 6 months) - بدون تغییر ====================
     monthly_leaves = []
-
-    cursor = current_month_start
+    cursor = today.replace(day=1)
     for _ in range(6):
         month_start = cursor
         next_month_start = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
-
-        leaves_in_month = Leave.objects.filter(
-            start_date__gte=month_start,
-            start_date__lt=next_month_start
-        )
-
+        leaves_in_month = Leave.objects.filter(start_date__gte=month_start, start_date__lt=next_month_start)
         monthly_leaves.append({
             "month": jalali_ym(month_start),
             "total": leaves_in_month.count(),
             "total_days": leaves_in_month.aggregate(total_days=Sum("days"))["total_days"] or 0,
         })
-
         cursor = prev_month_start(cursor)
-
     monthly_leaves.reverse()
 
-    # ==================== Service ending forecast (next 6 months) ====================
-    six_months_later = today + timedelta(days=180)
-    ending_forecast = []
-    current_month = today.replace(day=1)
+    # ==================== Service ending forecast (هوشمند و بهینه شده) ====================
 
-    soldiers_qs = Soldier.objects.select_related("service_status")
+    # کوئری پایه برای سربازان
+    soldiers_qs = Soldier.objects.select_related(
+        "service_status", "military_rank_ref"
+    ).order_by('dossier_code')
 
-    # اگر اتمام خدمت‌ها مخفی باشند، فقط فعال/نامشخص‌ها را در پیش‌بینی حساب کن
     if not show_completed:
         soldiers_qs = soldiers_qs.filter(
-            Q(service_status__isnull=True) |
-            Q(service_status__is_active_service=True) |
-            Q(service_status__is_active_service__isnull=True)
+            Q(service_status__isnull=True) | Q(service_status__is_active_service=True)
         )
 
-    # ✅ این prefetch فقط اگر service_end_date شما reductions را استفاده می‌کند لازم است.
-    # اگر reductions دخیل نیست، می‌توانید حذفش کنید.
-    soldiers = list(soldiers_qs.prefetch_related("reductions", "extra_logs").all())
+    # ✅ الگوریتم بهینه: یک حلقه به جای حلقه‌های تودرتو
+    # از defaultdict برای گروه‌بندی آسان‌تر استفاده می‌کنیم
+    forecast_groups = defaultdict(lambda: {"month": "", "date_obj": None, "count": 0, "soldiers": []})
 
-    for i in range(6):
-        next_month = (current_month.replace(day=28) + timedelta(days=4)).replace(day=1)
-        month_end = six_months_later if i == 5 else next_month
+    six_months_later = today + timedelta(days=180)
 
-        count = 0
-        for soldier in soldiers:
-            try:
-                end_date = soldier.service_end_date()
-            except Exception:
-                continue
+    for soldier in soldiers_qs:
+        try:
+            end_date = soldier.service_end_date()
+        except Exception:
+            continue
 
-            if end_date and current_month <= end_date < month_end:
-                count += 1
+        if not end_date:
+            continue
 
-        ending_forecast.append({
-            "month": jalali_ym(current_month),
-            "count": count,
-        })
+        # اگر در حالت پیش‌فرض (۶ ماهه) هستیم، سربازان خارج از بازه را نادیده بگیر
+        if not show_all_soldiers_forecast and not (today <= end_date < six_months_later):
+            continue
 
-        current_month = next_month
+        month_key = jalali_ym(end_date)
 
-    # ==================== Distributions ====================
+        # اولین باری که ماهی را می‌بینیم، اطلاعات اصلی آن را ثبت کن
+        if not forecast_groups[month_key]["month"]:
+            forecast_groups[month_key]["month"] = month_key
+            forecast_groups[month_key]["date_obj"] = end_date.replace(day=1)
 
-    # Location distribution
+        forecast_groups[month_key]["count"] += 1
+        forecast_groups[month_key]["soldiers"].append(soldier)
+
+    # تبدیل دیکشنری به لیست و مرتب‌سازی بر اساس تاریخ برای نمایش منظم
+    ending_forecast = sorted(forecast_groups.values(), key=lambda item: item["date_obj"])
+
+    # ==================== Distributions - بدون تغییر ====================
     location_dist = ServiceLocation.objects.annotate(
         soldier_count=Count("soldier")
     ).filter(soldier_count__gt=0).order_by("-soldier_count")[:10]
 
-    # Status distribution
     status_dist = ServiceStatus.objects.annotate(
         soldier_count=Count("soldier")
-    ).order_by("-soldier_count")
+    ).filter(soldier_count__gt=0).order_by("-soldier_count")
 
-    # ✅ جدید: توزیع نوع اضافه خدمت (بر اساس extra_service_type ساده)
-    # فقط مواردی که نوع دارند.
-    extra_type_dist = (
-        Soldier.objects.filter(extra_service_type__isnull=False)
-        .values('extra_service_type__title')
-        .annotate(count=Count('id'))
-        .order_by('-count')
-    )
+    extra_type_dist = Soldier.objects.filter(
+        extra_service_type__isnull=False
+    ).values('extra_service_type__title').annotate(count=Count('id')).order_by('-count')
 
-    # ✅ جدید: توزیع درجه (بر اساس military_rank_ref)
-    rank_dist = (
-        Soldier.objects.filter(military_rank_ref__isnull=False)
-        .values('military_rank_ref__title', 'military_rank_ref__code')
-        .annotate(count=Count('id'))
-        .order_by('military_rank_ref__code')
-    )
+    rank_dist = Soldier.objects.filter(
+        military_rank_ref__isnull=False
+    ).values(
+        'military_rank_ref__title', 'military_rank_ref__code'
+    ).annotate(count=Count('id')).order_by('military_rank_ref__code')
 
     context = {
         "monthly_leaves": monthly_leaves,
@@ -257,6 +231,8 @@ def panel_reports(request):
         "extra_type_dist": extra_type_dist,
         "rank_dist": rank_dist,
         "show_completed": show_completed,
+        # ارسال متغیر جدید به تمپلیت برای کنترل دکمه‌ها و عناوین
+        "show_all_soldiers_forecast": show_all_soldiers_forecast,
     }
     return render(request, "dashboard/reports.html", context)
 

@@ -41,36 +41,91 @@
         </div>
     </div>
 
+    <!-- پیش‌بینی پایان خدمت (طراحی جدید با لیست سربازان) -->
     <div class="card border-0 shadow-lg mb-4">
-        <div class="card-header bg-gradient text-white fw-bold"
-             style="background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;">
-            <i class="fas fa-clock"></i> پیش‌بینی پایان خدمت (۶ ماه آینده)
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover theme-table">
-                    <thead>
-                    <tr>
-                        <th>ماه</th>
-                        <th>تعداد سرباز</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for forecast in ending_forecast %}
-                    <tr>
-                        <td>{{ forecast.month|to_jalali_ym }}</td>
-                        <td>
-                            <span class="badge bg-warning text-dark">{{ forecast.count }} سرباز</span>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="2" class="text-center text-muted">داده‌ای موجود نیست</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
+             style="background: linear-gradient(90deg, #6d28d9, #9333ea) !important;">
+                <span>
+                    <i class="fas fa-calendar-check"></i> پیش‌بینی پایان خدمت
+                    <span class="badge bg-light text-dark ms-1">
+                        {% if show_all_soldiers_forecast %}کل سربازان{% else %}۶ ماه آینده{% endif %}
+                    </span>
+                </span>
+            <!-- دکمه جدید برای تغییر حالت نمایش -->
+            <div class="btn-group btn-group-sm">
+                <a href="?{% if show_completed %}show_completed=1{% endif %}"
+                   class="btn {% if not show_all_soldiers_forecast %}btn-light text-dark fw-bold{% else %}btn-outline-light{% endif %}"
+                   title="فقط ۶ ماه آینده">
+                    <i class="fas fa-hourglass-half"></i> ۶ ماه
+                </a>
+                <a href="?all_soldiers=1{% if show_completed %}&show_completed=1{% endif %}"
+                   class="btn {% if show_all_soldiers_forecast %}btn-light text-dark fw-bold{% else %}btn-outline-light{% endif %}"
+                   title="نمایش همه سربازان تا پایان خدمتشان">
+                    <i class="fas fa-users"></i> همه
+                </a>
             </div>
+        </div>
+        <div class="card-body p-3 p-lg-4">
+            {% if ending_forecast %}
+            <!-- نمودار میله‌ای -->
+            <div class="mb-4">
+                <canvas id="endingForecastChart" height="120"></canvas>
+            </div>
+
+            <!-- لیست آکاردئونی سربازان -->
+            <h6 class="mb-3 fw-bold" style="color: var(--text-muted);">
+                <i class="fas fa-list-ul ms-2"></i>جزئیات ماه‌ها
+            </h6>
+            <div class="accordion accordion-flush" id="forecastAccordion">
+                {% for item in ending_forecast %}
+                <div class="accordion-item" style="background-color: transparent; border-color: var(--border);">
+                    <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
+                        <button class="accordion-button collapsed fw-bold" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}"
+                                aria-expanded="false" aria-controls="collapse-{{ forloop.counter }}"
+                                style="background-color: var(--bg-secondary); box-shadow: none !important;">
+
+                            <span class="badge rounded-pill me-auto"
+                                  style="background-color: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid #c084fc;">
+                                        در {{ item.month|to_jalali_ym }} تعداد {{ item.count }} نفر
+                                    </span>
+                        </button>
+                    </h2>
+                    <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse"
+                         aria-labelledby="heading-{{ forloop.counter }}" data-bs-parent="#forecastAccordion">
+                        <div class="accordion-body p-2">
+                            <ul class="list-group list-group-flush">
+                                {% for soldier in item.soldiers %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    style="background: none; border-color: var(--border) !important;">
+                                    <div>
+                                        <i class="fas fa-user-graduate ms-2" style="color: var(--text-muted);"></i>
+                                        <a href="{% url 'panel_soldier_detail' soldier.id %}"
+                                           class="text-decoration-none fw-bold">
+                                            {{ soldier.full_name }}
+                                        </a>
+                                    </div>
+                                    <span class="badge bg-secondary fw-normal">
+                                                {{ soldier.military_rank_ref.title }}
+                                            </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- حالت خالی (Empty State) -->
+            <div class="text-center py-5 rounded"
+                 style="background: var(--bg-secondary); border: 1px dashed var(--border);">
+                <i class="fas fa-folder-open fa-3x mb-3" style="color: var(--text-muted); opacity: 0.5;"></i>
+                <p class="mb-0" style="color: var(--text-muted);">
+                    در بازه زمانی انتخاب شده، هیچ سربازی پایان خدمت خود را تجربه نمی‌کند.
+                </p>
+            </div>
+            {% endif %}
         </div>
     </div>
 

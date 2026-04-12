@@ -56,10 +56,8 @@ def to_jalali_ym(value, fmt="%Y/%m"):
         # ✅ If it's already date/datetime
         if isinstance(value, (date, datetime)):
             g_date = value if isinstance(value, date) else value.date()
-
-        # ✅ If it's a string
-        elif isinstance(value, str):
-            s = value.strip()
+        else:
+            s = str(value).strip()
 
             # normalize slash to dash
             s = s.replace("/", "-")
@@ -71,10 +69,7 @@ def to_jalali_ym(value, fmt="%Y/%m"):
             # now should be "YYYY-MM-DD"
             g_date = datetime.strptime(s, "%Y-%m-%d").date()
 
-        else:
-            return "-"
-
-        jd = jdatetime.fromgregorian(date=g_date)
+        jd = jdatetime.datetime.fromgregorian(date=g_date)
 
         # ✅ return only year-month
         return jd.strftime(fmt)
@@ -88,7 +83,7 @@ def to_jalali_full(date):
     if not date:
         return '-'
     try:
-        jd = jdatetime.fromgregorian(datetime=date)
+        jd = jdatetime.datetime.fromgregorian(datetime=date)
         return jd.strftime('%A %d %B %Y')
     except:
         return '-'
