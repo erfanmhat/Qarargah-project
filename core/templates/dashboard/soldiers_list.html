@@ -18,7 +18,7 @@
     <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
          style="background: linear-gradient(90deg, #00c853, #00e676) !important;">
         <span><i class="fas fa-list-ul"></i> فهرست سربازان ناحیه مقاومت بسیج اردبیل</span>
-        <small class="badge bg-dark opacity-90">{{ page_obj.paginator.count }} سرباز</small>
+        <small class="badge bg-dark opacity-90">{{ soldiers|length }} سرباز</small>
     </div>
     <div class="card-body p-4">
 
@@ -37,25 +37,12 @@
                    autocomplete="off">
         </div>
 
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-3 mb-3">
             <form method="get" class="d-flex flex-wrap align-items-center gap-2">
                 <input type="hidden" name="show_completed" value="{% if show_completed %}1{% else %}0{% endif %}">
-                <input type="hidden" name="sort" value="{{ sort }}">
-                <label class="form-label mb-0">تعداد در هر صفحه</label>
-                <select name="page_size" class="form-select w-auto" onchange="this.form.submit()">
-                    <option value="100" {% if page_size == 100 %}selected{% endif %}>100</option>
-                    <option value="250" {% if page_size == 250 %}selected{% endif %}>250</option>
-                    <option value="500" {% if page_size == 500 %}selected{% endif %}>500</option>
-                    <option value="1000" {% if page_size == 1000 %}selected{% endif %}>1000</option>
-                </select>
-            </form>
-
-            <form method="get" class="d-flex flex-wrap align-items-center gap-2">
-                <input type="hidden" name="show_completed" value="{% if show_completed %}1{% else %}0{% endif %}">
-                <input type="hidden" name="page_size" value="{{ page_size }}">
                 <label class="form-label mb-0">مرتب‌سازی</label>
                 <select name="sort" class="form-select w-auto" onchange="this.form.submit()">
-                    <!-- ✅ پیشفرض جدید روی کد پرونده (صعودی) -->
+                    <!-- ✅ پیشفرض روی کد پرونده (صعودی) -->
                     <option value="dossier" {% if sort == "dossier" %}selected{% endif %}>کد پرونده (صعودی)</option>
                     <option value="-dossier" {% if sort == "-dossier" %}selected{% endif %}>کد پرونده (نزولی)</option>
 
@@ -89,7 +76,7 @@
                 </tr>
                 </thead>
                 <tbody id="tableBody">
-                {% for soldier in page_obj %}
+                {% for soldier in soldiers %}
                     {% include "dashboard/soldier_row.html" %}
                 {% endfor %}
                 </tbody>
@@ -101,36 +88,6 @@
             <p class="fs-5" style="color: var(--text-secondary);">موردی با این مشخصات یافت نشد.</p>
         </div>
 
-        <!-- Pagination -->
-        {% if page_obj.has_other_pages %}
-        <nav aria-label="صفحه‌بندی">
-            <ul class="pagination justify-content-center mt-4">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if base_querystring %}&{{ base_querystring }}{% endif %}">قبلی</a>
-                </li>
-                {% endif %}
-
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if base_querystring %}&{{ base_querystring }}{% endif %}">{{ num }}</a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if base_querystring %}&{{ base_querystring }}{% endif %}">بعدی</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -170,8 +127,9 @@
         document.getElementById('noResults').classList.toggle('d-none', visibleCount > 0);
     });
 
-
     // انیمیشن ورود ردیف‌ها
+    // به دلیل بالا رفتن تعداد ردیف‌ها، زمان تاخیر انیمیشن (40) را می‌توانید کاهش دهید یا این بخش را کلا بردارید
+    // تا مرورگر در نمایش ۱۰۰۰ سرباز هنگ نکند. فعلا به 10 میلی‌ثانیه کاهش داده شد تا سریعتر لود شود.
     document.querySelectorAll('.soldier-row').forEach((row, i) => {
         row.style.opacity = '0';
         row.style.transform = 'translateY(15px)';
@@ -179,7 +137,7 @@
             row.style.transition = 'all 0.5s ease';
             row.style.opacity = '1';
             row.style.transform = 'translateY(0)';
-        }, i * 40);
+        }, i * 10);
     });
 </script>
 

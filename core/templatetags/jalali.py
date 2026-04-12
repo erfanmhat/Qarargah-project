@@ -13,22 +13,27 @@ def to_jalali(value, fmt='%Y/%m/%d'):
         return '-'
 
     try:
-        # If it's already a date/datetime
+        # 1. اگر از قبل آبجکت تاریخ یا زمان است
         if isinstance(value, (date, datetime)):
-            jd = jdatetime.fromgregorian(date=value)
+            # تبدیل به تاریخ ساده (بدون تایم‌زون) برای کتابخانه jdatetime
+            if isinstance(value, datetime):
+                value = value.date()
+            jd = jdatetime.date.fromgregorian(date=value)
+            return jd.strftime(fmt)
 
-        # If it's a string like "2025-08-14"
-        elif isinstance(value, str):
-            g_date = datetime.strptime(value, "%Y-%m-%d").date()
-            jd = jdatetime.fromgregorian(date=g_date)
+        # 2. اگر رشته است (حتی با ساعت)
+        if isinstance(value, str):
+            # حذف بخش ساعت در صورت وجود (برش تا 10 کاراکتر اول)
+            clean_date_str = value[:10]
+            g_date = datetime.strptime(clean_date_str, "%Y-%m-%d").date()
+            jd = jdatetime.date.fromgregorian(date=g_date)
+            return jd.strftime(fmt)
 
-        else:
-            return '-'
+    except Exception as e:
+        # برای دیباگ می‌توانید موقتاً print(e) بگذارید
+        return f"Error: {str(e)}" # موقتاً این را بگذارید تا بفهمید ارور چیست
 
-        return jd.strftime(fmt)
-
-    except Exception:
-        return '-'
+    return '-'
 
 
 @register.filter

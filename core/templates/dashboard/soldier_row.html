@@ -6,6 +6,7 @@
     data-rank="{% if soldier.military_rank_ref %}{{ soldier.military_rank_ref.title|lower }}{% elif soldier.military_rank %}{{ soldier.military_rank }}{% else %}{% endif %}"
     data-commander="{{ soldier.direct_commander_name|default:''|lower }}">
 
+    <!-- نام و مشخصات -->
     <td>
         <strong style="color: var(--text-primary);">{{ soldier.full_name|default:"—" }}</strong>
         {% if soldier.father_name %}
@@ -13,6 +14,7 @@
         {% endif %}
     </td>
 
+    <!-- کد ملی -->
     <td>
         {% if soldier.national_code %}
             <code class="text-info">{{ soldier.national_code }}</code>
@@ -21,6 +23,7 @@
         {% endif %}
     </td>
 
+    <!-- کد پرونده -->
     <td>
         {% if soldier.dossier_code and soldier.dossier_code > 0 %}
             <span class="badge bg-primary rounded-pill px-3">{{ soldier.dossier_code }}</span>
@@ -31,6 +34,7 @@
         {% endif %}
     </td>
 
+    <!-- اعزام و درجه -->
     <td>
         {% if soldier.dispatch_type %}
             <span class="badge" style="background-color: var(--bg-tertiary); color: var(--text-primary);">
@@ -52,6 +56,7 @@
         {% endif %}
     </td>
 
+    <!-- شروع خدمت -->
     <td class="fw-bold" style="color: var(--success);">
         {% if soldier.service_start_date %}
             {{ soldier.service_start_date|to_jalali:"%Y/%m/%d" }}
@@ -60,6 +65,7 @@
         {% endif %}
     </td>
 
+    <!-- پایان خدمت / اضافه خدمت -->
     <td>
         {% with end=soldier.service_end_date %}
             {% if end %}
@@ -84,6 +90,7 @@
         {% endif %}
     </td>
 
+    <!-- وضعیت خدمت -->
     <td>
         {% if soldier.service_status and soldier.service_status.is_active_service %}
             <span class="badge bg-success rounded-pill px-3">
@@ -108,13 +115,16 @@
         {% endif %}
     </td>
 
+    <!-- عملیات -->
     <td class="text-center py-3">
         <div class="d-flex justify-content-center gap-2">
-            <a href="/admin/core/leave/add/?soldier={{ soldier.id }}"
+            <!-- ✅ لینک استاندارد شده جنگو برای مرخصی -->
+            <a href="{% url 'admin:core_leave_add' %}?soldier={{ soldier.id }}"
                class="btn btn-sm btn-outline-warning"
-               title="مرخصی">
+               title="ثبت مرخصی جدید">
                 <i class="fas fa-bed"></i>
             </a>
+
             <a href="{% url 'admin:core_soldier_change' soldier.id %}"
                class="btn btn-sm btn-outline-primary"
                title="ویرایش">
@@ -122,13 +132,13 @@
             </a>
             <a href="{% url 'panel_soldier_detail' soldier.id %}"
                class="btn btn-sm btn-outline-info"
-               title="جزئیات">
+               title="جزئیات کامل">
                 <i class="fas fa-eye"></i>
             </a>
             <a href="{% url 'panel_soldier_delete' soldier.id %}"
                class="btn btn-sm btn-outline-danger"
-               title="حذف"
-               onclick="return confirm('آیا از حذف سرباز \"{{ soldier.full_name|escapejs }}\" اطمینان دارید؟\nاین عمل قابل بازگشت نیست.');">
+               title="حذف پرونده"
+               onclick="return confirm('آیا از حذف سرباز «{{ soldier.full_name|escapejs }}» اطمینان دارید؟\nاین عمل غیرقابل بازگشت است.');">
                 <i class="fas fa-trash-alt"></i>
             </a>
         </div>

@@ -16,18 +16,11 @@ logger = logging.getLogger('core')
 
 @login_required
 def panel_soldiers(request):
-    """لیست سربازها با امکان نمایش سربازهای پایان خدمت، مرتب‌سازی و صفحه‌بندی."""
+    """لیست تمامی سربازها با امکان مرتب‌سازی (بدون صفحه‌بندی)."""
 
     sort_key = request.GET.get('sort', 'dossier')
 
-    page_size_raw = request.GET.get('page_size')
-
-    try:
-        page_size = int(page_size_raw)
-        page_size = max(5, min(page_size, 10000))
-    except (TypeError, ValueError):
-        page_size = 250
-
+    # باگ برطرف شده: در کد قبلی، هم 'created' و هم '-created' مقدار '-created_at' را برمی‌گرداندند!
     sort_map = {
         'name': 'full_name',
         '-name': '-full_name',
@@ -41,35 +34,32 @@ def panel_soldiers(request):
         '-status': '-service_status__title',
         'location': 'current_location__name',
         '-location': '-current_location__name',
-        'created': '-created_at',
+        'created': 'created_at',    # این خط اصلاح شد
         '-created': '-created_at',
     }
 
+    # دریافت فیلدهای مرتب‌سازی و تبدیل آن به تاپل
     order_fields = sort_map.get(sort_key, ('dossier_code',))
     if isinstance(order_fields, str):
         order_fields = (order_fields,)
 
-    soldiers = Soldier.objects.select_related('service_status', 'current_location')
+    # واکشی تمام سربازها به همراه روابط (برای جلوگیری از N+1 query) و اعمال مرتب‌سازی
+    soldiers = Soldier.objects.select_related(
+        'service_status', 'current_location'
+    ).order_by(*order_fields)
 
-    soldiers = soldiers.order_by(*order_fields)
-
-    paginator = Paginator(soldiers, page_size)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
+    # حفظ پارامترهای URL برای لینک‌های هدر جدول (مرتب‌سازی)
     query_params = request.GET.copy()
-    for key in ('page', 'start_from_display', 'start_to_display'):
+    # کلیدهای غیرضروری که نباید در لینک مرتب‌سازی تکرار شوند حذف می‌شوند
+    # کلید page و page_size چون دیگر صفحه‌بندی نداریم حذف شدند
+    for key in ('start_from_display', 'start_to_display'):
         if key in query_params:
             query_params.pop(key)
-    if 'page_size' not in query_params:
-        query_params['page_size'] = page_size
 
     base_querystring = query_params.urlencode()
 
     return render(request, 'dashboard/soldiers_list.html', {
-        'soldiers': page_obj,
-        'page_obj': page_obj,
-        'page_size': page_size,
+        'soldiers': soldiers,  # کل لیست پاس داده می‌شود
         'sort': sort_key if sort_key in sort_map else 'dossier',
         'base_querystring': base_querystring,
     })

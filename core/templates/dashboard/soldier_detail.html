@@ -124,19 +124,6 @@
                         <strong style="color: var(--success);">تعداد فرزندان:</strong>
                         <p style="color: var(--text-primary);">{{ soldier.children_count|default:"—" }}</p>
                     </div>
-                    <div class="col-md-6">
-                        <strong style="color: var(--success);">عکس پرسنلی:</strong>
-                        <p style="color: var(--text-primary);">
-                            {% if soldier.personal_photo %}
-                            <a href="{{ soldier.personal_photo.url }}" target="_blank"
-                               class="btn btn-sm btn-outline-success">
-                                <i class="fas fa-image"></i> مشاهده
-                            </a>
-                            {% else %}
-                            <span style="color: var(--text-muted);">—</span>
-                            {% endif %}
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>

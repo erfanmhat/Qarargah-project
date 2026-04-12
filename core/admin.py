@@ -79,7 +79,7 @@ class SoldierAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
                 ('full_name', 'father_name'),
                 ('national_code', 'dossier_code'),
                 ('birth_date', 'birth_place'),
-                ('issue_place', 'personal_photo'),
+                'issue_place'
             )
         }),
         ("درجه و وضعیت خانوادگی", {
