@@ -1,15 +1,16 @@
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.db.models import Q
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
 import logging
 
+import jdatetime
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+
 from core.forms_document import build_document_input_form
-from core.models import Soldier, Leave, ServiceLocation, HealthStatus, ServiceStatus, DocumentTemplate
+from core.models import Soldier, Leave, ServiceLocation, HealthStatus, ServiceStatus, DocumentTemplate, DispatchType, \
+    ExtraServiceType, MilitaryRankRef
 from core.utils.doc_generator import build_docx
-from core.utils.utils import parse_date_input
 
 logger = logging.getLogger('core')
 
@@ -34,7 +35,7 @@ def panel_soldiers(request):
         '-status': '-service_status__title',
         'location': 'current_location__name',
         '-location': '-current_location__name',
-        'created': 'created_at',    # این خط اصلاح شد
+        'created': 'created_at',  # این خط اصلاح شد
         '-created': '-created_at',
     }
 
@@ -99,107 +100,111 @@ def panel_leaves(request):
 
 @login_required
 def panel_search(request):
-    soldiers = Soldier.objects.select_related('service_status', 'current_location', 'health_status').all()
+    # دریافت لیست کامل با Select Related برای سرعت بالا (بدون صفحه‌بندی)
+    soldiers = Soldier.objects.select_related(
+        'service_status', 'current_location', 'health_status',
+        'military_rank_ref', 'extra_service_type'
+    ).all()
 
+    # --- ۱. دریافت پارامترها ---
     query = request.GET.get('q', '').strip()
     dispatch_type = request.GET.get('dispatch_type', '')
     service_status_id = request.GET.get('service_status', '')
     location_id = request.GET.get('location', '')
     health_status_id = request.GET.get('health_status', '')
 
+    # پارامترهای جدید که در ویوی قبلی جا افتاده بودند!
+    rank_ref_id = request.GET.get('rank_ref', '')
+    extra_type_id = request.GET.get('extra_type', '')
+    extra_from = request.GET.get('extra_from', '')
+    extra_to = request.GET.get('extra_to', '')
+
     start_from_raw = request.GET.get('start_from', '')
     start_to_raw = request.GET.get('start_to', '')
-
     show_completed = request.GET.get('show_completed') == '1'
-    page_size_raw = request.GET.get('page_size')
 
-    try:
-        page_size = int(page_size_raw)
-        page_size = max(5, min(page_size, 10000))
-    except (TypeError, ValueError):
-        page_size = 250
+    # --- ۲. اعمال فیلترها ---
 
-    start_from_date, start_from_display = parse_date_input(start_from_raw)
-    start_to_date, start_to_display = parse_date_input(start_to_raw)
-
+    # فیلتر پایان خدمت
     if not show_completed:
         soldiers = soldiers.filter(
             Q(service_status__isnull=True) |
-            Q(service_status__is_active_service=True) |
-            Q(service_status__is_active_service__isnull=True)
+            Q(service_status__is_active_service=True)
         )
 
+    # جستجوی متنی همه‌جانبه
     if query:
         soldiers = soldiers.filter(
             Q(full_name__icontains=query) |
             Q(national_code__icontains=query) |
             Q(dossier_code__icontains=query) |
             Q(father_name__icontains=query) |
-            Q(birth_place__icontains=query) |
-            Q(issue_place__icontains=query) |
-            Q(phone_personal__icontains=query) |
-            Q(personal_mobile_phone__icontains=query) |
-            Q(military_mobile_phone__icontains=query) |
-            Q(phone_parent__icontains=query) |
-            Q(phone_home__icontains=query) |
-            Q(phone_work__icontains=query) |
-            Q(home_address__icontains=query) |
-            Q(father_home_address__icontains=query) |
-            Q(personal_home_address__icontains=query) |
-            Q(direct_commander_name__icontains=query) |
-            Q(direct_commander_phone__icontains=query)
+            Q(direct_commander_name__icontains=query)
         )
 
+    # فیلترهای Select
     if dispatch_type:
         soldiers = soldiers.filter(dispatch_type=dispatch_type)
-
     if service_status_id:
         soldiers = soldiers.filter(service_status_id=service_status_id)
-
     if location_id:
         soldiers = soldiers.filter(current_location_id=location_id)
-
     if health_status_id:
         soldiers = soldiers.filter(health_status_id=health_status_id)
+    if rank_ref_id:
+        soldiers = soldiers.filter(military_rank_ref_id=rank_ref_id)
+    if extra_type_id:
+        soldiers = soldiers.filter(extra_service_type_id=extra_type_id)
 
-    if start_from_date:
-        soldiers = soldiers.filter(service_start_date__gte=start_from_date)
-    if start_to_date:
-        soldiers = soldiers.filter(service_start_date__lte=start_to_date)
+    # فیلتر بازه عددی اضافه خدمت
+    if extra_from and extra_from.isdigit():
+        soldiers = soldiers.filter(extra_service_days__gte=int(extra_from))
+    if extra_to and extra_to.isdigit():
+        soldiers = soldiers.filter(extra_service_days__lte=int(extra_to))
 
-    paginator = Paginator(soldiers, page_size)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # فیلتر بازه تاریخ (تبدیل امن جلالی به میلادی)
+    def parse_jalali_to_gregorian(j_str):
+        try:
+            j_str = j_str.replace('-', '/').replace(' ', '')
+            y, m, d = map(int, j_str.split('/'))
+            return jdatetime.date(y, m, d).togregorian()
+        except:
+            return None
 
-    query_params = request.GET.copy()
-    if 'page' in query_params:
-        query_params.pop('page')
-    if 'page_size' not in query_params:
-        query_params['page_size'] = page_size
+    if start_from_raw:
+        g_start = parse_jalali_to_gregorian(start_from_raw)
+        if g_start: soldiers = soldiers.filter(service_start_date__gte=g_start)
 
-    base_querystring = query_params.urlencode()
+    if start_to_raw:
+        g_end = parse_jalali_to_gregorian(start_to_raw)
+        if g_end: soldiers = soldiers.filter(service_start_date__lte=g_end)
 
-    from core.models import DispatchType
-
+    # --- ۳. ارسال به تمپلیت ---
     context = {
-        'soldiers': page_obj,
-        'page_obj': page_obj,
+        'soldiers': soldiers,
+        'results_count': soldiers.count(),  # شمارشگر نتایج
+
+        # برای حفظ مقادیر سرچ شده در فرم
         'query': query,
-        'dispatch_types': DispatchType.choices,
-        'service_statuses': ServiceStatus.objects.all(),
-        'locations': ServiceLocation.objects.all(),
-        'health_statuses': HealthStatus.objects.all(),
         'selected_dispatch_type': dispatch_type,
         'selected_service_status': service_status_id,
         'selected_location': location_id,
         'selected_health_status': health_status_id,
-        'start_from_display': start_from_display or start_from_raw,
-        'start_to_display': start_to_display or start_to_raw,
-        'start_from_value': (start_from_date.isoformat() if start_from_date else start_from_raw),
-        'start_to_value': (start_to_date.isoformat() if start_to_date else start_to_raw),
+        'selected_rank_ref': rank_ref_id,
+        'selected_extra_type': extra_type_id,
+        'extra_from': extra_from,
+        'extra_to': extra_to,
+        'start_from': start_from_raw,
+        'start_to': start_to_raw,
         'show_completed': show_completed,
-        'base_querystring': base_querystring,
-        'page_size': page_size,
+
+        # دیتای دراپ‌داون‌ها (مطمئن شوید مدل‌های MilitaryRank و ExtraServiceType ایمپورت شده‌اند)
+        'dispatch_types': DispatchType.choices,
+        'service_statuses': ServiceStatus.objects.all(),
+        'locations': ServiceLocation.objects.all(),
+        'health_statuses': HealthStatus.objects.all(),
+        'rank_refs': MilitaryRankRef.objects.all(),
+        'extra_types': ExtraServiceType.objects.all(),
     }
 
     return render(request, 'dashboard/soldier_search.html', context)
