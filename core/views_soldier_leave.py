@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import quote
 
 import jdatetime
 from django.contrib import messages
@@ -274,29 +275,31 @@ def generate_document(request, soldier_id, template_id):
     soldier = get_object_or_404(Soldier, id=soldier_id)
     template_obj = get_object_or_404(DocumentTemplate, id=template_id, is_active=True)
 
-    # اگر این فرم ورودی دستی ندارد:
+    # تابعی برای ساخت و ارسال ریسپانس (برای جلوگیری از تکرار کد)
+    def create_response(content, filename):
+        response = HttpResponse(
+            content,
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+        # انکود کردن نام فایل برای پشتیبانی از حروف فارسی
+        encoded_filename = quote(filename)
+        # استفاده از استاندارد UTF-8 برای نام فایل
+        response["Content-Disposition"] = f"attachment; filename*=UTF-8''{encoded_filename}"
+        return response
+
     if template_obj.inputs.count() == 0:
         input_data = {}
         content = build_docx(template_obj, soldier, input_data)
-
         filename = f"{template_obj.title}_{soldier.national_code}.docx"
-        response = HttpResponse(content,
-                                content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-        response["Content-Disposition"] = f'attachment; filename="{filename}"'
-        return response
+        return create_response(content, filename)
 
-    # اگر ورودی دستی دارد:
     if request.method == "POST":
         form = build_document_input_form(template_obj, request.POST)
         if form.is_valid():
             input_data = form.cleaned_data
             content = build_docx(template_obj, soldier, input_data)
-
             filename = f"{template_obj.title}_{soldier.national_code}.docx"
-            response = HttpResponse(content,
-                                    content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-            response["Content-Disposition"] = f'attachment; filename="{filename}"'
-            return response
+            return create_response(content, filename)
     else:
         form = build_document_input_form(template_obj)
 

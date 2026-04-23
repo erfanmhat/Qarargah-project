@@ -239,7 +239,28 @@
                         </p>
                     </div>
                 </div>
-
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong style="color: var(--info);">مرکز آموزشی:</strong>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.training_center %}
+                            <span class="badge bg-warning">{{ soldier.training_center }}</span>
+                            {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong style="color: var(--info);">مسئولیت:</strong>
+                        <p style="color: var(--text-primary);">
+                            {% if soldier.responsibility %}
+                            <span class="badge bg-danger">{{ soldier.responsibility }}</span>
+                            {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -354,57 +375,11 @@
                         <p style="color: var(--text-primary);">{{ soldier.phone_parent|default:"—" }}</p>
                     </div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong style="color: var(--danger);">تلفن منزل:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.phone_home|default:"—" }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <strong style="color: var(--danger);">تلفن محل کار:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.phone_work|default:"—" }}</p>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong style="color: var(--danger);">تلفن منزل پدری:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.father_home_phone|default:"—" }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <strong style="color: var(--danger);">تلفن منزل شخصی:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.personal_home_phone|default:"—" }}</p>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong style="color: var(--danger);">همراه شخصی:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.personal_mobile_phone|default:"—" }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <strong style="color: var(--danger);">همراه نظامی:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.military_mobile_phone|default:"—" }}</p>
-                    </div>
-                </div>
 
                 <div class="row mb-3">
                     <div class="col-12">
                         <strong style="color: var(--danger);">آدرس منزل:</strong>
                         <p style="color: var(--text-primary);">{{ soldier.home_address|default:"—" }}</p>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <strong style="color: var(--danger);">آدرس منزل پدری:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.father_home_address|default:"—" }}</p>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <strong style="color: var(--danger);">آدرس منزل شخصی:</strong>
-                        <p style="color: var(--text-primary);">{{ soldier.personal_home_address|default:"—" }}</p>
                     </div>
                 </div>
 
@@ -421,11 +396,8 @@
                     <div class="col-12">
                         <strong style="color: var(--danger);">فرمانده مستقیم:</strong>
                         <p style="color: var(--text-primary);">
-                            {% if soldier.direct_commander_name %}
-                            {{ soldier.direct_commander_name }}
-                            {% if soldier.direct_commander_phone %}
-                            - <code>{{ soldier.direct_commander_phone }}</code>
-                            {% endif %}
+                            {% if soldier.commander %}
+                            {{ soldier.commander }}
                             {% else %}
                             —
                             {% endif %}
@@ -566,7 +538,7 @@
             </div>
         </div>
 
-                <!-- کارت مرخصی‌ها (بازطراحی شده) -->
+        <!-- کارت مرخصی‌ها (بازطراحی شده) -->
         <div class="card border-0 shadow-lg mb-4">
             <div class="card-header bg-gradient text-white fw-bold d-flex justify-content-between align-items-center"
                  style="background: linear-gradient(90deg, #d97706, #f59e0b) !important;">
@@ -597,7 +569,8 @@
                             </div>
                             <!-- خط اتصال (اگر آیتم آخر نیست نمایش داده شود) -->
                             {% if not forloop.last %}
-                            <div class="flex-grow-1 my-1" style="width: 2px; background-color: var(--border); border-radius: 2px;"></div>
+                            <div class="flex-grow-1 my-1"
+                                 style="width: 2px; background-color: var(--border); border-radius: 2px;"></div>
                             {% endif %}
                         </div>
 
@@ -608,12 +581,14 @@
                                 <span class="fw-bold" style="color: var(--text-primary); font-size: 0.85rem;">
                                     {{ leave.get_leave_type_display }}
                                 </span>
-                                <span class="badge" style="background-color: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid #fcd34d;">
+                                <span class="badge"
+                                      style="background-color: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid #fcd34d;">
                                     {{ leave.days }} روز
                                 </span>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center" style="font-size: 0.75rem; color: var(--text-muted);">
+                            <div class="d-flex justify-content-between align-items-center"
+                                 style="font-size: 0.75rem; color: var(--text-muted);">
                                 <span title="تاریخ شروع">
                                     <i class="far fa-calendar-alt ms-1 text-warning"></i>
                                     {{ leave.start_date|to_jalali:"%Y/%m/%d" }}
@@ -636,9 +611,11 @@
 
                 {% else %}
                 <!-- حالت خالی (Empty State) خلاقانه -->
-                <div class="text-center py-4 rounded" style="background: var(--bg-secondary); border: 1px dashed var(--border);">
+                <div class="text-center py-4 rounded"
+                     style="background: var(--bg-secondary); border: 1px dashed var(--border);">
                     <i class="fas fa-mug-hot fa-2x mb-2" style="color: var(--text-muted); opacity: 0.5;"></i>
-                    <p class="mb-2" style="color: var(--text-muted); font-size: 0.9rem;">تاکنون هیچ مرخصی برای این سرباز ثبت نشده است.</p>
+                    <p class="mb-2" style="color: var(--text-muted); font-size: 0.9rem;">تاکنون هیچ مرخصی برای این سرباز
+                        ثبت نشده است.</p>
                     <a href="{% url 'panel_leaves' %}?soldier={{ soldier.id }}" class="btn btn-sm btn-outline-warning">
                         <i class="fas fa-external-link-alt ms-1"></i> رفتن به پنل مرخصی
                     </a>

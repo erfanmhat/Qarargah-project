@@ -57,4 +57,4 @@ from django.core.wsgi import get_wsgi_application  # noqa: E402
 app = get_wsgi_application()
 
 if __name__ == "__main__":
-    serve(app, host="0.0.0.0", port=8000, threads=2)
+    serve(app, host="0.0.0.0", port=9000, threads=2)

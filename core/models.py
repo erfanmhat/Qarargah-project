@@ -41,6 +41,17 @@ class HealthStatus(TimeStampedModel):
         return self.title
 
 
+class TrainingCenter(TimeStampedModel):
+    title = models.CharField("نام مرکز آموزش", max_length=100, unique=True)
+
+    class Meta:
+        verbose_name = "مرکز آموزش"
+        verbose_name_plural = "مرکز های آموزش"
+
+    def __str__(self):
+        return self.title
+
+
 class DispatchType(models.TextChoices):
     TRAINING = 'training', 'آموزشی'
     GREEN_CARD = 'green_card', 'برگه سبز'
@@ -179,6 +190,30 @@ class DrivingLicenseType(models.TextChoices):
     BASE_3 = '3', 'پایه ۳'
 
 
+class Commander(TimeStampedModel):
+    name = models.CharField("نام فرمانده", max_length=100, unique=True)
+
+    # در صورت نیاز می‌توانید فیلدهای دیگری مثل درجه، شماره تماس و ... اضافه کنید
+
+    class Meta:
+        verbose_name = "فرمانده"
+        verbose_name_plural = "فرماندهان"
+
+    def __str__(self):
+        return self.name
+
+
+class Responsibility(TimeStampedModel):
+    title = models.CharField("عنوان مسئولیت", max_length=100, unique=True)
+
+    class Meta:
+        verbose_name = "مسئولیت"
+        verbose_name_plural = "مسئولیت‌ها"
+
+    def __str__(self):
+        return self.title
+
+
 class Soldier(TimeStampedModel):
     # ===== اطلاعات هویتی =====
     full_name = models.CharField("نام و نام خانوادگی", max_length=100, blank=True, null=True, db_index=True)
@@ -229,12 +264,8 @@ class Soldier(TimeStampedModel):
 
     phone_personal = models.CharField("شماره همراه سرباز", max_length=11, blank=True, null=True)
     phone_parent = models.CharField("شماره والدین/همسر", max_length=11, blank=True, null=True)
-    phone_home = models.CharField("تلفن منزل", max_length=11, blank=True, null=True)
-    phone_work = models.CharField("تلفن محل کار", max_length=11, blank=True, null=True)
 
     # ===== آدرس‌ها =====
-    father_home_address = models.TextField("آدرس منزل پدری", blank=True, null=True)
-    personal_home_address = models.TextField("آدرس منزل شخصی", blank=True, null=True)
     home_address = models.TextField("آدرس منزل", blank=True, null=True)  # فیلد قبلی حفظ شد
     postal_code = models.CharField("کد پستی", max_length=10, blank=True, null=True)
 
@@ -247,13 +278,13 @@ class Soldier(TimeStampedModel):
     driving_license_type = models.CharField("نوع گواهی نامه", max_length=10, blank=True, null=True,
                                             choices=DrivingLicenseType.choices)
 
-    # ===== فرمانده مستقیم =====
-    direct_commander_name = models.CharField("نام فرمانده مستقیم", max_length=100, blank=True, null=True)
-    direct_commander_phone = models.CharField("شماره تماس فرمانده مستقیم", max_length=11, blank=True, null=True)
-
     # ===== اطلاعات سیستمی/خدمتی فعلی =====
     dossier_code = models.IntegerField("کد پرونده", default=0, db_index=True, blank=True)
     dispatch_type = models.CharField("نوع اعزامی", null=True, blank=True, max_length=20, choices=DispatchType.choices)
+    training_center = models.ForeignKey(
+        TrainingCenter, null=True, blank=True, on_delete=models.SET_NULL,
+        verbose_name="مرکز آموزشی رزم مقدماتی"
+    )
 
     health_status = models.ForeignKey(
         HealthStatus, null=True, blank=True, on_delete=models.SET_NULL,
@@ -266,6 +297,25 @@ class Soldier(TimeStampedModel):
     current_location = models.ForeignKey(
         ServiceLocation, null=True, blank=True, on_delete=models.SET_NULL,
         verbose_name="محل خدمت فعلی"
+    )
+
+    # ===== فیلدهای سازمانی / یگانی =====
+    commander = models.ForeignKey(
+        Commander,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="فرمانده",
+        related_name="soldiers"
+    )
+
+    responsibility = models.ForeignKey(
+        Responsibility,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="مسئولیت",
+        related_name="soldiers"
     )
 
     expertises = models.ManyToManyField(Expertise, blank=True, verbose_name="تخصص‌ها")
@@ -342,6 +392,36 @@ class Soldier(TimeStampedModel):
             return end_date
         except Exception:
             return None
+
+    def get_type_str(self):
+        if self.dispatch_type in (DispatchType.TRAINING, DispatchType.GREEN_CARD):
+            return "سرباز"
+        elif self.dispatch_type == DispatchType.GUARD_DUTY:
+            return "پاسدار"
+        else:
+            return "-"
+
+    def service_duration(self, base='s', unit='m'):
+        """
+        base: 's' برای تاریخ شروع (service_start_date) | 'a' برای تاریخ ورود (arrival_date)
+        unit: 'm' برای تعداد کل ماه‌ها | 'd' برای باقیمانده روزها
+        """
+        from dateutil.relativedelta import relativedelta
+
+        end_date = self.service_end_date()
+        start_date = self.arrival_date if base == 'a' else self.service_start_date
+
+        if not end_date or not start_date:
+            return 0
+
+        diff = relativedelta(end_date, start_date)
+
+        if unit == 'm':
+            return (diff.years * 12) + diff.months
+        elif unit == 'd':
+            return diff.days
+
+        return 0
 
     def entitlement_allowance_days(self):
         """Maximum entitlement leave allowed based on dispatch group."""

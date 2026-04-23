@@ -323,7 +323,12 @@
 
                 <tr><td>دوره‌های گذرانده شده</td><td><span class="code">{% verbatim %}{{ soldier.completed_courses }}{% endverbatim %}</span></td></tr>
 
-                <tr><td>تاریخ پایان خدمت (محاسبه‌شده)</td><td><span class="code">{% verbatim %}{{ soldier.service_end_date|jalali }}{% endverbatim %}</span></td></tr>
+                <tr><td>تاریخ پایان خدمت (محاسبه‌شده)</td><td><span class="code">{% verbatim %}{{ soldier.service_end_date()|jalali }}{% endverbatim %}</span></td></tr>
+                <tr><td>نوع انجام وظیفه(سرباز / پاسدار)</td><td><span class="code">{% verbatim %}{{ soldier.get_type_str() }}{% endverbatim %}</span></td></tr>
+                <tr><td>مدت خدمت انجام شده (ماه)</td><td><span class="code">{% verbatim %}{{ soldier.service_duration("s","m") }}{% endverbatim %}</span></td></tr>
+                <tr><td>مدت خدمت انجام شده (روز)</td><td><span class="code">{% verbatim %}{{ soldier.service_duration("s","d") }}{% endverbatim %}</span></td></tr>
+                <tr><td>مدت خدمت در ناحیه (ماه)</td><td><span class="code">{% verbatim %}{{ soldier.service_duration("a","m") }}{% endverbatim %}</span></td></tr>
+                <tr><td>مدت خدمت در ناحیه (روز)</td><td><span class="code">{% verbatim %}{{ soldier.service_duration("a","d") }}{% endverbatim %}</span></td></tr>
                 </tbody>
             </table>
         </div>

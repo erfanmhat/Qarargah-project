@@ -2,13 +2,14 @@ from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
 from jalali_date.admin import ModelAdminJalaliMixin
 
+from core.forms import SoldierForm, LeaveForm
 from core.models import (
     Soldier, Leave,
     ServiceLocation, HealthStatus, ServiceStatus, Expertise,
     ServiceReductionType, SystemSetting, SoldierServiceReduction,
-    MilitaryRankRef, ExtraServiceType, SoldierExtraServiceLog, DocumentTemplateInput, DocumentTemplate
+    MilitaryRankRef, ExtraServiceType, SoldierExtraServiceLog, DocumentTemplateInput, DocumentTemplate,
+    Commander, Responsibility, TrainingCenter
 )
-from core.forms import SoldierForm, LeaveForm
 from core.templatetags.jalali import to_jalali
 
 
@@ -48,25 +49,27 @@ class SoldierAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
         'birth_place',
         'issue_place',
         'phone_personal',
-        'personal_mobile_phone',
-        'military_mobile_phone',
     )
 
     list_filter = (
         'dispatch_type', 'service_status', 'health_status',
-        'current_location', 'expertises',
+        'training_center', 'current_location', 'expertises',
         'marital_status', 'blood_group',
         'has_driving_license',
     )
 
     readonly_fields = ('jalali_service_end',)
 
+    # اضافه شدن فرمانده و مسئولیت برای قابلیت سرچ
     autocomplete_fields = (
         'current_location',
         'service_status',
         'health_status',
+        'training_center',
         'military_rank_ref',
         'extra_service_type',
+        'commander',
+        'responsibility',
     )
 
     filter_horizontal = ('expertises',)
@@ -99,16 +102,12 @@ class SoldierAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
         }),
         ("اطلاعات تماس", {
             'fields': (
-                ('phone_personal', 'personal_mobile_phone'),
-                ('military_mobile_phone', 'phone_parent'),
-                ('father_home_phone', 'personal_home_phone'),
-                ('phone_home', 'phone_work'),
+                'phone_personal',
+                'phone_parent',
             )
         }),
         ("آدرس‌ها", {
             'fields': (
-                'father_home_address',
-                'personal_home_address',
                 'home_address',
                 'postal_code',
             )
@@ -126,8 +125,9 @@ class SoldierAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
                 ('dispatch_type', 'guard_code'),
                 ('service_start_date', 'arrival_date'),
                 ('current_location', 'service_status'),
-                'health_status',
+                ('health_status', 'training_center'),
                 ('extra_service_days', 'extra_service_type'),
+                ('commander', 'responsibility')
             )
         }),
         ("تاریخ پایان خدمت", {
@@ -172,6 +172,24 @@ class LeaveAdmin(ModelAdminJalaliMixin, ImportExportModelAdmin):
         return to_jalali(obj.start_date, "%Y/%m/%d")
 
     jalali_start.short_description = "تاریخ رفت"
+
+
+@admin.register(TrainingCenter)
+class TrainingCenterAdmin(admin.ModelAdmin):
+    list_display = ('title',)
+    search_fields = ('title',)
+
+
+@admin.register(Commander)
+class CommanderAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)  # برای کارکرد autocomplete در سرباز الزامی است
+
+
+@admin.register(Responsibility)
+class ResponsibilityAdmin(admin.ModelAdmin):
+    list_display = ('title',)
+    search_fields = ('title',)  # برای کارکرد autocomplete در سرباز الزامی است
 
 
 # ==================== ثبت بقیه مدل‌ها ====================
