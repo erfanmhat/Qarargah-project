@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}سربازان — قرارگاه{% endblock %}
+{% block breadcrumb %}سربازان{% endblock %}
+{% block title_icon %}fas fa-users{% endblock %}
+{% block page_title %}سربازان{% endblock %}
+{% block page_subtitle %}لیست کامل سربازان{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'core:soldier_add' %}" class="btn btn-primary btn-sm">
+    <i class="fas fa-plus"></i> افزودن سرباز
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+@media(max-width:768px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+
+.filter-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+.filter-bar .filter-item { display: flex; flex-direction: column; gap: 4px; }
+.filter-bar .filter-item label { font-size: .75rem; font-weight: 600; color: var(--text-muted); }
+
+.soldiers-table-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.health-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .82rem;
+}
+.health-dot::before {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.health-dot.healthy::before   { background: var(--accent-green); box-shadow: 0 0 0 2px rgba(63,185,80,.2); }
+.health-dot.psych_exempt::before  { background: var(--accent-yellow); box-shadow: 0 0 0 2px rgba(210,153,34,.2); }
+.health-dot.other_exempt::before  { background: var(--accent-blue); box-shadow: 0 0 0 2px rgba(88,166,255,.2); }
+
+.status-flag {
+    font-size: .72rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+.flag-active   { background: rgba(63,185,80,.1);  color: var(--accent-green); }
+.flag-leave    { background: rgba(163,113,247,.12); color: var(--accent-purple); }
+.flag-inactive { background: rgba(139,148,158,.1); color: var(--text-muted); }
+
+.action-btns { display: flex; gap: 4px; }
+.btn-icon {
+    width: 30px; height: 30px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem;
+    transition: var(--transition);
+    text-decoration: none;
+}
+.btn-icon:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-active); }
+.btn-icon.danger:hover { color: var(--accent-red); border-color: rgba(248,81,73,.4); background: rgba(248,81,73,.05); }
+
+.empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+}
+.empty-state i { font-size: 2.5rem; margin-bottom: 12px; display: block; opacity: .4; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- آمار سریع -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+        <div>
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">کل سربازان فعال</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-shield-alt"></i></div>
+        <div>
+            <div class="stat-value">{{ stats.healthy }}</div>
+            <div class="stat-label">سالم</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(210,153,34,.15);color:var(--accent-yellow)">
+            <i class="fas fa-brain"></i>
+        </div>
+        <div>
+            <div class="stat-value">{{ stats.psych }}</div>
+            <div class="stat-label">معاف اعصاب‌وروان</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">
+            <i class="fas fa-star-of-life"></i>
+        </div>
+        <div>
+            <div class="stat-value">{{ stats.other }}</div>
+            <div class="stat-label">معاف سایر</div>
+        </div>
+    </div>
+</div>
+
+<!-- فیلتر -->
+<div class="filter-bar">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;width:100%">
+        <div class="filter-item" style="flex:1;min-width:180px">
+            <label>جستجو</label>
+            {{ form.search }}
+        </div>
+        <div class="filter-item">
+            <label>وضعیت سلامت</label>
+            {{ form.health_type }}
+        </div>
+        <div class="filter-item">
+            <label>وضعیت</label>
+            {{ form.status }}
+        </div>
+        <div class="filter-item">
+            <button type="submit" class="btn btn-secondary btn-sm">
+                <i class="fas fa-filter"></i> اعمال
+            </button>
+            <a href="{% url 'core:soldier_list' %}" class="btn btn-outline-secondary btn-sm mt-1">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- جدول -->
+<div class="soldiers-table-wrap">
+    {% if soldiers %}
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>نام و نام خانوادگی</th>
+                <th>کد ملی</th>
+                <th>وضعیت سلامت</th>
+                <th>نقش</th>
+                <th>وضعیت</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for soldier in soldiers %}
+            <tr>
+                <td style="color:var(--text-muted);font-size:.8rem">{{ forloop.counter }}</td>
+                <td>
+                    <a href="{% url 'core:soldier_profile' soldier.pk %}"
+                       style="font-weight:600;color:var(--text-primary);text-decoration:none">
+                        {{ soldier.full_name }}
+                    </a>
+                    {% if soldier.has_driving_license %}
+                        <i class="fas fa-car" title="دارای گواهینامه"
+                           style="font-size:.7rem;color:var(--text-muted);margin-right:4px"></i>
+                    {% endif %}
+                </td>
+                <td style="font-size:.82rem;color:var(--text-secondary);direction:ltr;text-align:right">
+                    {{ soldier.national_code }}
+                </td>
+                <td>
+                    <span class="health-dot {{ soldier.health_type }}">
+                        {{ soldier.get_health_type_display }}
+                    </span>
+                </td>
+                <td style="font-size:.82rem;color:var(--text-secondary)">
+                    {{ soldier.role.title|default:"—" }}
+                </td>
+                <td>
+                    {% if not soldier.is_active %}
+                        <span class="status-flag flag-inactive">ترخیص</span>
+                    {% elif soldier.pk in on_leave_today %}
+                        <span class="status-flag flag-leave">
+                            <i class="fas fa-plane-departure"></i> مرخصی
+                        </span>
+                    {% else %}
+                        <span class="status-flag flag-active">در خدمت</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="action-btns">
+                        <a href="{% url 'core:soldier_profile' soldier.pk %}"
+                           class="btn-icon" title="پروفایل">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'core:soldier_edit' soldier.pk %}"
+                           class="btn-icon" title="ویرایش">
+                            <i class="fas fa-pen"></i>
+                        </a>
+                        <a href="{% url 'core:leave_add' soldier.pk %}"
+                           class="btn-icon" title="ثبت مرخصی">
+                            <i class="fas fa-calendar-plus"></i>
+                        </a>
+                        <button class="btn-icon danger"
+                                onclick="confirmDelete({{ soldier.pk }}, '{{ soldier.full_name }}')"
+                                title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users-slash"></i>
+        <p>سربازی یافت نشد.</p>
+        <a href="{% url 'core:soldier_add' %}" class="btn btn-primary btn-sm mt-2">
+            <i class="fas fa-plus"></i> افزودن سرباز
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete confirm form -->
+<form id="deleteForm" method="post" action="" style="display:none">{% csrf_token %}</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(pk, name) {
+    if (!confirm('سرباز «' + name + '» حذف شود؟')) return;
+    var form = document.getElementById('deleteForm');
+    form.action = '/soldiers/' + pk + '/delete/';
+    form.submit();
+}
+</script>
+{% endblock %}

@@ -1,7 +1,7 @@
 import os
 from waitress import serve
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "soldier_management.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "qarargah.settings")
 
 import django
 from django.core.management import call_command
@@ -57,4 +57,4 @@ from django.core.wsgi import get_wsgi_application  # noqa: E402
 app = get_wsgi_application()
 
 if __name__ == "__main__":
-    serve(app, host="0.0.0.0", port=9000, threads=2)
+    serve(app, host="0.0.0.0", port=9999, threads=2)

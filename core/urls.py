@@ -1,29 +1,53 @@
 from django.urls import path
+from .views import schedule, soldiers, leaves
 
-from core.views_core import panel_settings, panel_reports, panel_dashboard, panel_logout, panel_login, \
-    calculate_jalali_diff
-from core.views_import_export_excel import export_leaves_excel, \
-    export_soldiers_excel, soldier_leaves_excel, soldier_profile_excel
-from core.views_soldier_leave import panel_search, panel_leave_delete, panel_leaves, panel_soldier_delete, \
-    panel_soldiers, generate_document, panel_soldier_detail, document_templates_help
+app_name = 'core'
 
 urlpatterns = [
-    path('login/', panel_login, name='panel_login'),
-    path('logout/', panel_logout, name='panel_logout'),
-    path('', panel_dashboard, name='panel_dashboard'),
-    path('soldiers/', panel_soldiers, name='panel_soldiers'),
-    path('soldier/<int:soldier_id>/', panel_soldier_detail, name='panel_soldier_detail'),
-    path("dashboard/soldier/<int:soldier_id>/excel/profile/", soldier_profile_excel, name="soldier_profile_excel"),
-    path("dashboard/soldier/<int:soldier_id>/excel/leaves/", soldier_leaves_excel, name="soldier_leaves_excel"),
-    path('soldier/<int:soldier_id>/delete/', panel_soldier_delete, name='panel_soldier_delete'),
-    path('soldiers/export/', export_soldiers_excel, name='export_soldiers_excel'),
-    path('leaves/', panel_leaves, name='panel_leaves'),
-    path('leave/<int:leave_id>/delete/', panel_leave_delete, name='panel_leave_delete'),
-    path('leaves/export/', export_leaves_excel, name='export_leaves_excel'),
-    path('search/', panel_search, name='panel_search'),
-    path('reports/', panel_reports, name='panel_reports'),
-    path('settings/', panel_settings, name='panel_settings'),
-    path('calculate_jalali_diff/', calculate_jalali_diff, name='calculate_jalali_diff'),
-    path("soldiers/<int:soldier_id>/documents/<int:template_id>/", generate_document, name="generate_document"),
-    path("documents/help/", document_templates_help, name="document_templates_help"),
+    # ===================
+    # Schedule URLs
+    # ===================
+    # صفحه اصلی برنامه نگهبانی
+    path('', schedule.schedule_index, name='schedule_index'),
+    # نمایش برنامه یک روز خاص
+    path('schedule/<str:date>/', schedule.schedule_day, name='schedule_day'),
+    # ایجاد برنامه جدید
+    path('schedule/generate/', schedule.schedule_generate, name='schedule_generate'),
+    # نهایی کردن برنامه
+    path('schedule/<int:schedule_id>/finalize/', schedule.schedule_finalize, name='schedule_finalize'),
+    # خارج کردن برنامه از حالت نهایی
+    path('schedule/<int:schedule_id>/unfinalize/', schedule.schedule_unfinalize, name='schedule_unfinalize'),
+    # API endpoints for AJAX calls
+    # پیشنهاد سرباز برای یک پست
+    path('ajax/suggest-for-post/', schedule.suggest_for_post, name='suggest_for_post'),
+    # انتساب یک سرباز به پست
+    path('ajax/assign-soldier/', schedule.assign_soldier, name='assign_soldier'),
+    # حذف انتساب
+    path('ajax/remove-assignment/', schedule.remove_assignment, name='remove_assignment'),
+
+
+    # ===================
+    # Soldiers URLs
+    # ===================
+    # لیست سربازها
+    path('soldiers/', soldiers.soldier_list, name='soldier_list'),
+    # افزودن سرباز جدید
+    path('soldiers/add/', soldiers.soldier_add, name='soldier_add'),
+    # پروفایل سرباز
+    path('soldiers/<int:soldier_id>/', soldiers.soldier_profile, name='soldier_profile'),
+    # ویرایش اطلاعات سرباز
+    path('soldiers/<int:soldier_id>/edit/', soldiers.soldier_edit, name='soldier_edit'),
+    # حذف سرباز
+    path('soldiers/<int:soldier_id>/delete/', soldiers.soldier_delete, name='soldier_delete'),
+
+
+    # ===================
+    # Leaves URLs
+    # ===================
+    # لیست مرخصی‌ها
+    path('leaves/', leaves.leave_list, name='leave_list'),
+    # افزودن مرخصی برای یک سرباز
+    path('soldiers/<int:soldier_id>/leaves/add/', leaves.leave_add, name='leave_add'),
+    # حذف مرخصی
+    path('leaves/<int:leave_id>/delete/', leaves.leave_delete, name='leave_delete'),
 ]

@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}مرخصی‌ها{% endblock %}
+
+{% block breadcrumb %}
+<span>قرارگاه</span>
+<i class="fas fa-chevron-left mx-1" style="font-size:.7rem;"></i>
+<span>مرخصی‌ها</span>
+{% endblock %}
+
+{% block title_icon %}<i class="fas fa-calendar-check"></i>{% endblock %}
+{% block page_title %}مدیریت مرخصی{% endblock %}
+{% block page_subtitle %}ثبت و پیگیری مرخصی سربازان{% endblock %}
+
+{% block page_actions %}
+<button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addLeaveModal">
+  <i class="fas fa-plus me-1"></i> مرخصی جدید
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- فیلترها -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small mb-1">از تاریخ</label>
+        <input type="text" name="date_from" class="form-control form-control-sm datepicker"
+               value="{{ request.GET.date_from }}" placeholder="۱۴۰۵/۰۱/۰۱">
+      </div>
+      <div class="col-auto">
+        <label class="form-label small mb-1">تا تاریخ</label>
+        <input type="text" name="date_to" class="form-control form-control-sm datepicker"
+               value="{{ request.GET.date_to }}" placeholder="۱۴۰۵/۰۱/۳۱">
+      </div>
+      <div class="col-auto">
+        <label class="form-label small mb-1">وضعیت</label>
+        <select name="status" class="form-select form-select-sm">
+          <option value="">همه</option>
+          <option value="pending"   {% if request.GET.status == 'pending'   %}selected{% endif %}>در انتظار</option>
+          <option value="approved"  {% if request.GET.status == 'approved'  %}selected{% endif %}>تایید شده</option>
+          <option value="rejected"  {% if request.GET.status == 'rejected'  %}selected{% endif %}>رد شده</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label small mb-1">سرباز</label>
+        <input type="text" name="soldier" class="form-control form-control-sm"
+               value="{{ request.GET.soldier }}" placeholder="جستجوی نام...">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="fas fa-search me-1"></i>فیلتر
+        </button>
+        <a href="{% url 'leave-list' %}" class="btn btn-outline-secondary btn-sm ms-1">پاک‌کردن</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- جدول -->
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>نام سرباز</th>
+            <th>نوع مرخصی</th>
+            <th>از تاریخ</th>
+            <th>تا تاریخ</th>
+            <th>مدت (روز)</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for leave in leaves %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-sm">{{ leave.soldier.name|first }}</div>
+                {{ leave.soldier.name }}
+              </div>
+            </td>
+            <td>{{ leave.get_leave_type_display }}</td>
+            <td>{{ leave.start_date|date:"Y/m/d" }}</td>
+            <td>{{ leave.end_date|date:"Y/m/d" }}</td>
+            <td>{{ leave.duration }}</td>
+            <td>
+              {% if leave.status == 'approved' %}
+                <span class="badge bg-success">تایید شده</span>
+              {% elif leave.status == 'pending' %}
+                <span class="badge bg-warning text-dark">در انتظار</span>
+              {% else %}
+                <span class="badge bg-danger">رد شده</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                {% if leave.status == 'pending' %}
+                <button class="btn btn-outline-success btn-approve" data-id="{{ leave.id }}" title="تایید">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-reject" data-id="{{ leave.id }}" title="رد">
+                  <i class="fas fa-times"></i>
+                </button>
+                {% endif %}
+                <button class="btn btn-outline-primary btn-edit-leave"
+                        data-id="{{ leave.id }}"
+                        data-bs-toggle="modal" data-bs-target="#addLeaveModal"
+                        title="ویرایش">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-delete-leave" data-id="{{ leave.id }}" title="حذف">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">
+              <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+              هیچ مرخصی‌ای یافت نشد
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if leaves.has_other_pages %}
+  <div class="card-footer d-flex justify-content-center">
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if leaves.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ leaves.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">قبلی</a>
+        </li>
+        {% endif %}
+        {% for num in leaves.paginator.page_range %}
+        <li class="page-item {% if leaves.number == num %}active{% endif %}">
+          <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if leaves.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ leaves.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">بعدی</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+
+<!-- مودال ثبت/ویرایش مرخصی -->
+<div class="modal fade" id="addLeaveModal" tabindex="-1" aria-labelledby="addLeaveModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addLeaveModalLabel">
+          <i class="fas fa-calendar-plus me-2"></i>ثبت مرخصی
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="leaveForm" method="post">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">سرباز <span class="text-danger">*</span></label>
+            <select name="soldier" id="soldierSelect" class="form-select" required>
+              <option value="">انتخاب کنید...</option>
+              {% for s in all_soldiers %}
+              <option value="{{ s.id }}">{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">نوع مرخصی <span class="text-danger">*</span></label>
+            <select name="leave_type" class="form-select" required>
+              <option value="normal">عادی</option>
+              <option value="medical">پزشکی</option>
+              <option value="emergency">اضطراری</option>
+              <option value="reward">پاداشی</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">از تاریخ <span class="text-danger">*</span></label>
+              <input type="text" name="start_date" class="form-control datepicker" required placeholder="۱۴۰۵/۰۱/۰۱">
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">تا تاریخ <span class="text-danger">*</span></label>
+              <input type="text" name="end_date" class="form-control datepicker" required placeholder="۱۴۰۵/۰۱/۰۳">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">توضیحات</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="در صورت نیاز توضیح دهید..."></textarea>
+          </div>
+          <div id="leaveFormError" class="alert alert-danger d-none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-save me-1"></i>ذخیره
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function () {
+  // datepicker init
+  $('.datepicker').persianDatepicker({
+    format: 'YYYY/MM/DD',
+    autoClose: true,
+    initialValue: false,
+  });
+
+  // تایید مرخصی
+  $(document).on('click', '.btn-approve', function () {
+    const id = $(this).data('id');
+    if (!confirm('مرخصی تایید شود؟')) return;
+    $.post(`/api/leaves/${id}/approve/`, { csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val() })
+      .done(() => location.reload())
+      .fail(() => alert('خطا در تایید'));
+  });
+
+  // رد مرخصی
+  $(document).on('click', '.btn-reject', function () {
+    const id = $(this).data('id');
+    if (!confirm('مرخصی رد شود؟')) return;
+    $.post(`/api/leaves/${id}/reject/`, { csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val() })
+      .done(() => location.reload())
+      .fail(() => alert('خطا در رد مرخصی'));
+  });
+
+  // حذف
+  $(document).on('click', '.btn-delete-leave', function () {
+    const id = $(this).data('id');
+    if (!confirm('این مرخصی حذف شود؟')) return;
+    $.ajax({
+      url: `/api/leaves/${id}/`,
+      method: 'DELETE',
+      headers: { 'X-CSRFToken': $('meta[name=csrf-token]').attr('content') },
+    }).done(() => location.reload()).fail(() => alert('خطا در حذف'));
+  });
+
+  // ارسال فرم
+  $('#leaveForm').on('submit', function (e) {
+    e.preventDefault();
+    const data = $(this).serialize();
+    $.post('/api/leaves/', data)
+      .done(() => { $('#addLeaveModal').modal('hide'); location.reload(); })
+      .fail(xhr => {
+        const msg = xhr.responseJSON?.detail || 'خطا در ذخیره';
+        $('#leaveFormError').text(msg).removeClass('d-none');
+      });
+  });
+});
+</script>
+{% endblock %}

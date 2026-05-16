@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+{% block title %}برنامه روزانه — قرارگاه{% endblock %}
+{% block breadcrumb %}برنامه روزانه{% endblock %}
+{% block title_icon %}fas fa-calendar-day{% endblock %}
+{% block page_title %}برنامه نگهبانی{% endblock %}
+{% block page_subtitle %}امروز، فردا و پس‌فردا{% endblock %}
+
+{% block page_actions %}
+<a href="#" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+    <i class="fas fa-print"></i> چاپ
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.day-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+}
+.day-tab {
+    padding: 10px 22px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: var(--transition);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.day-tab:hover { color: var(--text-primary); background: var(--bg-card-hover); }
+.day-tab.active { color: var(--accent-green); border-bottom-color: var(--accent-green); }
+.day-tab .day-label { font-size: .72rem; font-weight: 400; color: var(--text-muted); display: block; }
+.day-tab .day-date  { font-size: .88rem; }
+
+.day-panel { display: none; }
+.day-panel.active { display: block; }
+
+/* وضعیت‌نمای بالای هر روز */
+.day-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+}
+.day-status-info { display: flex; align-items: center; gap: 16px; font-size: .82rem; }
+.day-status-actions { display: flex; gap: 8px; }
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+.status-pill.finalized { background: rgba(63,185,80,.12); color: var(--accent-green); border: 1px solid rgba(63,185,80,.3); }
+.status-pill.draft     { background: rgba(210,153,34,.12); color: var(--accent-yellow); border: 1px solid rgba(210,153,34,.3); }
+.status-pill.empty     { background: rgba(139,148,158,.1); color: var(--text-muted); border: 1px solid var(--border-color); }
+
+/* گرید پست‌ها */
+.posts-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.post-row {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition);
+}
+.post-row:hover { border-color: rgba(88,166,255,.3); }
+
+.post-row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+.post-name {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.post-health-tag {
+    font-size: .68rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+.tag-healthy { background: rgba(63,185,80,.12); color: var(--accent-green); }
+.tag-psych   { background: rgba(210,153,34,.12); color: var(--accent-yellow); }
+.tag-other   { background: rgba(88,166,255,.12); color: var(--accent-blue); }
+.tag-mixed   { background: rgba(163,113,247,.12); color: var(--accent-purple); }
+
+.post-row-cells {
+    display: flex;
+    gap: 0;
+}
+
+/* سلول یک پاس */
+.shift-cell {
+    flex: 1;
+    border-left: 1px solid var(--border-color);
+    padding: 10px 12px;
+    min-height: 64px;
+    position: relative;
+}
+.shift-cell:last-child { border-left: none; }
+
+.shift-label {
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.soldier-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 5px 8px;
+    margin-bottom: 4px;
+    font-size: .8rem;
+    gap: 6px;
+    transition: var(--transition);
+}
+.soldier-chip:hover { border-color: var(--accent-blue); }
+.soldier-chip .chip-name { font-weight: 600; color: var(--text-primary); flex: 1; }
+.soldier-chip .chip-badge {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.chip-badge.healthy { background: var(--accent-green); }
+.chip-badge.psych   { background: var(--accent-yellow); }
+.chip-badge.other   { background: var(--accent-blue); }
+
+.btn-remove-chip {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: .7rem;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: var(--transition);
+    line-height: 1;
+}
+.btn-remove-chip:hover { color: var(--accent-red); background: rgba(248,81,73,.1); }
+
+.btn-add-soldier {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: .75rem;
+    padding: 5px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-family: 'Vazirmatn', sans-serif;
+}
+.btn-add-soldier:hover {
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+    background: rgba(63,185,80,.05);
+}
+
+/* پست بدون پاس‌بندی (راننده، مخابرات ...) */
+.no-shift-cell {
+    padding: 10px 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    min-height: 56px;
+}
+
+/* Modal پیشنهاد */
+.suggest-modal .modal-dialog { max-width: 540px; }
+
+.suggest-section-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    padding: 8px 0 4px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 8px;
+}
+
+.suggest-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    margin-bottom: 6px;
+    transition: var(--transition);
+    cursor: pointer;
+    gap: 10px;
+}
+.suggest-item:hover { border-color: var(--accent-green); background: rgba(63,185,80,.05); }
+.suggest-item.warn  { border-color: rgba(248,81,73,.3); background: rgba(248,81,73,.03); }
+.suggest-item.warn:hover { border-color: var(--accent-red); }
+
+.suggest-item-info { flex: 1; }
+.suggest-name { font-size: .87rem; font-weight: 600; color: var(--text-primary); }
+.suggest-meta { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+.suggest-score {
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+.suggest-score.high { background: rgba(63,185,80,.12); color: var(--accent-green); }
+.suggest-score.low  { background: rgba(248,81,73,.12); color: var(--accent-red); }
+
+.suggest-loading {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-muted);
+    font-size: .85rem;
+}
+
+@media print {
+    .sidebar, .topbar, .day-tabs, .day-status-actions,
+    .btn-add-soldier, .btn-remove-chip { display: none !important; }
+    .main-content { margin: 0 !important; padding: 0 !important; }
+    .day-panel { display: block !important; }
+    .post-row { break-inside: avoid; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Tabs -->
+<div class="day-tabs">
+    {% for day in days_data %}
+    <a href="#" class="day-tab {% if forloop.first %}active{% endif %}"
+       data-tab="day-{{ forloop.counter }}">
+        <span>
+            <span class="day-label">
+                {% if forloop.first %}امروز
+                {% elif forloop.counter == 2 %}فردا
+                {% else %}پس‌فردا{% endif %}
+            </span>
+            <span class="day-date">{{ day.date }}</span>
+        </span>
+        {% if day.is_finalized %}
+            <i class="fas fa-lock text-green" style="font-size:.7rem"></i>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Day Panels -->
+{% for day in days_data %}
+<div class="day-panel {% if forloop.first %}active{% endif %}" id="day-{{ forloop.counter }}">
+
+    <!-- Status Bar -->
+    <div class="day-status-bar">
+        <div class="day-status-info">
+            <span>
+                {% if day.is_finalized %}
+                    <span class="status-pill finalized"><i class="fas fa-lock"></i> نهایی شده</span>
+                {% elif day.schedule %}
+                    <span class="status-pill draft"><i class="fas fa-pencil-alt"></i> در حال تنظیم</span>
+                {% else %}
+                    <span class="status-pill empty"><i class="fas fa-circle"></i> بدون برنامه</span>
+                {% endif %}
+            </span>
+            <span style="font-size:.8rem;color:var(--text-muted)">
+                <i class="fas fa-calendar-alt me-1"></i>{{ day.date }}
+            </span>
+        </div>
+        <div class="day-status-actions">
+            {% if not day.is_finalized %}
+            <form method="post"
+                  action="{% url 'core:schedule_generate' day.date.year day.date.month day.date.day %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-magic"></i> پیشنهاد خودکار
+                </button>
+            </form>
+            <form method="post"
+                  action="{% url 'core:schedule_finalize' day.date.year day.date.month day.date.day %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-lock"></i> نهایی کن
+                </button>
+            </form>
+            {% else %}
+            <form method="post"
+                  action="{% url 'core:schedule_unfinalize' day.date.year day.date.month day.date.day %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-lock-open"></i> باز کردن قفل
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Posts Grid -->
+    <div class="posts-grid">
+        {% for post_data in day.posts %}
+        {% with post=post_data.post_type %}
+        <div class="post-row">
+            <div class="post-row-header">
+                <div class="post-name">
+                    <i class="fas fa-shield-alt" style="color:var(--text-muted);font-size:.8rem"></i>
+                    {{ post.name }}
+                    <!-- تگ وضعیت سلامت مجاز -->
+                    {% for ht in post.allowed_health_types %}
+                        {% if ht == 'healthy' %}<span class="post-health-tag tag-healthy">سالم</span>
+                        {% elif ht == 'psych_exempt' %}<span class="post-health-tag tag-psych">اعصاب‌وروان</span>
+                        {% elif ht == 'other_exempt' %}<span class="post-health-tag tag-other">سایر</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <small style="color:var(--text-muted);font-size:.75rem">
+                    {{ post.soldiers_per_shift }} نفر
+                    {% if post.is_shift_based %} × {{ post.shift_count }} پاس{% endif %}
+                </small>
+            </div>
+
+            {% if post.is_shift_based %}
+            <!-- پست با پاس‌بندی -->
+            <div class="post-row-cells">
+                {% for shift_data in post_data.shifts %}
+                <div class="shift-cell">
+                    <div class="shift-label">
+                        <span>{{ shift_data.shift.name }}</span>
+                        <span style="font-weight:400;font-size:.65rem">
+                            {{ shift_data.shift.start_time|time:"H:i" }}–{{ shift_data.shift.end_time|time:"H:i" }}
+                        </span>
+                    </div>
+
+                    {% for pa in shift_data.assignments %}
+                    <div class="soldier-chip" id="chip-{{ pa.pk }}">
+                        <span class="chip-badge {{ pa.soldier.health_type }}"></span>
+                        <span class="chip-name">{{ pa.soldier.full_name }}</span>
+                        {% if not day.is_finalized %}
+                        <button class="btn-remove-chip"
+                                data-assignment-id="{{ pa.pk }}"
+                                title="حذف">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    {% if not day.is_finalized and shift_data.empty_slots > 0 %}
+                    <button class="btn-add-soldier open-suggest"
+                            data-post-id="{{ post.pk }}"
+                            data-shift-id="{{ shift_data.shift.pk }}"
+                            data-date="{{ day.date|date:'Y-m-d' }}"
+                            data-post-name="{{ post.name }}"
+                            data-shift-name="{{ shift_data.shift.name }}">
+                        <i class="fas fa-plus"></i>
+                        {% if shift_data.empty_slots == 1 %}انتخاب سرباز{% else %}{{ shift_data.empty_slots }} جای خالی{% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <!-- پست بدون پاس‌بندی -->
+            <div class="no-shift-cell">
+                {% for shift_data in post_data.shifts %}
+                    {% for pa in shift_data.assignments %}
+                    <div class="soldier-chip" id="chip-{{ pa.pk }}" style="min-width:160px">
+                        <span class="chip-badge {{ pa.soldier.health_type }}"></span>
+                        <span class="chip-name">{{ pa.soldier.full_name }}</span>
+                        {% if not day.is_finalized %}
+                        <button class="btn-remove-chip"
+                                data-assignment-id="{{ pa.pk }}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    {% if not day.is_finalized and shift_data.empty_slots > 0 %}
+                    <button class="btn-add-soldier open-suggest"
+                            style="min-width:140px;flex:0 0 auto"
+                            data-post-id="{{ post.pk }}"
+                            data-shift-id=""
+                            data-date="{{ day.date|date:'Y-m-d' }}"
+                            data-post-name="{{ post.name }}"
+                            data-shift-name="">
+                        <i class="fas fa-plus"></i> انتخاب
+                    </button>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div><!-- /posts-grid -->
+
+</div><!-- /day-panel -->
+{% endfor %}
+
+<!-- ===== Modal پیشنهاد سرباز ===== -->
+<div class="modal fade suggest-modal" id="suggestModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="suggestModalTitle">انتخاب سرباز</h5>
+                    <small id="suggestModalSub" style="color:var(--text-muted);font-size:.75rem"></small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="suggestModalBody">
+                <div class="suggest-loading">
+                    <i class="fas fa-spinner fa-spin fa-lg mb-2"></i><br>در حال بارگذاری ...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    // ── Tab switching ──
+    document.querySelectorAll('.day-tab').forEach(function (tab) {
+        tab.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ── Modal باز کردن ──
+    var currentPostId   = null;
+    var currentShiftId  = null;
+    var currentDate     = null;
+    var suggestModal    = new bootstrap.Modal(document.getElementById('suggestModal'));
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.open-suggest');
+        if (!btn) return;
+
+        currentPostId  = btn.dataset.postId;
+        currentShiftId = btn.dataset.shiftId || null;
+        currentDate    = btn.dataset.date;
+
+        document.getElementById('suggestModalTitle').textContent = btn.dataset.postName;
+        document.getElementById('suggestModalSub').textContent   = btn.dataset.shiftName || 'بدون پاس';
+        document.getElementById('suggestModalBody').innerHTML =
+            '<div class="suggest-loading"><i class="fas fa-spinner fa-spin fa-lg mb-2"></i><br>در حال بارگذاری ...</div>';
+
+        suggestModal.show();
+        loadSuggestions();
+    });
+
+    function loadSuggestions() {
+        var params = new URLSearchParams({
+            post_type_id: currentPostId,
+            date: currentDate,
+        });
+        if (currentShiftId) params.append('shift_id', currentShiftId);
+
+        fetch("{% url 'core:suggest_for_post' %}?" + params.toString(), {
+            headers: { 'X-CSRFToken': window.CSRF_TOKEN }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) { renderSuggestions(data); })
+        .catch(function () {
+            document.getElementById('suggestModalBody').innerHTML =
+                '<div class="suggest-loading text-red"><i class="fas fa-exclamation-circle"></i> خطا در بارگذاری</div>';
+        });
+    }
+
+    function renderSuggestions(data) {
+        var html = '';
+
+        if (data.preferred.length === 0 && data.not_recommended.length === 0) {
+            html = '<div class="suggest-loading"><i class="fas fa-users-slash fa-lg mb-2"></i><br>سرباز واجد شرایطی وجود ندارد</div>';
+            document.getElementById('suggestModalBody').innerHTML = html;
+            return;
+        }
+
+        if (data.preferred.length > 0) {
+            html += '<div class="suggest-section-label"><i class="fas fa-check-circle me-1 text-green"></i> پیشنهادی</div>';
+            data.preferred.forEach(function (s) {
+                html += renderSoldierItem(s, false);
+            });
+        }
+
+        if (data.not_recommended.length > 0) {
+            html += '<div class="suggest-section-label mt-3"><i class="fas fa-exclamation-triangle me-1 text-yellow"></i> کمتر از ۲۴ ساعت از پست قبلی</div>';
+            data.not_recommended.forEach(function (s) {
+                html += renderSoldierItem(s, true);
+            });
+        }
+
+        document.getElementById('suggestModalBody').innerHTML = html;
+
+        // کلیک روی هر سرباز
+        document.querySelectorAll('.suggest-item').forEach(function (item) {
+            item.addEventListener('click', function () {
+                assignSoldier(item.dataset.soldierId, item.dataset.soldierName);
+            });
+        });
+    }
+
+    function renderSoldierItem(s, isWarn) {
+        var scoreClass = s.score >= 3 ? 'high' : (s.under_24h ? 'low' : '');
+        var healthIcon = s.health_type === 'healthy' ? 'text-green' :
+                         s.health_type === 'psych_exempt' ? 'text-yellow' : 'text-blue';
+
+        return '<div class="suggest-item ' + (isWarn ? 'warn' : '') + '" ' +
+               'data-soldier-id="' + s.id + '" data-soldier-name="' + s.name + '">' +
+               '  <span class="fas fa-circle ' + healthIcon + '" style="font-size:.55rem;flex-shrink:0"></span>' +
+               '  <div class="suggest-item-info">' +
+               '    <div class="suggest-name">' + s.name + '</div>' +
+               '    <div class="suggest-meta">' + (s.role || s.health_label) + ' &mdash; ' + s.score_label + '</div>' +
+               '  </div>' +
+               '  <span class="suggest-score ' + scoreClass + '">امتیاز ' + s.score + '</span>' +
+               '  <i class="fas fa-chevron-left" style="font-size:.7rem;color:var(--text-muted)"></i>' +
+               '</div>';
+    }
+
+    function assignSoldier(soldierId, soldierName) {
+        fetch("{% url 'core:assign_soldier' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.CSRF_TOKEN,
+            },
+            body: JSON.stringify({
+                soldier_id: parseInt(soldierId),
+                post_type_id: parseInt(currentPostId),
+                shift_id: currentShiftId ? parseInt(currentShiftId) : null,
+                date: currentDate,
+            })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                suggestModal.hide();
+                // reload ساده — در نسخه بعدی می‌توان DOM update کرد
+                location.reload();
+            } else {
+                alert('خطا: ' + data.error);
+            }
+        });
+    }
+
+    // ── حذف تخصیص ──
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn-remove-chip');
+        if (!btn) return;
+
+        if (!confirm('این سرباز از پست حذف شود؟')) return;
+
+        var assignmentId = btn.dataset.assignmentId;
+        fetch('/schedule/assignment/' + assignmentId + '/remove/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': window.CSRF_TOKEN },
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                var chip = document.getElementById('chip-' + assignmentId);
+                if (chip) chip.remove();
+            } else {
+                alert('خطا: ' + data.error);
+            }
+        });
+    });
+
+})();
+</script>
+{% endblock %}
