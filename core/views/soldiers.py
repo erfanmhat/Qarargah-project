@@ -1,139 +1,128 @@
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models import Q
+from django.core.paginator import Paginator
 from django.utils import timezone
-from django.views.decorators.http import require_POST
 
-from ..forms import SoldierFilterForm, SoldierForm
-from ..models import HealthType, PostAssignment, Soldier
+from ..models import Soldier
+from ..forms import SoldierForm, SoldierSearchForm
+from ..services import get_guard_score
 
 
 def soldier_list(request):
-    """لیست سربازان با فیلتر وضعیت سلامت و جستجو"""
-    form = SoldierFilterForm(request.GET)
-    soldiers = Soldier.objects.select_related("role").order_by("full_name")
+    soldiers = Soldier.objects.select_related("role").all()
 
-    today = timezone.now().date()
+    form = SoldierSearchForm(request.GET or None)
 
     if form.is_valid():
-        health = form.cleaned_data.get("health_type")
-        status = form.cleaned_data.get("status")
         search = form.cleaned_data.get("search")
-
-        if health:
-            soldiers = soldiers.filter(health_type=health)
-
-        if status == "active":
-            soldiers = soldiers.filter(is_active=True)
-        elif status == "on_leave":
-            soldiers = soldiers.filter(
-                is_active=True,
-                leaves__start_date__lte=today,
-                leaves__end_date__gte=today,
-            ).distinct()
+        role = form.cleaned_data.get("role")
+        is_active = form.cleaned_data.get("is_active")
 
         if search:
             soldiers = soldiers.filter(
-                full_name__icontains=search
-            ) | soldiers.filter(national_code__icontains=search)
+                Q(first_name__icontains=search)
+                | Q(last_name__icontains=search)
+                | Q(national_code__icontains=search)
+            )
 
-    # آمار سریع
-    total = Soldier.objects.filter(is_active=True).count()
-    healthy_count = Soldier.objects.filter(is_active=True, health_type=HealthType.HEALTHY).count()
-    psych_count = Soldier.objects.filter(is_active=True, health_type=HealthType.PSYCH_EXEMPT).count()
-    other_count = Soldier.objects.filter(is_active=True, health_type=HealthType.OTHER_EXEMPT).count()
+        if role:
+            soldiers = soldiers.filter(role=role)
 
-    # وضعیت مرخصی هر سرباز
-    on_leave_today = set(
-        Soldier.objects.filter(
-            leaves__start_date__lte=today,
-            leaves__end_date__gte=today,
-        ).values_list("pk", flat=True)
-    )
+        if is_active == "true":
+            soldiers = soldiers.filter(is_active=True)
+
+        if is_active == "false":
+            soldiers = soldiers.filter(is_active=False)
+
+    paginator = Paginator(soldiers.order_by("last_name"), 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        "soldiers": soldiers,
         "form": form,
-        "today": today,
-        "on_leave_today": on_leave_today,
-        "stats": {
-            "total": total,
-            "healthy": healthy_count,
-            "psych": psych_count,
-            "other": other_count,
-        },
+        "page_obj": page_obj,
     }
+
     return render(request, "core/soldiers/list.html", context)
 
 
-def soldier_add(request):
-    """افزودن سرباز جدید"""
-    if request.method == "POST":
-        form = SoldierForm(request.POST)
-        if form.is_valid():
-            soldier = form.save()
-            messages.success(request, f"سرباز «{soldier.full_name}» با موفقیت اضافه شد.")
-            return redirect("core:soldier_list")
-    else:
-        form = SoldierForm()
-
-    return render(request, "core/soldiers/form.html", {
-        "form": form,
-        "action": "add",
-        "title": "افزودن سرباز",
-    })
-
-
-def soldier_edit(request, pk):
-    """ویرایش سرباز"""
+def soldier_detail(request, pk):
     soldier = get_object_or_404(Soldier, pk=pk)
 
-    if request.method == "POST":
-        form = SoldierForm(request.POST, instance=soldier)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"اطلاعات «{soldier.full_name}» بروزرسانی شد.")
-            return redirect("core:soldier_list")
-    else:
-        form = SoldierForm(instance=soldier)
+    assignments = soldier.postassignment_set.select_related(
+        "post_type", "shift"
+    ).order_by("-created_at")
 
-    return render(request, "core/soldiers/form.html", {
-        "form": form,
-        "soldier": soldier,
-        "action": "edit",
-        "title": f"ویرایش — {soldier.full_name}",
-    })
+    leaves = soldier.leave_set.all().order_by("-start_date")
 
+    last_assignment = assignments.first()
 
-@require_POST
-def soldier_delete(request, pk):
-    """حذف سرباز"""
-    soldier = get_object_or_404(Soldier, pk=pk)
-    name = soldier.full_name
-    soldier.delete()
-    messages.success(request, f"سرباز «{name}» حذف شد.")
-    return redirect("core:soldier_list")
+    guard_score = get_guard_score(soldier, timezone.now().date())
 
-
-def soldier_profile(request, pk):
-    """پروفایل سرباز: تاریخچه نگهبانی و مرخصی‌ها"""
-    soldier = get_object_or_404(Soldier.objects.select_related("role"), pk=pk)
-    today = timezone.now().date()
-
-    assignments = (
-        PostAssignment.objects
-        .filter(soldier=soldier)
-        .select_related("schedule", "post_type", "shift")
-        .order_by("-schedule__date")[:30]
-    )
-
-    leaves = soldier.leaves.order_by("-start_date")
+    current_leave = leaves.filter(
+        start_date__lte=today,#TODO fix today
+        end_date__gte=today
+    ).first()
 
     context = {
         "soldier": soldier,
         "assignments": assignments,
         "leaves": leaves,
-        "is_on_leave": soldier.is_on_leave(today),
-        "guard_score": soldier.guard_score(today),
-        "today": today,
+        "last_assignment": last_assignment,
+        "guard_score": guard_score,
+        "current_leave": current_leave,
+        "is_on_leave": current_leave is not None,
     }
-    return render(request, "core/soldiers/profile.html", context)
+
+    return render(request, "core/soldiers/detail.html", context)
+
+
+def soldier_create(request):
+    if request.method == "POST":
+        form = SoldierForm(request.POST)
+
+        if form.is_valid():
+            soldier = form.save()
+            messages.success(request, "سرباز با موفقیت ثبت شد.")
+            return redirect("core:soldier_detail", pk=soldier.pk)
+    else:
+        form = SoldierForm()
+
+    return render(request, "core/soldiers/form.html", {"form": form})
+
+
+def soldier_update(request, pk):
+    soldier = get_object_or_404(Soldier, pk=pk)
+
+    if request.method == "POST":
+        form = SoldierForm(request.POST, instance=soldier)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "اطلاعات سرباز بروزرسانی شد.")
+            return redirect("core:soldier_detail", pk=soldier.pk)
+    else:
+        form = SoldierForm(instance=soldier)
+
+    context = {
+        "form": form,
+        "soldier": soldier,
+    }
+
+    return render(request, "core/soldiers/form.html", context)
+
+
+def soldier_delete(request, pk):
+    soldier = get_object_or_404(Soldier, pk=pk)
+
+    if request.method == "POST":
+        soldier.delete()
+        messages.success(request, "سرباز حذف شد.")
+        return redirect("core:soldier_list")
+
+    return render(
+        request,
+        "core/soldiers/delete.html",
+        {"soldier": soldier},
+    )

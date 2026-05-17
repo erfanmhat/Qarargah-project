@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}انواع پست‌ها{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>مدیریت انواع پست‌ها</h2>
+    <a href="{% url 'core:post_type_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> افزودن پست جدید
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if object_list %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>نام پست</th>
+                        <th>توضیحات</th>
+                        <th>ضریب سختی</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in object_list %}
+                    <tr>
+                        <td>{{ post.name }}</td>
+                        <td>{{ post.description|truncatewords:10|default:"-" }}</td>
+                        <td>
+                            <span class="badge bg-info text-dark">{{ post.difficulty_multiplier }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'core:post_type_update' post.pk %}" class="btn btn-sm btn-outline-secondary">ویرایش</a>
+                            <a href="{% url 'core:post_type_delete' post.pk %}" class="btn btn-sm btn-outline-danger">حذف</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center my-4">هیچ پستی ثبت نشده است.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

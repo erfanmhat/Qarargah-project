@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}نقش‌های سربازان{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>مدیریت نقش‌ها</h2>
+    <a href="{% url 'core:role_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> افزودن نقش جدید
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if object_list %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>عنوان نقش</th>
+                        <th>توضیحات</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for role in object_list %}
+                    <tr>
+                        <td><strong>{{ role.name }}</strong></td>
+                        <td>{{ role.description|truncatewords:15|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'core:role_update' role.pk %}" class="btn btn-sm btn-outline-secondary">ویرایش</a>
+                            <a href="{% url 'core:role_delete' role.pk %}" class="btn btn-sm btn-outline-danger">حذف</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center my-4">هیچ نقشی ثبت نشده است.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

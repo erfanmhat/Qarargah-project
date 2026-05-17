@@ -1,0 +1,218 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}برنامه نگهبانی{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>برنامه نگهبانی</h3>
+
+        <div>
+            <a class="btn btn-outline-secondary" href="?date={{ dates.0|date:'Y-m-d' }}">
+                روز قبل
+            </a>
+
+            <a class="btn btn-outline-primary" href="?date={{ today|date:'Y-m-d' }}">
+                امروز
+            </a>
+
+            <a class="btn btn-outline-secondary" href="?date={{ dates.2|date:'Y-m-d' }}">
+                روز بعد
+            </a>
+        </div>
+    </div>
+
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+
+    <div class="table-responsive">
+
+        <table class="table table-bordered text-center align-middle">
+
+            <thead class="table-dark">
+
+                <tr>
+
+                    <th rowspan="2">پست</th>
+                    <th rowspan="2">شیفت</th>
+
+                    {% for schedule in schedules %}
+                    <th>
+
+                        {{ schedule.date|date:"Y/m/d" }}
+
+                        <br>
+
+                        {% if schedule.is_finalized %}
+                        <span class="badge bg-success">
+                            نهایی
+                        </span>
+                        {% else %}
+                        <span class="badge bg-warning">
+                            پیش نویس
+                        </span>
+                        {% endif %}
+
+                    </th>
+                    {% endfor %}
+
+                </tr>
+
+                <tr>
+
+                    {% for schedule in schedules %}
+                    <th>
+
+                        {% if not schedule.is_finalized %}
+
+                        <a class="btn btn-sm btn-primary" href="{% url 'generate_schedule' schedule.id %}">
+                            پیشنهاد
+                        </a>
+
+                        {% endif %}
+
+                    </th>
+                    {% endfor %}
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for post in post_types %}
+                {% for shift in shifts %}
+
+                <tr>
+
+                    {% if forloop.first %}
+                    <td rowspan="{{ shifts|length }}">
+                        <strong>{{ post.name }}</strong>
+                    </td>
+                    {% endif %}
+
+                    <td>
+
+                        {{ shift.name }}
+
+                        {% if shift.start_time %}
+                        <br>
+                        <small>
+                            {{ shift.start_time|time:"H:i" }} -
+                            {{ shift.end_time|time:"H:i" }}
+                        </small>
+                        {% endif %}
+
+                    </td>
+
+
+                    {% for schedule in schedules %}
+                    <td>
+
+
+                        {% with matrix|get_item:schedule.id|get_item:post.id|get_item:shift.id as assignments %}
+
+                        {% for a in assignments %}
+
+                        <div class="border rounded p-2 mb-2
+{% if a.is_override %}bg-danger-subtle{% else %}bg-success-subtle{% endif %}">
+
+                            <div class="fw-bold">
+                                {{ a.soldier }}
+                            </div>
+
+                            {% if a.is_override %}
+                            <small class="text-danger">
+                                تغییر دستی
+                            </small>
+                            {% else %}
+                            <small class="text-success">
+                                سیستم
+                            </small>
+                            {% endif %}
+
+                            <form method="post" action="{% url 'override_assignment' a.id %}" class="mt-2">
+
+                                {% csrf_token %}
+
+                                <select name="soldier_id" class="form-select form-select-sm mb-1">
+
+                                    {% for s in soldiers %}
+                                    <option value="{{ s.id }}" {% if s.id==a.soldier.id %}selected{% endif %}>
+                                        {{ s }}
+                                    </option>
+                                    {% endfor %}
+
+                                </select>
+
+                                <input type="text" name="reason" placeholder="دلیل تغییر"
+                                    class="form-control form-control-sm mb-1">
+
+                                <button class="btn btn-warning btn-sm w-100">
+                                    تغییر
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                        {% empty %}
+
+                        <form method="post" action="{% url 'assign_soldier_to_post' %}"
+                            class="p-2 border rounded bg-light">
+
+                            {% csrf_token %}
+
+                            <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+
+                            <input type="hidden" name="post_id" value="{{ post.id }}">
+
+                            <input type="hidden" name="shift_id" value="{{ shift.id }}">
+
+                            <select name="soldier_id" class="form-select form-select-sm mb-1">
+
+                                {% for s in soldiers %}
+                                <option value="{{ s.id }}">
+                                    {{ s }}
+                                </option>
+                                {% endfor %}
+
+                            </select>
+
+                            <button class="btn btn-success btn-sm w-100">
+                                اختصاص
+                            </button>
+
+                        </form>
+
+                        {% endfor %}
+
+                        {% endwith %}
+
+
+                    </td>
+                    {% endfor %}
+
+                </tr>
+
+                {% endfor %}
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %} <!-- اگر از crispy استفاده می‌کنید، در غیر این صورت حذف کنید -->
+
+{% block title %}{% if object %}ویرایش شیفت{% else %}افزودن شیفت جدید{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{% if object %}ویرایش شیفت: {{ object.name }}{% else %}افزودن شیفت جدید{% endif %}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }} <!-- در صورت عدم استفاده از crispy، بنویسید: {{ form.as_p }} -->
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success">ذخیره</button>
+                        <a href="{% url 'core:shift_config_list' %}" class="btn btn-secondary">انصراف</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

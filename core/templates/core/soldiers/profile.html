@@ -1,0 +1,397 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}{{ soldier.full_name }} — قرارگاه{% endblock %}
+{% block breadcrumb %}
+    <a href="{% url 'core:soldier_list' %}">سربازان</a> /
+    {{ soldier.full_name }}
+{% endblock %}
+{% block title_icon %}fas fa-user-circle{% endblock %}
+{% block page_title %}پروفایل سرباز{% endblock %}
+{% block page_subtitle %}{{ soldier.full_name }} — {{ soldier.role|default:"بدون نقش" }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'core:soldier_update' soldier.pk %}" class="btn btn-primary btn-sm">
+    <i class="fas fa-edit"></i> ویرایش
+</a>
+<a href="{% url 'core:soldier_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="fas fa-arrow-right"></i> بازگشت
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+@media(max-width:900px) {
+    .profile-grid { grid-template-columns: 1fr; }
+}
+
+/* کارت اطلاعات اصلی */
+.profile-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 3rem;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+
+.profile-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.profile-role {
+    font-size: .85rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.profile-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.profile-status.active {
+    background: rgba(76,175,80,.15);
+    color: var(--accent-green);
+}
+
+.profile-status.inactive {
+    background: rgba(244,67,54,.15);
+    color: var(--accent-red);
+}
+
+.profile-status.on-leave {
+    background: rgba(255,152,0,.15);
+    color: var(--accent-orange);
+}
+
+.profile-info-list {
+    text-align: right;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.profile-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,.03);
+}
+
+.profile-info-item:last-child {
+    border-bottom: none;
+}
+
+.profile-info-label {
+    font-size: .75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.profile-info-value {
+    font-size: .85rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* تب‌ها */
+.tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 10px 18px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: -2px;
+}
+
+.tab:hover {
+    color: var(--text-primary);
+}
+
+.tab.active {
+    color: var(--accent-blue);
+    border-bottom-color: var(--accent-blue);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* کارت امتیاز نگهبانی */
+.guard-score-card {
+    background: linear-gradient(135deg, rgba(88,166,255,.1), rgba(76,175,80,.1));
+    border: 1px solid rgba(88,166,255,.3);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.guard-score-value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+    margin-bottom: 8px;
+}
+
+.guard-score-label {
+    font-size: .8rem;
+    color: var(--text-secondary);
+}
+
+/* جدول تاریخچه */
+.table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.table-card table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-card th, .table-card td {
+    padding: 12px;
+    font-size: .8rem;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.table-card th {
+    background: rgba(255,255,255,.03);
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    padding: 30px;
+    text-align: center;
+    font-size: .85rem;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="profile-grid">
+
+    <!-- ستون سمت راست (اطلاعات اصلی) -->
+    <div class="profile-card">
+        <div class="profile-avatar">
+            {{ soldier.first_name|first }}{{ soldier.last_name|first }}
+        </div>
+
+        <div class="profile-name">
+            {{ soldier.full_name }}
+        </div>
+
+        <div class="profile-role">
+            {{ soldier.role|default:"بدون نقش ثبت‌شده" }}
+        </div>
+
+        {% if is_on_leave %}
+            <div class="profile-status on-leave">
+                <i class="fas fa-plane-departure"></i>
+                در مرخصی
+            </div>
+        {% elif soldier.is_active %}
+            <div class="profile-status active">
+                <i class="fas fa-check-circle"></i>
+                در حال خدمت
+            </div>
+        {% else %}
+            <div class="profile-status inactive">
+                <i class="fas fa-times-circle"></i>
+                غیرفعال
+            </div>
+        {% endif %}
+
+        <div class="profile-info-list">
+            <div class="profile-info-item">
+                <div class="profile-info-label">کد ملی</div>
+                <div class="profile-info-value">{{ soldier.national_code }}</div>
+            </div>
+
+            <div class="profile-info-item">
+                <div class="profile-info-label">تاریخ ورود</div>
+                <div class="profile-info-value">
+                    {{ soldier.entry_date|default:"—" }}
+                </div>
+            </div>
+
+            {% if current_leave %}
+            <div class="profile-info-item">
+                <div class="profile-info-label">بازگشت از مرخصی</div>
+                <div class="profile-info-value">
+                    {{ current_leave.end_date }}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="profile-info-item">
+                <div class="profile-info-label">آخرین پست</div>
+                <div class="profile-info-value">
+                    {{ last_assignment.post_type|default:"—" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ستون اصلی -->
+    <div>
+
+        <!-- امتیاز نگهبانی -->
+        <div class="guard-score-card">
+            <div class="guard-score-value">
+                {{ guard_score }}
+            </div>
+            <div class="guard-score-label">
+                امتیاز نگهبانی (بر اساس فاصله از آخرین پست)
+            </div>
+        </div>
+
+        <!-- تب‌ها -->
+        <div class="tabs">
+            <button class="tab active" onclick="openTab(event, 'assignments')">
+                تاریخچه پست‌ها
+            </button>
+            <button class="tab" onclick="openTab(event, 'leaves')">
+                مرخصی‌ها
+            </button>
+        </div>
+
+        <!-- تاریخچه پست -->
+        <div id="assignments" class="tab-content active">
+            <div class="table-card">
+                {% if assignments %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>تاریخ</th>
+                            <th>پست</th>
+                            <th>شیفت</th>
+                            <th>Override</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in assignments %}
+                        <tr>
+                            <td>{{ a.created_at|date:"Y/m/d" }}</td>
+                            <td>{{ a.post_type }}</td>
+                            <td>{{ a.shift|default:"—" }}</td>
+                            <td>
+                                {% if a.is_override %}
+                                    <i class="fas fa-edit" title="{{ a.override_reason }}"></i>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    هیچ سابقه پستی ثبت نشده است.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- تاریخچه مرخصی -->
+        <div id="leaves" class="tab-content">
+            <div class="table-card">
+                {% if leaves %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>نوع</th>
+                            <th>شروع</th>
+                            <th>پایان</th>
+                            <th>توضیحات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leaves %}
+                        <tr>
+                            <td>{{ leave.get_leave_type_display }}</td>
+                            <td>{{ leave.start_date }}</td>
+                            <td>{{ leave.end_date }}</td>
+                            <td>{{ leave.notes|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    سابقه مرخصی ثبت نشده است.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openTab(evt, tabId) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+    evt.currentTarget.classList.add("active");
+    document.getElementById(tabId).classList.add("active");
+}
+</script>
+{% endblock %}

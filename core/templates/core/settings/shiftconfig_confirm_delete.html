@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}حذف شیفت{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">تایید حذف</h4>
+            </div>
+            <div class="card-body text-center">
+                <p class="lead">آیا از حذف شیفت <strong>"{{ object.name }}"</strong> اطمینان دارید؟</p>
+                <p class="text-muted text-sm">این عملیات غیرقابل بازگشت است.</p>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-4">بله، حذف شود</button>
+                    <a href="{% url 'core:shift_config_list' %}" class="btn btn-secondary px-4">انصراف</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

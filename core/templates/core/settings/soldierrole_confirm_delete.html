@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}حذف نقش{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">تایید حذف</h4>
+            </div>
+            <div class="card-body text-center">
+                <p class="lead">آیا از حذف نقش <strong>"{{ object.name }}"</strong> اطمینان دارید؟</p>
+                <p class="text-muted text-sm">توجه: اگر سربازانی دارای این نقش باشند، ممکن است دچار مشکل شوند.</p>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-4">بله، حذف شود</button>
+                    <a href="{% url 'core:role_list' %}" class="btn btn-secondary px-4">انصراف</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

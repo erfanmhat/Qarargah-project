@@ -1,53 +1,54 @@
 from django.urls import path
-from .views import schedule, soldiers, leaves
+from .views import soldiers, leaves, schedule, settings
 
-app_name = 'core'
+app_name = "core"
 
 urlpatterns = [
-    # ===================
-    # Schedule URLs
-    # ===================
-    # صفحه اصلی برنامه نگهبانی
-    path('', schedule.schedule_index, name='schedule_index'),
-    # نمایش برنامه یک روز خاص
-    path('schedule/<str:date>/', schedule.schedule_day, name='schedule_day'),
-    # ایجاد برنامه جدید
-    path('schedule/generate/', schedule.schedule_generate, name='schedule_generate'),
-    # نهایی کردن برنامه
-    path('schedule/<int:schedule_id>/finalize/', schedule.schedule_finalize, name='schedule_finalize'),
-    # خارج کردن برنامه از حالت نهایی
-    path('schedule/<int:schedule_id>/unfinalize/', schedule.schedule_unfinalize, name='schedule_unfinalize'),
-    # API endpoints for AJAX calls
-    # پیشنهاد سرباز برای یک پست
-    path('ajax/suggest-for-post/', schedule.suggest_for_post, name='suggest_for_post'),
-    # انتساب یک سرباز به پست
-    path('ajax/assign-soldier/', schedule.assign_soldier, name='assign_soldier'),
-    # حذف انتساب
-    path('ajax/remove-assignment/', schedule.remove_assignment, name='remove_assignment'),
+    # ==========================
+    # Soldiers
+    # ==========================
+    path("soldiers/", soldiers.soldier_list, name="soldier_list"),
+    path("soldiers/create/", soldiers.soldier_create, name="soldier_create"),
+    path("soldiers/<int:pk>/", soldiers.soldier_detail, name="soldier_detail"),
+    path("soldiers/<int:pk>/edit/", soldiers.soldier_update, name="soldier_update"),
+    path("soldiers/<int:pk>/delete/", soldiers.soldier_delete, name="soldier_delete"),
 
+    # ==========================
+    # Leaves (اشتباه تایپی اصلاح شد)
+    # ==========================
+    path("leaves/", leaves.leave_list, name="leave_list"),
+    path("leaves/create/", leaves.leave_create, name="leave_create"),
+    path("leaves/<int:pk>/", leaves.leave_detail, name="leave_detail"),
+    path("leaves/<int:pk>/edit/", leaves.leave_update, name="leave_update"),
+    path("leaves/<int:pk>/delete/", leaves.leave_delete, name="leave_delete"),
 
-    # ===================
-    # Soldiers URLs
-    # ===================
-    # لیست سربازها
-    path('soldiers/', soldiers.soldier_list, name='soldier_list'),
-    # افزودن سرباز جدید
-    path('soldiers/add/', soldiers.soldier_add, name='soldier_add'),
-    # پروفایل سرباز
-    path('soldiers/<int:soldier_id>/', soldiers.soldier_profile, name='soldier_profile'),
-    # ویرایش اطلاعات سرباز
-    path('soldiers/<int:soldier_id>/edit/', soldiers.soldier_edit, name='soldier_edit'),
-    # حذف سرباز
-    path('soldiers/<int:soldier_id>/delete/', soldiers.soldier_delete, name='soldier_delete'),
+    # ==========================
+    # Schedule
+    # ==========================
+    path("schedule/", schedule.schedule_view, name="schedule_view"),
+    path("schedule/generate/<int:schedule_id>/", schedule.generate_schedule, name="generate_schedule"),
+    path("schedule/assign/", schedule.assign_soldier_to_post, name="assign_soldier_to_post"),
+    path("schedule/override/<int:assignment_id>/", schedule.override_assignment, name="override_assignment"),
 
+    # ==========================
+    # Settings (Shift, Post, Role)
+    # ==========================
+    
+    # Shifts
+    path("settings/shifts/", settings.ShiftConfigListView.as_view(), name="shift_config_list"),
+    path("settings/shifts/create/", settings.ShiftConfigCreateView.as_view(), name="shift_config_create"),
+    path("settings/shifts/<int:pk>/edit/", settings.ShiftConfigUpdateView.as_view(), name="shift_config_update"),
+    path("settings/shifts/<int:pk>/delete/", settings.ShiftConfigDeleteView.as_view(), name="shift_config_delete"),
 
-    # ===================
-    # Leaves URLs
-    # ===================
-    # لیست مرخصی‌ها
-    path('leaves/', leaves.leave_list, name='leave_list'),
-    # افزودن مرخصی برای یک سرباز
-    path('soldiers/<int:soldier_id>/leaves/add/', leaves.leave_add, name='leave_add'),
-    # حذف مرخصی
-    path('leaves/<int:leave_id>/delete/', leaves.leave_delete, name='leave_delete'),
+    # Posts
+    path("settings/posts/", settings.PostTypeListView.as_view(), name="post_type_list"),
+    path("settings/posts/create/", settings.PostTypeCreateView.as_view(), name="post_type_create"),
+    path("settings/posts/<int:pk>/edit/", settings.PostTypeUpdateView.as_view(), name="post_type_update"),
+    path("settings/posts/<int:pk>/delete/", settings.PostTypeDeleteView.as_view(), name="post_type_delete"),
+
+    # Roles
+    path("settings/roles/", settings.SoldierRoleListView.as_view(), name="role_list"),
+    path("settings/roles/create/", settings.SoldierRoleCreateView.as_view(), name="role_create"),
+    path("settings/roles/<int:pk>/edit/", settings.SoldierRoleUpdateView.as_view(), name="role_update"),
+    path("settings/roles/<int:pk>/delete/", settings.SoldierRoleDeleteView.as_view(), name="role_delete"),
 ]

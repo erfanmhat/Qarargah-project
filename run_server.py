@@ -57,4 +57,9 @@ from django.core.wsgi import get_wsgi_application  # noqa: E402
 app = get_wsgi_application()
 
 if __name__ == "__main__":
-    serve(app, host="0.0.0.0", port=9999, threads=2)
+    port = 8000
+    print(f"✅ Server is running successfully with Waitress!")
+    print(f"🌐 Open your browser and go to: http://127.0.0.1:{port}/")
+    print(f"Press CTRL+C to stop.")
+    
+    serve(app, host='0.0.0.0', port=port)
