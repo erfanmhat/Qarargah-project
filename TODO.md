@@ -7,7 +7,6 @@
 - [x] مدل `Soldier` (سرباز)
 - [x] مدل `SoldierRole` (نقش سرباز)
 - [x] مدل `Leave` (مرخصی)
-- [x] مدل `SoldierTemporaryStatus` (وضعیت موقت)
 - [x] مدل `ShiftConfig` (تنظیمات شیفت)
 - [x] مدل `PostType` (نوع پست)
 - [x] مدل `DailySchedule` (برنامه روزانه)

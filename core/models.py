@@ -93,39 +93,7 @@ class Leave(TimeStampedModel):
 
     def __str__(self):
         return f"{self.soldier.full_name} - {self.start_date} تا {self.end_date}"
-
-
-class SoldierTemporaryStatus(TimeStampedModel):
-    """وضعیت موقت سرباز (بیمار، ماموریت، ...)"""
-    STATUS_CHOICES = [
-        ('sick', 'بیمار'),
-        ('mission', 'ماموریت'),
-        ('unavailable', 'عدم دسترسی'),
-    ]
-
-    soldier = models.ForeignKey(
-        Soldier,
-        on_delete=models.CASCADE,
-        related_name='temporary_statuses',
-        verbose_name="سرباز"
-    )
-    date = models.DateField(verbose_name="تاریخ")
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        verbose_name="وضعیت"
-    )
-    reason = models.TextField(blank=True, verbose_name="دلیل")
-
-    class Meta:
-        verbose_name = "وضعیت موقت"
-        verbose_name_plural = "وضعیت‌های موقت"
-        ordering = ['-date']
-        unique_together = ['soldier', 'date']
-
-    def __str__(self):
-        return f"{self.soldier.full_name} - {self.get_status_display()} ({self.date})"
-
+    
 
 class ShiftConfig(TimeStampedModel):
     """تنظیمات شیفت‌های نگهبانی"""

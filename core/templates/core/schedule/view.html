@@ -1,5 +1,6 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load core_tags %}
 
 {% block title %}برنامه نگهبانی{% endblock %}
 
@@ -69,20 +70,6 @@
 
                 <tr>
 
-                    {% for schedule in schedules %}
-                    <th>
-
-                        {% if not schedule.is_finalized %}
-
-                        <a class="btn btn-sm btn-primary" href="{% url 'generate_schedule' schedule.id %}">
-                            پیشنهاد
-                        </a>
-
-                        {% endif %}
-
-                    </th>
-                    {% endfor %}
-
                 </tr>
 
             </thead>
@@ -148,7 +135,7 @@
                                 <select name="soldier_id" class="form-select form-select-sm mb-1">
 
                                     {% for s in soldiers %}
-                                    <option value="{{ s.id }}" {% if s.id==a.soldier.id %}selected{% endif %}>
+                                    <option value="{{ s.id }}" {% if s.id == a.soldier.id %}selected{% endif %}>
                                         {{ s }}
                                     </option>
                                     {% endfor %}

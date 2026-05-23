@@ -5,7 +5,6 @@ from datetime import timedelta
 from .models import (
     Soldier,
     Leave,
-    SoldierTemporaryStatus,
     PostAssignment,
 )
 
@@ -47,13 +46,6 @@ def is_soldier_available(soldier, date):
         soldier=soldier,
         start_date__lte=date,
         end_date__gte=date
-    ).exists():
-        return False
-
-    # وضعیت موقت
-    if SoldierTemporaryStatus.objects.filter(
-        soldier=soldier,
-        date=date
     ).exists():
         return False
 
