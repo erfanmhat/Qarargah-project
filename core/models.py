@@ -12,25 +12,6 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
-class SoldierRole(TimeStampedModel):
-    """نقش‌های سربازان (مثلاً: سرگروه، سرجوخه، سرباز)"""
-    name = models.CharField(max_length=100, unique=True, verbose_name="نام نقش")
-    priority = models.IntegerField(
-        default=0,
-        validators=[MinValueValidator(0)],
-        verbose_name="اولویت",
-        help_text="عدد بالاتر = اولویت بیشتر"
-    )
-
-    class Meta:
-        verbose_name = "نقش سرباز"
-        verbose_name_plural = "نقش‌های سربازان"
-        ordering = ['-priority', 'name']
-
-    def __str__(self):
-        return self.name
-
-
 class Soldier(TimeStampedModel):
     """سرباز"""
     first_name = models.CharField(max_length=100, verbose_name="نام")
@@ -40,14 +21,6 @@ class Soldier(TimeStampedModel):
         unique=True,
         verbose_name="کد ملی"
     )
-    entry_date = models.DateField(verbose_name="تاریخ ورود")
-    role = models.ForeignKey(
-        SoldierRole,
-        on_delete=models.PROTECT,
-        related_name='soldiers',
-        verbose_name="نقش"
-    )
-    is_active = models.BooleanField(default=True, verbose_name="فعال")
 
     class Meta:
         verbose_name = "سرباز"
@@ -118,12 +91,6 @@ class PostType(TimeStampedModel):
         default=1,
         validators=[MinValueValidator(1)],
         verbose_name="تعداد نفرات مورد نیاز"
-    )
-    allowed_roles = models.ManyToManyField(
-        SoldierRole,
-        blank=True,
-        related_name='allowed_posts',
-        verbose_name="نقش‌های مجاز"
     )
 
     class Meta:

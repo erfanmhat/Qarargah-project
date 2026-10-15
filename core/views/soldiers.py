@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q
@@ -10,14 +11,11 @@ from ..services import get_guard_score
 
 
 def soldier_list(request):
-    soldiers = Soldier.objects.select_related("role").all()
-
+    soldiers = Soldier.objects.all()
     form = SoldierSearchForm(request.GET or None)
 
     if form.is_valid():
         search = form.cleaned_data.get("search")
-        role = form.cleaned_data.get("role")
-        is_active = form.cleaned_data.get("is_active")
 
         if search:
             soldiers = soldiers.filter(
@@ -26,22 +24,9 @@ def soldier_list(request):
                 | Q(national_code__icontains=search)
             )
 
-        if role:
-            soldiers = soldiers.filter(role=role)
-
-        if is_active == "true":
-            soldiers = soldiers.filter(is_active=True)
-
-        if is_active == "false":
-            soldiers = soldiers.filter(is_active=False)
-
-    paginator = Paginator(soldiers.order_by("last_name"), 20)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
     context = {
         "form": form,
-        "page_obj": page_obj,
+        "soldiers": soldiers,
     }
 
     return render(request, "core/soldiers/list.html", context)
@@ -61,8 +46,8 @@ def soldier_detail(request, pk):
     guard_score = get_guard_score(soldier, timezone.now().date())
 
     current_leave = leaves.filter(
-        start_date__lte=today,#TODO fix today
-        end_date__gte=today
+        start_date__lte=datetime.now(),
+        end_date__gte=datetime.now()
     ).first()
 
     context = {

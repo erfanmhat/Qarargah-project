@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from core.models import ShiftConfig, PostType, SoldierRole
+from core.models import ShiftConfig, PostType
 
 # ==========================================
 # 1. تنظیمات شیفت‌ها (ShiftConfig)
@@ -62,32 +62,3 @@ class PostTypeDeleteView(LoginRequiredMixin, DeleteView):
     model = PostType
     template_name = 'settings/posts/delete.html'
     success_url = reverse_lazy('core:post_type_list')
-
-
-# ==========================================
-# 3. تنظیمات نقش‌ها (SoldierRole)
-# ==========================================
-
-class SoldierRoleListView(LoginRequiredMixin, ListView):
-    model = SoldierRole
-    template_name = 'settings/roles/list.html'
-    context_object_name = 'roles'
-
-class SoldierRoleCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-    model = SoldierRole
-    fields = '__all__'
-    template_name = 'settings/roles/form.html'
-    success_url = reverse_lazy('core:role_list')
-    success_message = "نقش جدید با موفقیت ایجاد شد."
-
-class SoldierRoleUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    model = SoldierRole
-    fields = '__all__'
-    template_name = 'settings/roles/form.html'
-    success_url = reverse_lazy('core:role_list')
-    success_message = "نقش با موفقیت ویرایش شد."
-
-class SoldierRoleDeleteView(LoginRequiredMixin, DeleteView):
-    model = SoldierRole
-    template_name = 'settings/roles/delete.html'
-    success_url = reverse_lazy('core:role_list')

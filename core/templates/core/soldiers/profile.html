@@ -243,11 +243,6 @@
                 <i class="fas fa-plane-departure"></i>
                 در مرخصی
             </div>
-        {% elif soldier.is_active %}
-            <div class="profile-status active">
-                <i class="fas fa-check-circle"></i>
-                در حال خدمت
-            </div>
         {% else %}
             <div class="profile-status inactive">
                 <i class="fas fa-times-circle"></i>
@@ -259,13 +254,6 @@
             <div class="profile-info-item">
                 <div class="profile-info-label">کد ملی</div>
                 <div class="profile-info-value">{{ soldier.national_code }}</div>
-            </div>
-
-            <div class="profile-info-item">
-                <div class="profile-info-label">تاریخ ورود</div>
-                <div class="profile-info-value">
-                    {{ soldier.entry_date|default:"—" }}
-                </div>
             </div>
 
             {% if current_leave %}

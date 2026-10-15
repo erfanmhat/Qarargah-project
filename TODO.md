@@ -5,7 +5,6 @@
 ### 1. مدل‌ها (Models) - `core/models.py`
 - [x] مدل پایه `TimeStampedModel`
 - [x] مدل `Soldier` (سرباز)
-- [x] مدل `SoldierRole` (نقش سرباز)
 - [x] مدل `Leave` (مرخصی)
 - [x] مدل `ShiftConfig` (تنظیمات شیفت)
 - [x] مدل `PostType` (نوع پست)

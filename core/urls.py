@@ -45,10 +45,4 @@ urlpatterns = [
     path("settings/posts/create/", settings.PostTypeCreateView.as_view(), name="post_type_create"),
     path("settings/posts/<int:pk>/edit/", settings.PostTypeUpdateView.as_view(), name="post_type_update"),
     path("settings/posts/<int:pk>/delete/", settings.PostTypeDeleteView.as_view(), name="post_type_delete"),
-
-    # Roles
-    path("settings/roles/", settings.SoldierRoleListView.as_view(), name="role_list"),
-    path("settings/roles/create/", settings.SoldierRoleCreateView.as_view(), name="role_create"),
-    path("settings/roles/<int:pk>/edit/", settings.SoldierRoleUpdateView.as_view(), name="role_update"),
-    path("settings/roles/<int:pk>/delete/", settings.SoldierRoleDeleteView.as_view(), name="role_delete"),
 ]

@@ -1,0 +1,199 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<!-- اضافه کردن استایل‌های Select2 و Persian Datepicker -->
+<link rel="stylesheet" href="{% static 'css/select2.min.css' %}" />
+<style>
+    /* هماهنگ‌سازی استایل Select2 با تمپلیت زیبای شما */
+    .select2-container--default .select2-selection--single {
+        height: 42px !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--radius-md) !important;
+        background-color: var(--bg-card) !important;
+        display: flex;
+        align-items: center;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: var(--text-main) !important;
+        padding-right: 12px;
+        text-align: right;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px !important;
+        left: 8px !important;
+        right: auto !important;
+    }
+
+    .select2-dropdown {
+        border: 1px solid var(--border-color) !important;
+        background-color: var(--bg-card) !important;
+        color: var(--text-main) !important;
+    }
+
+    .select2-search__field {
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--radius-sm) !important;
+        padding: 6px !important;
+    }
+
+    /* شخصی‌سازی تقویم شمسی بر اساس استایل شما */
+    .datepicker-plot-area {
+        font-family: inherit !important;
+        border-radius: var(--radius-md) !important;
+        border: 1px solid var(--border-color) !important;
+        box-shadow: var(--shadow-md) !important;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:leave_list' %}">مدیریت مرخصی‌ها</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+{% endblock %}
+
+{% block title_icon %}
+<i class="fas fa-calendar-plus text-primary"></i>
+{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}ثبت و ویرایش اطلاعات مرخصی سربازان{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+            <p class="mb-0">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- بخش اطلاعات مرخصی (کارت تعریف شده) -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-info-circle"></i>
+                    جزئیات درخواست مرخصی
+                </div>
+
+                <div class="form-row">
+                    <!-- فیلد انتخاب سرباز (با قابلیت جستجو) -->
+                    <div class="form-group">
+                        <label for="{{ form.soldier.id_for_label }}">
+                            {{ form.soldier.label }}
+                            {% if form.soldier.field.required %}<span class="required">*</span>{% endif %}
+                        </label>
+                        {{ form.soldier }}
+                        {% if form.soldier.errors %}
+                        <div class="invalid-feedback d-block">{{ form.soldier.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- نوع مرخصی -->
+                    <div class="form-group">
+                        <label for="{{ form.leave_type.id_for_label }}">
+                            {{ form.leave_type.label }}
+                            {% if form.leave_type.field.required %}<span class="required">*</span>{% endif %}
+                        </label>
+                        {{ form.leave_type }}
+                        {% if form.leave_type.errors %}
+                        <div class="invalid-feedback d-block">{{ form.leave_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <!-- تاریخ شروع (شمسی) -->
+                    <div class="form-group">
+                        <label for="id_start_date_display">
+                            {{ form.start_date.label }}
+                            {% if form.start_date.field.required %}<span class="required">*</span>{% endif %}
+                        </label>
+                        <!-- اینپوت نمایشی برای انتخاب تاریخ شمسی -->
+                        <input type="text" id="id_start_date_display"
+                            class="form-control {% if form.start_date.errors %}is-invalid{% endif %}"
+                            placeholder="انتخاب تاریخ..." readonly>
+                        <!-- اینپوت مخفی اصلی برای ارسال تاریخ به جنگو -->
+                        <input type="hidden" name="{{ form.start_date.html_name }}"
+                            id="{{ form.start_date.id_for_label }}"
+                            value="{{ form.start_date.value|default_if_none:'' }}">
+                        {% if form.start_date.errors %}
+                        <div class="invalid-feedback d-block">{{ form.start_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- تعداد روزها -->
+                    <div class="form-group">
+                        <label for="{{ form.days.id_for_label }}">
+                            {{ form.days.label }}
+                            {% if form.days.field.required %}<span class="required">*</span>{% endif %}
+                        </label>
+                        {{ form.days }}
+                        {% if form.days.errors %}
+                        <div class="invalid-feedback d-block">{{ form.days.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- دکمه‌های عملیات -->
+            <div class="form-actions">
+                <a href="{% url 'core:leave_list' %}" class="btn btn-secondary">انصراف</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {{ submit_text|default:"ذخیره اطلاعات" }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<!-- اضافه کردن اسکریپت‌های مورد نیاز برای Select2، تقویم شمسی و کوئری پارامتر -->
+<script src="{% static 'js/select2.min.js' %}"></script>
+
+<script>
+    $(document).ready(function () {
+        // ۱. فعال‌سازی قابلیت جستجو روی فیلد سرباز با Select2
+        const soldierSelect = $('#{{ form.soldier.id_for_label }}');
+        soldierSelect.select2({
+            placeholder: "سرباز مورد نظر را جستجو کنید...",
+            allowClear: true,
+            width: '100%'
+        });
+
+        // ۲. انتخاب خودکار سرباز بر اساس آیدی پاس داده شده در URL Query String
+        const urlParams = new URLSearchParams(window.location.search);
+        const soldierId = urlParams.get('soldier_id');
+        if (soldierId) {
+            soldierSelect.val(soldierId).trigger('change');
+        }
+
+        // اضافه کردن کلاس‌های استاندارد به اینپوت‌های جنگو جهت حفظ ظاهر تمپلیت شما
+        $('#{{ form.leave_type.id_for_label }}').addClass('form-select');
+        $('#{{ form.days.id_for_label }}').addClass('form-control');
+
+        // ۳. راه‌اندازی تقویم شمسی
+        $('#id_start_date_display').persianDatepicker({
+            format: 'YYYY-MM-DD',
+            autoClose: true,
+            altField: '#{{ form.start_date.id_for_label }}', // ذخیره مقدار میلادی یا فرمت استاندارد در فیلد مخفی
+            altFormat: 'YYYY-MM-DD', // فرمت ارسالی به جنگو
+            observer: true
+        });
+
+        // اگر از قبل تاریخی ثبت شده (در حالت ویرایش)، آن را در تقویم لود کن
+        const initialDateValue = $('#{{ form.start_date.id_for_label }}').val();
+        if (initialDateValue) {
+            const pDate = new persianDate(new Date(initialDateValue));
+            $('#id_start_date_display').val(pDate.format('YYYY/MM/DD'));
+        }
+    });
+</script>
+{% endblock %}

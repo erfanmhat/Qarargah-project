@@ -57,7 +57,7 @@ def suggest_soldiers_for_post(post_type, shift, date, count):
     پیشنهاد سربازان برای یک پست مشخص
     """
 
-    soldiers = Soldier.objects.filter(is_active=True)
+    soldiers = Soldier.objects.all()
 
     # فیلتر نقش‌های مجاز
     if post_type.allowed_roles.exists():

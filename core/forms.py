@@ -1,14 +1,15 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django import forms
-from core.models import Leave,SoldierRole, Soldier
+from core.models import Leave, Soldier
+import jdatetime
 
 class SoldierForm(forms.ModelForm):
     """فرم ایجاد و ویرایش سرباز"""
     
     class Meta:
         model = Soldier
-        fields = ['first_name', 'last_name', 'national_code', 'entry_date', 'role', 'is_active']
+        fields = ['first_name', 'last_name', 'national_code']
         widgets = {
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -26,43 +27,41 @@ class SoldierForm(forms.ModelForm):
                 'maxlength': '10',
                 'dir': 'ltr'
             }),
-            'entry_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
-            'role': forms.Select(attrs={
-                'class': 'form-control',
-                'dir': 'rtl'
-            }),
-            'is_active': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
-            })
         }
 
     def clean_national_code(self):
         """اعتبارسنجی کد ملی"""
         national_code = self.cleaned_data.get('national_code')
-        
         if not national_code:
             raise ValidationError("کد ملی الزامی است.")
-        
         if not national_code.isdigit():
             raise ValidationError("کد ملی باید فقط شامل اعداد باشد.")
-        
         if len(national_code) != 10:
             raise ValidationError("کد ملی باید ۱۰ رقم باشد.")
         
-        # بررسی تکراری نبودن (در صورت ویرایش، کد ملی خود سرباز را نادیده بگیر)
         qs = Soldier.objects.filter(national_code=national_code)
         if self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
-        
         if qs.exists():
             raise ValidationError("سربازی با این کد ملی قبلاً ثبت شده است.")
         
         return national_code
+    
+    def _convert_fa_to_en_numbers(self, date_str):
+        """تبدیل کاراکترهای اعداد فارسی و عربی به اعداد انگلیسی استاندارد"""
+        persian_numbers = '۰۱۲۳۴۵۶۷۸۹'
+        arabic_numbers = '٠١٢٣٤٥٦٧٨٩'
+        english_numbers = '0123456789'
+        
+        # ساخت یک جدول نگاشت برای ترجمه کاراکترها
+        translation_table = str.maketrans(
+            persian_numbers + arabic_numbers, 
+            english_numbers + english_numbers
+        )
+        return date_str.translate(translation_table)
 
     def clean(self):
+        # با اصلاح متدهای بالایی، super().clean() دیگر دچار خطای کاذب روی فیلدها نخواهد شد
         cleaned_data = super().clean()
         first_name = cleaned_data.get('first_name')
         last_name = cleaned_data.get('last_name')
@@ -82,29 +81,6 @@ class SoldierSearchForm(forms.Form):
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'جستجو بر اساس نام، نام خانوادگی یا کد ملی',
-            'dir': 'rtl'
-        })
-    )
-    
-    role = forms.ModelChoiceField(
-        queryset=SoldierRole.objects.all(),
-        required=False,
-        empty_label="همه نقش‌ها",
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'dir': 'rtl'
-        })
-    )
-    
-    is_active = forms.ChoiceField(
-        choices=[
-            ('', 'همه'),
-            ('true', 'فعال'),
-            ('false', 'غیرفعال')
-        ],
-        required=False,
-        widget=forms.Select(attrs={
-            'class': 'form-control',
             'dir': 'rtl'
         })
     )

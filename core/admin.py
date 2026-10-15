@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import (
-    SoldierRole,
     ShiftConfig,
     PostType,
     Soldier,
@@ -9,15 +8,8 @@ from .models import (
     PostAssignment,
 )
 
-@admin.register(SoldierRole)
-class SoldierRoleAdmin(admin.ModelAdmin):
-    # فیلد description با priority جایگزین شد
-    list_display = ("name", "priority")
-    search_fields = ("name",)
-
 @admin.register(ShiftConfig)
 class ShiftConfigAdmin(admin.ModelAdmin):
-    # 'is_active' removed
     list_display = ("name", "start_time", "end_time", "order")
     ordering = ("order",)
 
@@ -31,8 +23,8 @@ class PostTypeAdmin(admin.ModelAdmin):
 class SoldierAdmin(admin.ModelAdmin):
     # Removed 'full_name' (from ordering), 'health_type', 'has_driving_license'
     # Assuming first_name and last_name exist based on standard models
-    list_display = ("first_name", "last_name", "national_code", "role", "is_active")
-    list_filter = ("is_active", "role")
+    list_display = ("first_name", "last_name", "national_code")
+    list_filter = ("first_name", "last_name")
     search_fields = ("first_name", "last_name", "national_code")
     # ordering by standard fields instead of full_name
     ordering = ("last_name", "first_name")
